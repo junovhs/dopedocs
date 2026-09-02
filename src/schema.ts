@@ -98,6 +98,10 @@ export function defineDocs<const F extends FactMap>(docs: DocSet<F>): DocSet<F> 
 
 /* ── Validation ──────────────────────────────────────────────────────────── */
 
+/**
+ * The closed set of problems `validate` reports. Callers branch on the code
+ * rather than on message text, so wording can change without breaking them.
+ */
 export type FindingCode =
     | "duplicate-section-id"
     | "invalid-section-id"
@@ -122,6 +126,7 @@ export interface Finding {
     factKey?: string;
 }
 
+/** Tuning for a `validate` run; every field has a working default. */
 export interface ValidateOptions {
     /** A fact reviewed longer ago than this is reported stale. Default 365. */
     staleAfterDays?: number;
