@@ -1,0 +1,297 @@
+import { describe, expect, it } from "vitest";
+
+import { defineFacts } from "./facts.js";
+import { defineDocs, type DocSet } from "./schema.js";
+import {
+    DEFAULT_SEARCH_BOTS,
+    DEFAULT_TRAINING_BOTS,
+    InvalidDocumentError,
+    buildStatic,
+} from "./static.js";
+
+const facts = defineFacts({
+    price: { value: "free", reviewed: "2026-09-02" },
+});
+
+const docs = defineDocs({
+    entity: {
+        name: "No Ceremony",
+        url: "https://noceremony.app",
+        legalName: "Strange Systems",
+        tagline: "A day organiser that decides the order of your work.",
+        notToBeConfusedWith: ["No Ceremony (band)", "Ceremony"],
+        sameAs: ["https://github.com/junovhs"],
+    },
+    title: "How No Ceremony works",
+    lead: "No Ceremony decides the order of your work, and it is {fact:price}.",
+    facts,
+    sections: [
+        {
+            id: "what-it-is",
+            title: "What this is",
+            question: "What is No Ceremony?",
+            answer: "No Ceremony is a day organiser that decides which task to start next, and it is {fact:price}.",
+            keywords: ["task order", "decision fatigue"],
+            blocks: [{ kind: "p", text: "Storage tools keep work; this one orders it." }],
+        },
+        {
+            id: "data",
+            title: "Your data",
+            question: "Where does No Ceremony store my data?",
+            answer: "No Ceremony stores your list in your browser, with optional sync when signed in.",
+            blocks: [{ kind: "p", text: "Nothing leaves the device unless you sign in." }],
+            children: [
+                {
+                    id: "export",
+                    title: "Export",
+                    question: "Can I export my No Ceremony data?",
+                    answer: "No Ceremony exports the whole list as JSON at any time.",
+                    blocks: [{ kind: "p", text: "Use the export control in settings." }],
+                },
+            ],
+        },
+    ],
+});
+
+const now = new Date("2026-09-02T00:00:00Z");
+const out = buildStatic(docs, { now });
+const graphOf = (html: string) =>
+    JSON.parse(
+        html
+            .split('<script type="application/ld+json">')[1]!
+            .split("</script>")[0]!
+            .replace(/\\u003c/g, "<"),
+    );
+const nodesOf = (html: string) => graphOf(html)["@graph"] as Record<string, unknown>[];
+const nodeOf = (html: string, type: string) =>
+    nodesOf(html).find((n) => n["@type"] === type)!;
+
+describe("the written tree", () => {
+    it("emits an index, a page per section including folder children, and the crawler files", () => {
+        expect(Object.keys(out).sort()).toEqual([
+            "docs/data/index.html",
+            "docs/export/index.html",
+            "docs/index.html",
+            "docs/what-it-is/index.html",
+            "llms.txt",
+            "questions.json",
+            "robots.txt",
+            "sitemap.xml",
+        ]);
+    });
+
+    it("honours a custom base path", () => {
+        const custom = buildStatic(docs, { now, basePath: "/help/" });
+        expect(Object.keys(custom)).toContain("help/what-it-is/index.html");
+        expect(custom["help/index.html"]).toContain("https://noceremony.app/help/");
+    });
+});
+
+describe("a section page", () => {
+    const html = out["docs/what-it-is/index.html"]!;
+
+    it("carries its heading and prose in the served HTML, with no JavaScript", () => {
+        expect(html).toContain("<h2 class=\"dd-section-title\">What this is</h2>");
+        expect(html).toContain("Storage tools keep work; this one orders it.");
+        expect(html).not.toContain("<script src");
+    });
+
+    it("declares its own canonical URL", () => {
+        expect(html).toContain(
+            '<link rel="canonical" href="https://noceremony.app/docs/what-it-is/">',
+        );
+    });
+
+    it("uses the section answer as its description, with facts filled", () => {
+        expect(html).toContain(
+            '<meta name="description" content="No Ceremony is a day organiser that decides which task to start next, and it is free.">',
+        );
+    });
+
+    it("links the previous and next sections and the index", () => {
+        expect(html).toContain('rel="next" href="https://noceremony.app/docs/data/"');
+        expect(html).toContain("All documentation");
+    });
+});
+
+describe("the entity graph", () => {
+    it("uses one identical @id across every page", () => {
+        const ids = Object.entries(out)
+            .filter(([path]) => path.endsWith(".html"))
+            .map(([, html]) => (nodeOf(html, "Organization") as { "@id": string })["@id"]);
+        expect(new Set(ids)).toEqual(new Set(["https://noceremony.app/#entity"]));
+    });
+
+    it("names the collision terms in disambiguatingDescription", () => {
+        const entity = nodeOf(out["docs/index.html"]!, "Organization");
+        expect(entity["disambiguatingDescription"]).toBe(
+            "No Ceremony is not affiliated with No Ceremony (band), Ceremony.",
+        );
+    });
+
+    it("carries legalName and sameAs when given", () => {
+        const entity = nodeOf(out["docs/index.html"]!, "Organization");
+        expect(entity["legalName"]).toBe("Strange Systems");
+        expect(entity["sameAs"]).toEqual(["https://github.com/junovhs"]);
+    });
+
+    it("takes a different schema.org type on request", () => {
+        const app = buildStatic(docs, { now, entityType: "SoftwareApplication" });
+        expect(nodeOf(app["docs/index.html"]!, "SoftwareApplication")).toBeTruthy();
+    });
+
+    it("builds the index FAQ from every section's question and answer", () => {
+        const faq = nodeOf(out["docs/index.html"]!, "FAQPage") as {
+            mainEntity: { name: string; acceptedAnswer: { text: string } }[];
+        };
+        expect(faq.mainEntity).toHaveLength(3);
+        expect(faq.mainEntity[0]!.name).toBe("What is No Ceremony?");
+        // The fact is filled in the structured data, not left as a placeholder:
+        // the machine-readable value and the visible sentence are one string.
+        expect(faq.mainEntity[0]!.acceptedAnswer.text).toContain("it is free");
+        expect(faq.mainEntity[0]!.acceptedAnswer.text).not.toContain("{fact:");
+    });
+
+    it("gives a section page a TechArticle and a breadcrumb through its parent", () => {
+        const html = out["docs/export/index.html"]!;
+        expect(nodeOf(html, "TechArticle")["headline"]).toBe("Export");
+        const crumbs = nodeOf(html, "BreadcrumbList") as {
+            itemListElement: { name: string; position: number }[];
+        };
+        expect(crumbs.itemListElement.map((c) => c.name)).toEqual([
+            "How No Ceremony works",
+            "Your data",
+            "Export",
+        ]);
+    });
+
+    it("escapes < so a fact value cannot close the script tag early", () => {
+        const hostile = buildStatic(
+            {
+                ...docs,
+                facts: {
+                    price: { value: "</script><img src=x>", reviewed: "2026-09-02" },
+                },
+            } as DocSet,
+            { now },
+        );
+        const html = hostile["docs/index.html"]!;
+        const block = html.split('<script type="application/ld+json">')[1]!;
+        expect(block.split("</script>")[0]).not.toContain("<img");
+        expect(html).toContain("\\u003c/script>");
+        // And it still parses back to the original string.
+        expect(JSON.stringify(graphOf(html))).toContain("</script><img src=x>");
+    });
+});
+
+describe("sitemap.xml", () => {
+    const xml = out["sitemap.xml"]!;
+
+    it("declares the XML prolog and namespace", () => {
+        expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+        expect(xml).toContain(
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        );
+    });
+
+    it("lists the index and every section as canonical absolute URLs", () => {
+        const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+        expect(locs).toEqual([
+            "https://noceremony.app/docs/",
+            "https://noceremony.app/docs/what-it-is/",
+            "https://noceremony.app/docs/data/",
+            "https://noceremony.app/docs/export/",
+        ]);
+        expect(locs.every((l) => l.startsWith("https://"))).toBe(true);
+    });
+});
+
+describe("robots.txt", () => {
+    const txt = out["robots.txt"]!;
+
+    it("allows every named search crawler", () => {
+        for (const bot of DEFAULT_SEARCH_BOTS) {
+            expect(txt).toContain(`User-agent: ${bot}\nAllow: /`);
+        }
+    });
+
+    it("disallows every named training crawler", () => {
+        for (const bot of DEFAULT_TRAINING_BOTS) {
+            expect(txt).toContain(`User-agent: ${bot}\nDisallow: /`);
+        }
+    });
+
+    it("points at the sitemap", () => {
+        expect(txt).toContain("Sitemap: https://noceremony.app/sitemap.xml");
+    });
+
+    it("lets a consumer decide their own policy in either direction", () => {
+        const permissive = buildStatic(docs, {
+            now,
+            robots: { allowTraining: true, training: ["GPTBot"] },
+        })["robots.txt"]!;
+        expect(permissive).toContain("User-agent: GPTBot\nAllow: /");
+
+        const closed = buildStatic(docs, {
+            now,
+            robots: { allowSearch: false, search: ["PerplexityBot"] },
+        })["robots.txt"]!;
+        expect(closed).toContain("User-agent: PerplexityBot\nDisallow: /");
+    });
+});
+
+describe("llms.txt and questions.json", () => {
+    it("lists every section with its question, answer and URL", () => {
+        const txt = out["llms.txt"]!;
+        for (const title of ["What this is", "Your data", "Export"]) {
+            expect(txt).toContain(`### ${title}`);
+        }
+        expect(txt).toContain("Not to be confused with: No Ceremony (band), Ceremony.");
+        expect(txt).toContain("https://noceremony.app/docs/export/");
+    });
+
+    it("emits the prompt set as parseable JSON with one entry per section", () => {
+        const parsed = JSON.parse(out["questions.json"]!);
+        expect(parsed.questions).toHaveLength(3);
+        expect(parsed.questions[2]).toEqual({
+            id: "export",
+            question: "Can I export my No Ceremony data?",
+            answer: "No Ceremony exports the whole list as JSON at any time.",
+            url: "https://noceremony.app/docs/export/",
+        });
+    });
+});
+
+describe("refusing to publish a faulty document", () => {
+    it("throws rather than emitting anything, listing the findings", () => {
+        const broken: DocSet = {
+            ...docs,
+            sections: [
+                {
+                    id: "Bad Id",
+                    title: "Bad",
+                    question: "Is this valid?",
+                    answer: "It is not.",
+                    blocks: [],
+                },
+            ],
+        };
+        expect(() => buildStatic(broken, { now })).toThrow(InvalidDocumentError);
+        try {
+            buildStatic(broken, { now });
+        } catch (error) {
+            const e = error as InvalidDocumentError;
+            expect(e.findings.map((f) => f.code)).toContain("invalid-section-id");
+            expect(e.findings.map((f) => f.code)).toContain("answer-opens-with-pronoun");
+            expect(e.message).toContain("Bad Id");
+        }
+    });
+
+    it("does not block on an advisory finding such as a stale fact", () => {
+        const stale: DocSet = {
+            ...docs,
+            facts: { price: { value: "free", reviewed: "2020-01-01" } },
+        };
+        expect(() => buildStatic(stale, { now })).not.toThrow();
+    });
+});

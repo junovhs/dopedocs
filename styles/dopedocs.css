@@ -640,3 +640,75 @@ h3.dd-section-title {
         transform: none;
     }
 }
+
+/* ==========================================================================
+   Static-page navigation
+   Emitted only by the static build: a contents list on the index and a pager
+   on each section page. These are how a reader — and a crawler following
+   links — moves between pages when there is no rail.
+   ========================================================================== */
+
+.dd-contents {
+    max-width: var(--dd-measure);
+    margin: 0 0 44px;
+    padding: 18px 20px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel-muted);
+}
+
+.dd-contents h2 {
+    margin: 0 0 10px;
+    color: var(--dd-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.dd-contents .dd-list {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.dd-contents a {
+    color: var(--dd-text);
+    font-size: 14px;
+    text-decoration-color: var(--dd-edge);
+    text-underline-offset: 3px;
+}
+
+.dd-contents a:hover {
+    color: var(--dd-accent);
+    text-decoration-color: var(--dd-accent);
+}
+
+.dd-pager {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    align-items: center;
+    max-width: var(--dd-measure);
+    margin-top: 46px;
+    padding-top: 18px;
+    border-top: 1px solid var(--dd-line);
+}
+
+.dd-pager a {
+    color: var(--dd-text-soft);
+    font-size: 13px;
+    text-decoration-color: var(--dd-edge);
+    text-underline-offset: 3px;
+}
+
+.dd-pager a:hover {
+    color: var(--dd-accent);
+    text-decoration-color: var(--dd-accent);
+}
+
+/* The middle link is the way back to the whole document, so it reads as the
+   anchor of the row rather than as one more sibling. */
+.dd-pager a[rel="next"] {
+    margin-left: auto;
+    text-align: right;
+}
