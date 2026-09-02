@@ -3,3 +3,6 @@ dist/
 .ishoo/
 .semmap/
 *.tsbuildinfo
+**/.ishoo/*.local.toml
+**/.ishoo/cache/
+**/.ishoo/worktrees/
