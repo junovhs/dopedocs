@@ -270,6 +270,7 @@ export function buildStatic(
         }
     })();
     const indexPath = `${homePath}${basePath}/`;
+    /** A section's in-site path, for links a reader follows. */
     const pathFor = (id: string) => `${homePath}${basePath}/${id}/`;
     /** The one canonical URL a section owns (DEC-04). */
     const urlFor = (id: string) => `${origin}/${basePath}/${id}/`;
@@ -297,6 +298,7 @@ export function buildStatic(
         `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>` +
         `</div>`;
 
+    /** One rail link, marked when it is the page being read. */
     const navLink = (s: DocSection, currentId?: string): string =>
         `<a class="dd-nav-link${s.id === currentId ? " is-active" : ""}"` +
         ` href="${escapeHtml(pathFor(s.id))}"` +
@@ -307,6 +309,7 @@ export function buildStatic(
     // collapsed group: there is no script on this page to open a folder, so
     // anything hidden would be hidden for good — from a reader and a crawler
     // alike.
+    /** A rail entry, with any children listed beneath it. */
     const railItem = (s: DocSection, currentId?: string): string =>
         `<li>${navLink(s, currentId)}` +
         (s.children?.length
@@ -316,6 +319,7 @@ export function buildStatic(
             : "") +
         `</li>`;
 
+    /** The whole rail; `currentId` is absent on the index, which is nobody's section. */
     const railFor = (currentId?: string): string =>
         `<nav class="dd-nav" aria-label="Contents">` +
         `<p class="dd-nav-label">Contents</p>` +
