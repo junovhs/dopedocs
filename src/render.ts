@@ -79,6 +79,7 @@ function assertNever(value: never): never {
  * block that silently renders as nothing.
  */
 export function renderBlock(block: DocBlock, facts: FactMap, where: string): string {
+    /** Renders one authored string of this block, bound to its registry and origin. */
     const text = (raw: string) => inline(raw, facts, where);
 
     switch (block.kind) {
@@ -126,6 +127,7 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
     }
 }
 
+/** How a section is drawn; every field has a working default. */
 export interface SectionRenderOptions {
     /** Heading level for this section; children render one level deeper. */
     headingLevel?: 2 | 3 | 4;
