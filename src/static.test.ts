@@ -332,3 +332,30 @@ describe("stylesheet links", () => {
         expect(evil["docs/index.html"]!).not.toContain("<script>x");
     });
 });
+
+describe("page titles", () => {
+    const titlesIn = (html: string) => ({
+        title: /<title>([^<]*)<\/title>/.exec(html)?.[1],
+        og: /<meta property="og:title" content="([^"]*)">/.exec(html)?.[1],
+        twitter: /<meta name="twitter:title" content="([^"]*)">/.exec(html)?.[1],
+    });
+
+    it("separates section and entity with a hyphen, never an em dash", () => {
+        // The title is what shows in a search result and a browser tab, and the
+        // separator is dopedocs' choice rather than the consumer's.
+        const t = titlesIn(out["docs/what-it-is/index.html"]!);
+        expect(t.title).toBe("What this is - No Ceremony");
+        expect(t.og).toBe("What this is - No Ceremony");
+        expect(t.twitter).toBe("What this is - No Ceremony");
+        for (const value of Object.values(t)) {
+            expect(value).not.toContain("—");
+        }
+    });
+
+    it("emits no em dash in any generated page", () => {
+        for (const [path, html] of Object.entries(out)) {
+            if (!path.endsWith(".html")) continue;
+            expect(html, `${path} contains an em dash`).not.toContain("—");
+        }
+    });
+});

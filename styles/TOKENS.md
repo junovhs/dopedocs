@@ -1,7 +1,7 @@
 # Theming dopedocs
 
 dopedocs reads only `--dd-*` custom properties. You theme it by aliasing your
-own tokens onto that namespace — there is no theme object, no configuration
+own tokens onto that namespace - there is no theme object, no configuration
 argument, and no build step (DEC-05).
 
 ## The whole integration
@@ -28,7 +28,7 @@ argument, and no build step (DEC-05).
 ```
 
 Alias what you have. Every token below has a working fallback, so a partial
-alias renders correctly rather than breaking — which also means a token you
+alias renders correctly rather than breaking - which also means a token you
 forget fails silently, in the fallback's appearance rather than an error.
 
 ## The fallbacks carry no brand
@@ -133,7 +133,7 @@ CSS rule, so no consumer is ever blocked waiting on a dopedocs release. The
 trade is that these names are a compatibility surface and renaming one is a
 breaking change.
 
-**Content** (shared by the panel and the static pages) —
+**Content** (shared by the panel and the static pages) -
 `dd-identity`, `dd-identity-mark`, `dd-identity-text`, `dd-identity-name`,
 `dd-identity-meta`, `dd-identity-dot`, `dd-identity-maker`,
 `dd-header`, `dd-title`, `dd-lead`,
@@ -143,12 +143,12 @@ breaking change.
 `dd-keys`, `dd-table-scroll`, `dd-table`,
 `dd-facts`, `dd-facts-title`, `dd-facts-rows`.
 
-**Panel chrome** —
+**Panel chrome** -
 `dd-overlay` (with `is-open`), `dd-shell`,
 `dd-bar`, `dd-back`, `dd-bar-page`, `dd-esc`,
 `dd-body`, `dd-nav`, `dd-nav-label`, `dd-nav-list`,
 `dd-nav-link` (with `is-active`), `dd-nav-group`, `dd-main`.
 
-**Static page** — `dd-page`, which replaces the overlay chrome entirely,
+**Static page** - `dd-page`, which replaces the overlay chrome entirely,
 plus `dd-contents` (the index's list of sections) and `dd-pager` (the
 previous / all / next row at the foot of each section page).

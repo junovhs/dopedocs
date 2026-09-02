@@ -335,7 +335,7 @@ export function buildStatic(
         ];
 
         out[`${basePath}/${section.id}/index.html`] = page({
-            title: `${section.title} — ${docs.entity.name}`,
+            title: `${section.title} - ${docs.entity.name}`,
             description: entry.answer,
             canonical: url,
             entity: docs.entity,

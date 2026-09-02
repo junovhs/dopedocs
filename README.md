@@ -53,12 +53,12 @@ export default defineConfig({
 ```
 
 `stylesheet: true` emits dopedocs' own stylesheet beside the pages and links it.
-Pass an href string instead only if you are emitting that file yourself —
+Pass an href string instead only if you are emitting that file yourself -
 getting that wrong renders the static pages unstyled with no error.
 
 **To theme the static pages, pass a list.** The in-app panel picks up your
 `--dd-*` aliases from your app's bundled CSS, but the static pages load only
-what they link — so without this they render in the neutral fallback palette,
+what they link - so without this they render in the neutral fallback palette,
 and the pages search engines see are the ones that look nothing like your app:
 
 ```ts
@@ -66,7 +66,7 @@ dopedocs({ docs, stylesheet: [true, "/docs-theme.css"] })
 ```
 
 Sheets link in order, so put your aliases last. `/docs-theme.css` is yours to
-serve — in Vite, `public/docs-theme.css` holding just the `:root` alias block.
+serve - in Vite, `public/docs-theme.css` holding just the `:root` alias block.
 
 ## 3. Alias your design tokens
 
@@ -186,7 +186,7 @@ search result opens it at that section. Do not also call `open()` on boot.
 | `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
 | `facts` | `{ kind: "facts", title?, rows: [label, value][] }` |
 
-Prose carries two inline marks — `` `code` `` and `**strong**` — plus
+Prose carries two inline marks - `` `code` `` and `**strong**` - plus
 `{fact:key}` references. Anything richer becomes a new block kind, never new
 syntax.
 
