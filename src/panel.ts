@@ -352,8 +352,12 @@ export function mountPanel(
         }
     };
 
-    // A summary is not a link, so navigation rides the native toggle: opening a
-    // folder takes you to the section it stands for, collapsing it moves nothing.
+    /**
+     * Navigates when a folder is opened by the reader.
+     *
+     * A summary is not a link, so navigation rides the native toggle: opening a
+     * folder takes you to the section it stands for, collapsing it moves nothing.
+     */
     const onToggleGroup = (event: Event) => {
         const group = event.target as HTMLDetailsElement;
         const id = group.dataset.ddGroup;
