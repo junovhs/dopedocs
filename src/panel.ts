@@ -148,11 +148,13 @@ export function mountPanel(
 
     /* --- markup ---------------------------------------------------------- */
 
+    /** One rail entry pointing at a section's canonical path. */
     const link = (s: DocSection) =>
         `<a class="dd-nav-link" href="${escapeHtml(basePath)}/${escapeHtml(
             s.id,
         )}/" data-dd-link="${escapeHtml(s.id)}">${escapeHtml(s.title)}</a>`;
 
+    /** A rail entry, or a folder when the section has children. */
     const railItem = (s: DocSection): string => {
         if (!s.children?.length) return `<li>${link(s)}</li>`;
         // The summary both toggles and, when it opens, navigates — so a folder
@@ -195,8 +197,10 @@ export function mountPanel(
 
     /* --- url ------------------------------------------------------------- */
 
+    /** The path a section is read at. */
     const urlFor = (id?: string) => (id ? `${basePath}/${id}/` : `${basePath}/`);
 
+    /** Moves the address to a section without adding a history entry. */
     const replaceUrl = (id: string) => {
         if (!syncUrl) return;
         history.replaceState({ dopedocs: id }, "", urlFor(id));
@@ -214,6 +218,7 @@ export function mountPanel(
 
     /* --- rail state ------------------------------------------------------ */
 
+    /** Marks a section as the one being read, updating rail, folders and URL. */
     function setActive(id: string | null): void {
         if (id === activeId) return;
         activeId = id;
@@ -237,6 +242,7 @@ export function mountPanel(
         if (id) replaceUrl(id);
     }
 
+    /** Recomputes the active section from scroll position, unless pinned. */
     function syncActive(): void {
         if (pinned) return;
         setActive(activeSectionId(body, sectionEls));
@@ -247,6 +253,7 @@ export function mountPanel(
         pinned = null;
     };
 
+    /** Throttles scroll to one active-section resolution per frame. */
     const onScroll = () => {
         if (ticking) return;
         ticking = true;
@@ -256,6 +263,7 @@ export function mountPanel(
         });
     };
 
+    /** Scrolls a section into view and holds it active. */
     function scrollTo(id: string, smooth = false): void {
         const el = root.querySelector<HTMLElement>(`.dd-section[id="${CSS.escape(id)}"]`);
         if (!el) return;
@@ -269,6 +277,7 @@ export function mountPanel(
 
     /* --- open / close ---------------------------------------------------- */
 
+    /** Opens the panel, optionally at a section, optionally pushing history. */
     function doOpen(sectionId?: string, push = true): void {
         if (open) {
             if (sectionId) scrollTo(sectionId, true);
@@ -308,6 +317,7 @@ export function mountPanel(
         onToggle?.(true);
     }
 
+    /** Closes the panel and returns focus to whatever opened it. */
     function doClose(pop = true): void {
         if (!open) return;
         open = false;
@@ -323,6 +333,7 @@ export function mountPanel(
 
     /* --- listeners ------------------------------------------------------- */
 
+    /** Handles the close control, a scrim click, and rail navigation. */
     const onClick = (event: MouseEvent) => {
         const el = event.target as HTMLElement;
         if (el.closest("[data-dd-close]")) {
@@ -355,6 +366,7 @@ export function mountPanel(
         }
     };
 
+    /** Escape closes the panel. */
     const onKeydown = (event: KeyboardEvent) => {
         if (event.key === "Escape" && open) {
             event.preventDefault();
@@ -362,6 +374,7 @@ export function mountPanel(
         }
     };
 
+    /** Follows browser history into, within, and out of the documentation. */
     const onPopState = () => {
         if (!syncUrl) return;
         const id = sectionFromPath(location.pathname);
