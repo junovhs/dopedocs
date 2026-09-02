@@ -1,0 +1,642 @@
+/* ==========================================================================
+   dopedocs
+   --------------------------------------------------------------------------
+   DEC-05: every value here resolves through a `--dd-` custom property with a
+   working fallback. A consumer themes dopedocs by aliasing its own tokens onto
+   that namespace in one block — there is no theme object and no build step.
+
+   Two consequences worth knowing:
+
+   - Class names are public API. Renaming one is a breaking change, because a
+     consumer overriding anything this file did not anticipate does it with an
+     ordinary CSS rule.
+   - There is no dark-mode block. Dark mode is the host's; alias tokens that
+     already respond to it and dopedocs follows automatically. Defining a
+     scheme here would fight the app it is embedded in.
+
+   The fallbacks below are the ONLY place a literal colour, font stack or
+   radius appears. Everything after `:root` reads through a token.
+   ========================================================================== */
+
+/* The fallbacks are deliberately neutral: a plain greyscale and the system font
+   stack, carrying no brand of their own. dopedocs should look like the app that
+   hosts it, so an unthemed page reads as correct-but-unopinionated rather than
+   as some other product's design leaking in. The monochrome accent is the clue
+   that `--dd-accent` is yours to set. */
+:root {
+    /* Surfaces */
+    --dd-bg: #ffffff;
+    --dd-panel: #ffffff;
+    --dd-panel-muted: #f4f4f5;
+    --dd-ink: #18181b;
+
+    /* Text */
+    --dd-text: #18181b;
+    --dd-text-soft: #52525b;
+    --dd-muted: #8b8b93;
+    --dd-on-ink: #f4f4f5;
+    --dd-on-ink-strong: #ffffff;
+    --dd-on-accent: #ffffff;
+
+    /* Rules */
+    --dd-line: #e4e4e7;
+    --dd-line-soft: #efeff1;
+    --dd-edge: #b8b8c0;
+
+    /* Accent */
+    --dd-accent: #18181b;
+
+    /* Scrim behind the panel */
+    --dd-scrim: rgb(9 9 11 / 0.72);
+    --dd-shadow-lift: 0 22px 70px rgb(9 9 11 / 0.2);
+
+    /* Type */
+    --dd-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --dd-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* Shape */
+    --dd-radius: 4px;
+    --dd-radius-sm: 3px;
+    --dd-radius-xs: 2px;
+
+    /* Motion */
+    --dd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --dd-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --dd-duration: 0.24s;
+
+    /* Layout */
+    --dd-measure: 660px;
+    --dd-rail: 224px;
+    --dd-column: 752px;
+}
+
+/* ==========================================================================
+   Panel chrome
+   Used by the in-app panel only. The static page skips all of this and uses
+   `.dd-page` instead; everything from "Prose" down is shared by both.
+   ========================================================================== */
+
+.dd-overlay {
+    position: fixed;
+    z-index: 60;
+    inset: 0 auto 0 0;
+    width: 100vw;
+    visibility: hidden;
+    pointer-events: none;
+    transition: visibility 0s linear var(--dd-duration);
+}
+
+.dd-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--dd-scrim);
+    opacity: 0;
+    transition: opacity var(--dd-duration) ease;
+}
+
+.dd-overlay.is-open {
+    visibility: visible;
+    pointer-events: auto;
+    transition: visibility 0s linear 0s;
+}
+
+.dd-overlay.is-open::before {
+    opacity: 1;
+    transition-timing-function: var(--dd-ease);
+}
+
+.dd-shell {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--dd-bg);
+    /* The panel is a fixed-position layer, so it inherits nothing useful from
+       the host page. Type and colour are established here or the panel renders
+       in the browser's default serif while the static page renders correctly. */
+    color: var(--dd-text);
+    font-family: var(--dd-sans);
+    box-shadow: var(--dd-shadow-lift);
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+    transition: opacity 0.2s ease, transform var(--dd-duration) ease;
+}
+
+.dd-overlay.is-open .dd-shell {
+    opacity: 1;
+    transform: none;
+    transition:
+        opacity var(--dd-duration) var(--dd-ease),
+        transform 0.42s var(--dd-spring);
+}
+
+/* --- bar ------------------------------------------------------------------ */
+
+.dd-bar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 18px;
+    min-height: 52px;
+    background: var(--dd-ink);
+}
+
+.dd-back {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    margin-left: -10px;
+    padding: 0 14px 0 10px;
+    border: 0;
+    border-radius: var(--dd-radius-xs);
+    background: transparent;
+    color: var(--dd-on-ink);
+    font: 500 13px var(--dd-mono);
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.16s var(--dd-ease);
+}
+
+.dd-back:hover {
+    background: color-mix(in srgb, var(--dd-on-ink) 10%, transparent);
+    color: var(--dd-on-ink-strong);
+}
+
+.dd-back svg {
+    width: 15px;
+    height: 15px;
+    transition: transform var(--dd-duration) var(--dd-spring);
+}
+
+.dd-back:hover svg {
+    transform: translateX(-2px);
+}
+
+.dd-bar-page {
+    color: color-mix(in srgb, var(--dd-on-ink) 48%, transparent);
+    font: 500 11px/1 var(--dd-mono);
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.dd-esc {
+    margin-left: auto;
+    padding: 3px 8px;
+    border: 1px solid color-mix(in srgb, var(--dd-on-ink) 26%, transparent);
+    border-radius: var(--dd-radius-xs);
+    background: transparent;
+    color: color-mix(in srgb, var(--dd-on-ink) 62%, transparent);
+    font: 500 11px/1.4 var(--dd-mono);
+}
+
+/* --- reading layout ------------------------------------------------------- */
+
+.dd-body {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) var(--dd-rail)
+        minmax(0, var(--dd-column)) minmax(0, 1fr);
+    align-items: start;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Chromium ignores ::-webkit-scrollbar entirely once scrollbar-width or
+   scrollbar-color is set, so neither standard property is used here; Firefox
+   keeps its own default rather than losing the styled thumb in Chrome. */
+.dd-body::-webkit-scrollbar { width: 13px; }
+.dd-body::-webkit-scrollbar-track { background: transparent; }
+.dd-body::-webkit-scrollbar-button { display: none; height: 0; }
+
+.dd-body::-webkit-scrollbar-thumb {
+    border: 3px solid var(--dd-bg);
+    border-radius: var(--dd-radius-xs);
+    background: var(--dd-edge);
+    background-clip: padding-box;
+}
+
+.dd-body::-webkit-scrollbar-thumb:hover {
+    background: var(--dd-ink);
+    background-clip: padding-box;
+}
+
+/* --- navigation rail ------------------------------------------------------ */
+
+.dd-nav {
+    grid-column: 2;
+    position: sticky;
+    top: 0;
+    max-height: 100%;
+    padding: 44px 14px 26px 22px;
+    border-right: 1px solid var(--dd-line);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.dd-nav-label {
+    margin: 0 0 11px 10px;
+    color: var(--dd-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.dd-nav-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dd-nav-list li + li {
+    margin-top: 1px;
+}
+
+.dd-nav-link {
+    display: block;
+    padding: 7px 10px;
+    border-radius: var(--dd-radius-xs);
+    color: var(--dd-text-soft);
+    font-size: 13px;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: color 0.14s, background 0.14s;
+}
+
+.dd-nav-link:hover {
+    background: var(--dd-panel-muted);
+    color: var(--dd-text);
+}
+
+.dd-nav-link.is-active {
+    background: var(--dd-accent);
+    color: var(--dd-on-accent);
+    font-weight: 700;
+}
+
+/* Folders. Native <details> carries the keyboard and assistive behaviour, so
+   only the marker and the indent are ours. */
+.dd-nav-group > summary {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border-radius: var(--dd-radius-xs);
+    color: var(--dd-text);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+    list-style: none;
+    cursor: pointer;
+    transition: background 0.14s;
+}
+
+.dd-nav-group > summary::-webkit-details-marker {
+    display: none;
+}
+
+.dd-nav-group > summary:hover {
+    background: var(--dd-panel-muted);
+}
+
+.dd-nav-group > summary::before {
+    content: "";
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 5px solid var(--dd-edge);
+    transition: transform 0.18s var(--dd-ease);
+}
+
+.dd-nav-group[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.dd-nav-group > .dd-nav-list {
+    margin-left: 12px;
+    padding-left: 8px;
+    border-left: 1px solid var(--dd-line);
+}
+
+.dd-main {
+    grid-column: 3;
+    padding: 44px 46px 110px;
+}
+
+/* ==========================================================================
+   Static page wrapper
+   The same content styles, without the overlay. This is the outermost element
+   of a crawlable `/docs/<id>` page.
+   ========================================================================== */
+
+.dd-page {
+    max-width: var(--dd-column);
+    margin: 0 auto;
+    padding: 56px 24px 110px;
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    font-family: var(--dd-sans);
+}
+
+/* ==========================================================================
+   Prose — shared by the panel and the static page
+   ========================================================================== */
+
+.dd-header {
+    max-width: var(--dd-measure);
+    margin: 0 0 44px;
+}
+
+.dd-title {
+    margin: 0 0 12px;
+    color: var(--dd-ink);
+    font: 800 clamp(28px, 3.6vw, 38px)/1.08 var(--dd-sans);
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+}
+
+.dd-lead {
+    margin: 0;
+    color: var(--dd-text-soft);
+    font-size: 16.5px;
+    line-height: 1.62;
+}
+
+.dd-section {
+    max-width: var(--dd-measure);
+    margin: 0 0 46px;
+    scroll-margin-top: 20px;
+}
+
+.dd-section:last-child {
+    margin-bottom: 0;
+}
+
+.dd-section-title {
+    margin: 0 0 15px;
+    padding-bottom: 9px;
+    border-bottom: 1px solid var(--dd-line);
+    color: var(--dd-ink);
+    font: 700 clamp(19px, 2.4vw, 23px)/1.18 var(--dd-sans);
+    letter-spacing: -0.025em;
+}
+
+h3.dd-section-title {
+    font-size: clamp(16px, 2vw, 18px);
+}
+
+/* The answer is the sentence a machine quotes. Setting it slightly ahead of the
+   body reflects that it is also the sentence a person in a hurry reads. */
+.dd-answer {
+    margin: 0 0 15px;
+    color: var(--dd-text);
+    font-size: 15.5px;
+    font-weight: 500;
+    line-height: 1.68;
+}
+
+.dd-p {
+    margin: 0 0 13px;
+    color: var(--dd-text-soft);
+    font-size: 15px;
+    line-height: 1.74;
+}
+
+.dd-p:last-child {
+    margin-bottom: 0;
+}
+
+.dd-list {
+    margin: 0 0 13px;
+    padding-left: 19px;
+}
+
+.dd-list li {
+    margin-bottom: 6px;
+    color: var(--dd-text-soft);
+    font-size: 15px;
+    line-height: 1.74;
+}
+
+.dd-section strong {
+    color: var(--dd-text);
+    font-weight: 700;
+}
+
+.dd-section code {
+    padding: 1px 5px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius-sm);
+    background: var(--dd-panel-muted);
+    color: var(--dd-text);
+    font: 500 12.5px/1.5 var(--dd-mono);
+}
+
+/* --- callout -------------------------------------------------------------- */
+
+.dd-callout {
+    margin: 20px 0;
+    padding: 15px 19px;
+    border: 0;
+    border-left: 8px solid var(--dd-accent);
+    border-radius: var(--dd-radius-sm);
+    background: var(--dd-ink);
+}
+
+.dd-callout p {
+    margin: 0;
+    color: var(--dd-on-ink);
+    font-size: 14.5px;
+    line-height: 1.68;
+}
+
+.dd-callout strong {
+    color: var(--dd-on-ink-strong);
+}
+
+.dd-callout code {
+    border-color: color-mix(in srgb, var(--dd-on-ink) 22%, transparent);
+    background: color-mix(in srgb, var(--dd-on-ink) 10%, transparent);
+    color: var(--dd-on-ink);
+}
+
+.dd-callout--warn {
+    border-left-color: var(--dd-accent);
+    background: var(--dd-ink);
+}
+
+/* --- table ---------------------------------------------------------------- */
+
+/* Wide content scrolls inside its own container so the page body never does. */
+.dd-table-scroll {
+    margin: 18px 0;
+    overflow-x: auto;
+}
+
+.dd-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dd-table th {
+    padding: 0 14px 7px 0;
+    border-bottom: 1px solid var(--dd-line);
+    color: var(--dd-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.dd-table td {
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--dd-line-soft);
+    color: var(--dd-text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    vertical-align: top;
+}
+
+.dd-table td:first-child {
+    width: 34%;
+    color: var(--dd-text);
+    font-weight: 650;
+}
+
+/* --- keys ----------------------------------------------------------------- */
+
+.dd-keys {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 9px 18px;
+    align-items: start;
+    justify-items: start;
+    margin: 16px 0;
+}
+
+.dd-keys kbd {
+    padding: 3px 8px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius-sm);
+    background: var(--dd-panel-muted);
+    color: var(--dd-text);
+    font: 500 12px/1.5 var(--dd-mono);
+    white-space: nowrap;
+}
+
+.dd-keys span {
+    color: var(--dd-text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* --- facts card ----------------------------------------------------------- */
+
+.dd-facts {
+    max-width: var(--dd-measure);
+    margin: 4px 0 20px;
+    padding: 17px 19px 15px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel-muted);
+}
+
+.dd-facts-title {
+    margin: 0 0 13px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--dd-line);
+    color: var(--dd-text);
+    font: 700 15px/1.25 var(--dd-sans);
+    letter-spacing: -0.02em;
+}
+
+.dd-facts-rows {
+    display: grid;
+    grid-template-columns: minmax(88px, max-content) 1fr;
+    gap: 7px 18px;
+    margin: 0;
+}
+
+.dd-facts-rows dt {
+    color: var(--dd-muted);
+    font: 600 12px/1.5 var(--dd-sans);
+    letter-spacing: 0.01em;
+}
+
+.dd-facts-rows dd {
+    margin: 0;
+    color: var(--dd-text-soft);
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   Narrow
+   ========================================================================== */
+
+@media (max-width: 860px) {
+    .dd-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dd-nav,
+    .dd-main {
+        grid-column: 1;
+    }
+
+    .dd-nav {
+        position: static;
+        max-height: 154px;
+        padding: 16px 18px;
+        border-right: 0;
+        border-bottom: 1px solid var(--dd-line);
+    }
+
+    .dd-main {
+        padding: 24px 20px 70px;
+    }
+
+    .dd-page {
+        padding: 32px 20px 70px;
+    }
+
+    .dd-title {
+        font-size: 27px;
+    }
+}
+
+/* ==========================================================================
+   Reduced motion
+   The panel still arrives and leaves — visibility and opacity are what make it
+   usable — but nothing travels or springs.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .dd-shell,
+    .dd-overlay.is-open .dd-shell {
+        transform: none;
+        transition: opacity 0.12s linear;
+    }
+
+    .dd-back svg,
+    .dd-back:hover svg,
+    .dd-nav-group > summary::before,
+    .dd-nav-group[open] > summary::before {
+        transition: none;
+    }
+
+    .dd-back:hover svg {
+        transform: none;
+    }
+}
