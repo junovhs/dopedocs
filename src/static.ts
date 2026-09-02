@@ -71,6 +71,7 @@ export const DEFAULT_SEARCH_BOTS = [
     "DuckDuckBot",
 ];
 
+/** Crawlers that gather training material; refused by default. */
 export const DEFAULT_TRAINING_BOTS = ["GPTBot", "ClaudeBot", "Google-Extended", "CCBot"];
 
 /* ── Small helpers ───────────────────────────────────────────────────────── */
@@ -224,6 +225,7 @@ export function buildStatic(
     const origin = docs.entity.url.replace(/\/+$/, "");
     const entityId = `${origin}/#entity`;
     const indexUrl = `${origin}/${basePath}/`;
+    /** The one canonical URL a section owns (DEC-04). */
     const urlFor = (id: string) => `${origin}/${basePath}/${id}/`;
     const lastmod = now.toISOString().slice(0, 10);
     const facts = docs.facts;
@@ -380,6 +382,7 @@ export function buildStatic(
         allowTraining = false,
     } = robots;
 
+    /** One robots stanza per named agent, rather than a wildcard group. */
     const rule = (agents: string[], allow: boolean) =>
         agents
             .map((a) => `User-agent: ${a}\n${allow ? "Allow: /" : "Disallow: /"}`)
