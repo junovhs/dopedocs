@@ -7,6 +7,7 @@ import {
     inline,
     renderBlock,
     renderBody,
+    renderIdentity,
     renderLead,
     renderSection,
 } from "./render.js";
@@ -217,3 +218,82 @@ export const everyBlockKindIsRendered: Record<DocBlock["kind"], true> = {
     table: true,
     facts: true,
 };
+
+/* ── Release identity ────────────────────────────────────────────────────── */
+
+describe("release identity", () => {
+    const base = { name: "No Ceremony" };
+
+    it("renders nothing when a document declares no identity", () => {
+        const docs = defineDocs({
+            entity: { name: "E", url: "https://e.com", notToBeConfusedWith: [] },
+            title: "T",
+            lead: "L",
+            facts,
+            sections: [],
+        });
+        expect(renderLead(docs)).not.toContain("dd-identity");
+    });
+
+    it("renders the card when one is declared", () => {
+        const html = renderIdentity({
+            ...base,
+            version: "0.1.0",
+            channel: "Preview",
+            maker: { name: "Strange Systems" },
+        });
+        expect(html).toContain('<p class="dd-identity-name">No Ceremony</p>');
+        expect(html).toContain("<span>Version 0.1.0</span>");
+        expect(html).toContain("<span>Preview</span>");
+        expect(html).toContain("<span>by Strange Systems</span>");
+    });
+
+    it("omits absent fields rather than leaving a dangling separator", () => {
+        const html = renderIdentity(base);
+        expect(html).not.toContain("dd-identity-meta");
+        expect(html).not.toContain("dd-identity-dot");
+
+        const one = renderIdentity({ ...base, version: "1.0" });
+        expect(one).toContain("dd-identity-meta");
+        expect(one).not.toContain("dd-identity-dot");
+
+        const two = renderIdentity({ ...base, version: "1.0", channel: "Beta" });
+        expect(two.match(/dd-identity-dot/g)).toHaveLength(1);
+    });
+
+    it("links the maker when given an href", () => {
+        const html = renderIdentity({ ...base, maker: { name: "SS", href: "#who" } });
+        expect(html).toContain('href="#who"');
+        expect(html).toContain('data-dd-link="who"');
+    });
+
+    it("escapes every text field", () => {
+        const html = renderIdentity({
+            name: '<script>x</script>',
+            version: '"1"',
+            maker: { name: "<b>M</b>", href: '"><img>' },
+        });
+        expect(html).toContain("&lt;script&gt;");
+        expect(html).not.toContain("<script>x");
+        expect(html).toContain("&quot;1&quot;");
+        expect(html).not.toContain("<img>");
+    });
+
+    it("passes the brandmark through as markup, since it is inline SVG", () => {
+        const html = renderIdentity({ ...base, mark: "<svg><circle r='2'/></svg>" });
+        expect(html).toContain("<svg><circle r='2'/></svg>");
+    });
+
+    it("places the identity above the title in the lead", () => {
+        const docs = defineDocs({
+            entity: { name: "E", url: "https://e.com", notToBeConfusedWith: [] },
+            identity: { ...base, version: "0.1.0" },
+            title: "How it works",
+            lead: "Lead.",
+            facts,
+            sections: [],
+        });
+        const html = renderLead(docs);
+        expect(html.indexOf("dd-identity")).toBeLessThan(html.indexOf("dd-title"));
+    });
+});

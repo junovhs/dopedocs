@@ -712,3 +712,75 @@ h3.dd-section-title {
     margin-left: auto;
     text-align: right;
 }
+
+/* ==========================================================================
+   Release identity
+   What the documentation is documentation for. Rendered above the title when a
+   document declares an `identity`, and omitted entirely when it does not.
+   ========================================================================== */
+
+.dd-identity {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: var(--dd-measure);
+    margin: 0 0 34px;
+    padding: 15px 18px;
+    border: 2px solid var(--dd-ink);
+    border-radius: var(--dd-radius);
+    background: transparent;
+}
+
+.dd-identity-mark {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 35px;
+    color: var(--dd-text);
+}
+
+.dd-identity-mark > svg {
+    width: 100%;
+    height: 100%;
+}
+
+.dd-identity-text {
+    min-width: 0;
+}
+
+.dd-identity-name {
+    margin: 0;
+    color: var(--dd-text);
+    font: 700 15px/1.2 var(--dd-sans);
+    letter-spacing: -0.02em;
+}
+
+.dd-identity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 3px 0 0;
+    color: var(--dd-muted);
+    font-size: 12px;
+}
+
+.dd-identity-dot {
+    color: var(--dd-edge);
+}
+
+/* The maker credit is the way into the section that explains the name. */
+.dd-identity-maker {
+    color: var(--dd-muted);
+    text-decoration: underline;
+    text-decoration-color: var(--dd-edge);
+    text-underline-offset: 3px;
+    transition:
+        color 0.16s var(--dd-ease),
+        text-decoration-color 0.16s var(--dd-ease);
+}
+
+.dd-identity-maker:hover {
+    color: var(--dd-accent);
+    text-decoration-color: var(--dd-accent);
+}

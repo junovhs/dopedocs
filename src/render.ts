@@ -11,7 +11,7 @@
 
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
-import type { DocBlock, DocSection, DocSet } from "./schema.js";
+import type { DocBlock, DocIdentity, DocSection, DocSet } from "./schema.js";
 
 /**
  * Thrown when prose references a fact the registry does not hold. Shipping a
@@ -183,9 +183,47 @@ export function renderBody(docs: DocSet, options: SectionRenderOptions = {}): st
         .join("");
 }
 
-/** Renders the document's title and lead, above the sections. */
+/**
+ * Renders the release card: which product, which version, made by whom.
+ *
+ * Every text field is escaped. `mark` is not, because it is inline SVG — see
+ * the warning on `DocIdentity.mark`.
+ */
+export function renderIdentity(identity: DocIdentity): string {
+    const meta = [
+        identity.version ? `<span>Version ${escapeHtml(identity.version)}</span>` : "",
+        identity.channel ? `<span>${escapeHtml(identity.channel)}</span>` : "",
+        identity.maker
+            ? identity.maker.href
+                ? `<a class="dd-identity-maker" href="${escapeHtml(identity.maker.href)}" data-dd-link="${escapeHtml(
+                      identity.maker.href.replace(/^#/, ""),
+                  )}">by ${escapeHtml(identity.maker.name)}</a>`
+                : `<span>by ${escapeHtml(identity.maker.name)}</span>`
+            : "",
+    ].filter(Boolean);
+
+    return (
+        `<section class="dd-identity">` +
+        (identity.mark
+            ? `<span class="dd-identity-mark" aria-hidden="true">${identity.mark}</span>`
+            : "") +
+        `<div class="dd-identity-text">` +
+        `<p class="dd-identity-name">${escapeHtml(identity.name)}</p>` +
+        // Separators are joined between present fields only, so an absent
+        // version never leaves a dangling dot.
+        (meta.length
+            ? `<p class="dd-identity-meta">${meta.join(
+                  '<span class="dd-identity-dot">·</span>',
+              )}</p>`
+            : "") +
+        `</div></section>`
+    );
+}
+
+/** Renders the document's identity, title and lead, above the sections. */
 export function renderLead(docs: DocSet): string {
     return (
+        (docs.identity ? renderIdentity(docs.identity) : "") +
         `<header class="dd-header">` +
         `<h1 class="dd-title">${escapeHtml(docs.title)}</h1>` +
         `<p class="dd-lead">${inline(docs.lead, docs.facts, "the document lead")}</p>` +

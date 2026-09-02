@@ -78,11 +78,34 @@ export interface SiteEntity {
     contactEmail?: string;
 }
 
+/**
+ * What the documentation is documentation *for*: the product, its version, and
+ * who makes it. Optional — omit it and nothing renders.
+ */
+export interface DocIdentity {
+    name: string;
+    version?: string;
+    /** Release channel, e.g. "Preview", "Beta". */
+    channel?: string;
+    /** Who makes it, optionally linking to the section that explains them. */
+    maker?: { name: string; href?: string };
+    /**
+     * Raw inline SVG for a brandmark.
+     *
+     * The one field rendered without escaping, because a brandmark is markup.
+     * It is trusted author input from the content module — never put user input
+     * here.
+     */
+    mark?: string;
+}
+
 /* ── The document ────────────────────────────────────────────────────────── */
 
 /** A whole documentation set: who publishes it, what it claims, what it says. */
 export interface DocSet<F extends FactMap = FactMap> {
     entity: SiteEntity;
+    /** Optional release card shown above the title. */
+    identity?: DocIdentity;
     /** Where the docs are served. Defaults to `/docs` at render time. */
     basePath?: string;
     title: string;

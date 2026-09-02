@@ -134,6 +134,8 @@ trade is that these names are a compatibility surface and renaming one is a
 breaking change.
 
 **Content** (shared by the panel and the static pages) —
+`dd-identity`, `dd-identity-mark`, `dd-identity-text`, `dd-identity-name`,
+`dd-identity-meta`, `dd-identity-dot`, `dd-identity-maker`,
 `dd-header`, `dd-title`, `dd-lead`,
 `dd-section`, `dd-section-title`, `dd-answer`,
 `dd-p`, `dd-list`,

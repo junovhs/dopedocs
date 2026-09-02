@@ -240,7 +240,14 @@ export function buildStatic(
     }));
 
     const out: Record<string, string> = {};
-    const entityJson = entityNode(docs.entity, entityType, entityId);
+    const entityJson = {
+        ...entityNode(docs.entity, entityType, entityId),
+        // A version is only meaningful on a software entity; on an Organization
+        // it would be a nonsense property.
+        ...(docs.identity?.version && /software|application|webapp/i.test(entityType)
+            ? { softwareVersion: docs.identity.version }
+            : {}),
+    };
 
     /* --- index --------------------------------------------------------- */
 
