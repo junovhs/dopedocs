@@ -5,12 +5,27 @@
     "type": "module",
     "description": "A typed documentation engine that renders one source to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
     "license": "MIT",
-    "files": ["dist", "styles"],
+    "files": [
+        "dist",
+        "styles"
+    ],
     "exports": {
-        ".": "./dist/index.js",
-        "./panel": "./dist/panel.js",
-        "./static": "./dist/static.js",
-        "./vite": "./dist/vite.js",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./panel": {
+            "types": "./dist/panel.d.ts",
+            "import": "./dist/panel.js"
+        },
+        "./static": {
+            "types": "./dist/static.d.ts",
+            "import": "./dist/static.js"
+        },
+        "./vite": {
+            "types": "./dist/vite.d.ts",
+            "import": "./dist/vite.js"
+        },
         "./styles.css": "./styles/dopedocs.css"
     },
     "types": "./dist/index.d.ts",
@@ -20,6 +35,7 @@
         "test": "vitest run"
     },
     "devDependencies": {
+        "@types/node": "^22.20.1",
         "typescript": "~5.6.2",
         "vitest": "^3.2.7"
     },
@@ -27,6 +43,8 @@
         "vite": ">=5"
     },
     "peerDependenciesMeta": {
-        "vite": { "optional": true }
+        "vite": {
+            "optional": true
+        }
     }
 }
