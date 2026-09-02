@@ -45,7 +45,7 @@ npm i dopedocs
 // vite.config.ts
 import { defineConfig } from "vite";
 import { dopedocs } from "dopedocs/vite";
-import { docs } from "./src/docs";
+import { docs } from "./src/docs.ts";
 
 export default defineConfig({
     plugins: [dopedocs({ docs, stylesheet: true })],
