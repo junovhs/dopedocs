@@ -109,7 +109,7 @@ describe("a section page", () => {
     });
 
     it("links the previous and next sections and the index", () => {
-        expect(html).toContain('rel="next" href="https://noceremony.app/docs/data/"');
+        expect(html).toContain('rel="next" href="/docs/data/"');
         expect(html).toContain("All documentation");
     });
 });
@@ -357,5 +357,103 @@ describe("page titles", () => {
             if (!path.endsWith(".html")) continue;
             expect(html, `${path} contains an em dash`).not.toContain("—");
         }
+    });
+});
+
+/* ── Chrome (DEC-07) ─────────────────────────────────────────────────────── */
+
+describe("static page chrome", () => {
+    const section = out["docs/what-it-is/index.html"]!;
+    const index = out["docs/index.html"]!;
+
+    it("wraps every page in the bar and rail the panel uses", () => {
+        for (const html of [section, index, out["docs/export/index.html"]!]) {
+            expect(html).toContain('<body class="dd-static">');
+            expect(html).toContain('<div class="dd-bar">');
+            expect(html).toContain('<nav class="dd-nav" aria-label="Contents">');
+            expect(html).toContain('<article class="dd-page">');
+        }
+    });
+
+    it("links back to the site root, labelled with the entity", () => {
+        expect(section).toContain('<a class="dd-back" href="/">');
+        expect(section).toContain("No Ceremony</a>");
+        // The document title names where the reader is, as it does in the panel.
+        expect(section).toContain('<span class="dd-bar-page">How No Ceremony works</span>');
+    });
+
+    it("lists every section in the rail, children under their parent", () => {
+        for (const id of ["what-it-is", "data", "export"]) {
+            expect(section).toContain(`href="/docs/${id}/"`);
+        }
+        // "export" is a child of "data", so its item is nested in an inner list.
+        expect(section).toMatch(
+            /\/docs\/data\/"[^>]*>Your data<\/a><ul class="dd-nav-list"><li><a[^>]*export\//,
+        );
+    });
+
+    it("marks the current section, and only that one", () => {
+        expect(section).toContain('class="dd-nav-link is-active"');
+        expect(section.match(/is-active/g)).toHaveLength(1);
+        expect(section).toContain('aria-current="page"');
+        // The index is nobody's section, so nothing there is current.
+        expect(index).not.toContain("is-active");
+        expect(index).not.toContain('aria-current="page"');
+    });
+
+    it("is complete without JavaScript", () => {
+        // Every chrome affordance is a link or plain markup: a reader with
+        // scripting off, and a crawler, get the whole page and every route out
+        // of it. A <script> here would be a regression of the crawler view.
+        expect(section).not.toMatch(/<script(?![^>]*application\/ld\+json)/);
+        expect(section).not.toContain("onclick");
+        const routesOut = section.match(/<a class="dd-(back|nav-link)[^"]*"/g) ?? [];
+        expect(routesOut.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it("needs no configuration — chrome is derived from the document", () => {
+        // Same document, no options at all beyond the injected clock.
+        const bare = buildStatic(docs, { now })["docs/data/index.html"]!;
+        expect(bare).toContain('<a class="dd-back" href="/">');
+        expect(bare).toContain('<nav class="dd-nav"');
+    });
+});
+
+describe("link form", () => {
+    const section = out["docs/what-it-is/index.html"]!;
+
+    it("navigates by path so a local or preview build stays where it is", () => {
+        // Every href a reader can follow is root-relative.
+        const hrefs = [...section.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1]!);
+        expect(hrefs.length).toBeGreaterThan(4);
+        for (const href of hrefs) expect(href.startsWith("/")).toBe(true);
+    });
+
+    it("keeps machine-read addresses absolute", () => {
+        // Canonical, og:url and every JSON-LD id name one address unambiguously.
+        expect(section).toContain(
+            '<link rel="canonical" href="https://noceremony.app/docs/what-it-is/">',
+        );
+        expect(section).toContain(
+            '<meta property="og:url" content="https://noceremony.app/docs/what-it-is/">',
+        );
+        expect(JSON.stringify(graphOf(section))).toContain(
+            "https://noceremony.app/docs/what-it-is/#article",
+        );
+        expect(out["sitemap.xml"]).toContain(
+            "<loc>https://noceremony.app/docs/what-it-is/</loc>",
+        );
+    });
+
+    it("respects a site served under a subpath", () => {
+        const nested = buildStatic(
+            { ...docs, entity: { ...docs.entity, url: "https://example.test/product" } },
+            { now },
+        )["docs/data/index.html"]!;
+        expect(nested).toContain('<a class="dd-back" href="/product/">');
+        expect(nested).toContain('href="/product/docs/export/"');
+        expect(nested).toContain(
+            '<link rel="canonical" href="https://example.test/product/docs/data/">',
+        );
     });
 });

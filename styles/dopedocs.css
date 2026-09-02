@@ -784,3 +784,66 @@ h3.dd-section-title {
     color: var(--dd-accent);
     text-decoration-color: var(--dd-accent);
 }
+
+/* ==========================================================================
+   Static page chrome (DEC-07)
+   The same bar and rail the panel uses, laid out for a document that scrolls
+   in the window rather than inside a fixed overlay. Every rule here is a
+   layout correction; colour, type and spacing come from the shared classes,
+   so a consumer's `--dd-*` aliases style both surfaces at once.
+   ========================================================================== */
+
+.dd-static {
+    margin: 0;
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    font-family: var(--dd-sans);
+}
+
+.dd-static .dd-bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* The bar's control is a button in the panel and a link here. */
+.dd-static .dd-back {
+    text-decoration: none;
+}
+
+/* The window scrolls rather than an inner pane, so the rail sticks to the
+   viewport under the bar instead of to a scrollport of its own. */
+.dd-static .dd-body {
+    min-height: 0;
+    overflow: visible;
+}
+
+.dd-static .dd-nav {
+    position: sticky;
+    top: 52px;
+    max-height: calc(100vh - 52px);
+}
+
+.dd-static .dd-page {
+    grid-column: 3;
+}
+
+/* Children sit indented under their parent. A static page has no script to
+   open a folder, so nothing here is collapsed and nothing is hidden. */
+.dd-static .dd-nav-list .dd-nav-list {
+    margin-top: 1px;
+    padding-left: 12px;
+}
+
+@media (max-width: 860px) {
+    .dd-static .dd-page {
+        grid-column: 1;
+    }
+
+    /* Matches the panel's narrow rail: a short scrollable strip above the
+       reading column rather than a full-height list pushing it off-screen. */
+    .dd-static .dd-nav {
+        position: static;
+        max-height: 154px;
+    }
+}

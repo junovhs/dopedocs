@@ -166,10 +166,12 @@ interface PageInput {
     graph: unknown;
     entity: SiteEntity;
     stylesheet?: string | string[];
+    /** The bar and rail wrapped around the article (DEC-07). */
+    chrome: { bar: string; rail: string };
 }
 
 function page(input: PageInput): string {
-    const { title, description, canonical, body, graph, entity } = input;
+    const { title, description, canonical, body, graph, entity, chrome } = input;
     const esc = escapeHtml;
     return `<!doctype html>
 <html lang="en">
@@ -195,14 +197,26 @@ ${[input.stylesheet ?? []]
 ${jsonLd(graph)}
 </script>
 </head>
-<body>
+<body class="dd-static">
+${chrome.bar}
+<div class="dd-body">
+${chrome.rail}
 <article class="dd-page">
 ${body}
 </article>
+</div>
 </body>
 </html>
 `;
 }
+
+/* ── Chrome (DEC-07) ─────────────────────────────────────────────────────── */
+
+/** The back arrow. Inline and self-contained so it needs no stylesheet. */
+const BACK_ARROW =
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ` +
+    `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
+    `<path d="M15 18l-6-6 6-6"/></svg>`;
 
 /* ── The build ───────────────────────────────────────────────────────────── */
 
@@ -236,6 +250,27 @@ export function buildStatic(
     const origin = docs.entity.url.replace(/\/+$/, "");
     const entityId = `${origin}/#entity`;
     const indexUrl = `${origin}/${basePath}/`;
+    /**
+     * Where the site sits on its host, from the entity's own URL — `/` for a
+     * site at the domain root, `/product/` for one under a subpath.
+     *
+     * Links a reader follows are paths, not absolute URLs. An absolute link
+     * would send someone browsing a local build or a preview deployment
+     * straight to production, which is the one place a developer checking a
+     * change does not want to land. Metadata a machine reads — canonical,
+     * og:url, the JSON-LD ids, sitemap and llms.txt — stays absolute, because
+     * there the whole point is naming one address unambiguously.
+     */
+    const homePath = (() => {
+        try {
+            const { pathname } = new URL(docs.entity.url);
+            return pathname.endsWith("/") ? pathname : `${pathname}/`;
+        } catch {
+            return "/";
+        }
+    })();
+    const indexPath = `${homePath}${basePath}/`;
+    const pathFor = (id: string) => `${homePath}${basePath}/${id}/`;
     /** The one canonical URL a section owns (DEC-04). */
     const urlFor = (id: string) => `${origin}/${basePath}/${id}/`;
     const lastmod = now.toISOString().slice(0, 10);
@@ -249,6 +284,44 @@ export function buildStatic(
         question: plain(section.question, facts, `section "${section.id}"`),
         answer: plain(section.answer, facts, `section "${section.id}"`),
     }));
+
+    /* --- chrome (DEC-07) ------------------------------------------------
+       The bar and rail are derived, never configured: the site root comes from
+       the entity's own URL, the labels from its name and the document title,
+       and the rail from the section tree. A consumer rebuilds and has chrome. */
+
+    const bar =
+        `<div class="dd-bar">` +
+        `<a class="dd-back" href="${escapeHtml(homePath)}">` +
+        `${BACK_ARROW}${escapeHtml(docs.entity.name)}</a>` +
+        `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>` +
+        `</div>`;
+
+    const navLink = (s: DocSection, currentId?: string): string =>
+        `<a class="dd-nav-link${s.id === currentId ? " is-active" : ""}"` +
+        ` href="${escapeHtml(pathFor(s.id))}"` +
+        (s.id === currentId ? ` aria-current="page"` : "") +
+        `>${escapeHtml(s.title)}</a>`;
+
+    // Children are listed under their parent rather than folded into a
+    // collapsed group: there is no script on this page to open a folder, so
+    // anything hidden would be hidden for good — from a reader and a crawler
+    // alike.
+    const railItem = (s: DocSection, currentId?: string): string =>
+        `<li>${navLink(s, currentId)}` +
+        (s.children?.length
+            ? `<ul class="dd-nav-list">` +
+              s.children.map((child) => railItem(child, currentId)).join("") +
+              `</ul>`
+            : "") +
+        `</li>`;
+
+    const railFor = (currentId?: string): string =>
+        `<nav class="dd-nav" aria-label="Contents">` +
+        `<p class="dd-nav-label">Contents</p>` +
+        `<ul class="dd-nav-list">` +
+        docs.sections.map((s) => railItem(s, currentId)).join("") +
+        `</ul></nav>`;
 
     const out: Record<string, string> = {};
     const entityJson = {
@@ -267,7 +340,7 @@ export function buildStatic(
         all
             .map(
                 ({ section }) =>
-                    `<li><a href="${escapeHtml(urlFor(section.id))}">${escapeHtml(
+                    `<li><a href="${escapeHtml(pathFor(section.id))}">${escapeHtml(
                         section.title,
                     )}</a></li>`,
             )
@@ -280,6 +353,7 @@ export function buildStatic(
         canonical: indexUrl,
         entity: docs.entity,
         stylesheet: options.stylesheet,
+        chrome: { bar, rail: railFor() },
         body: renderLead(docs) + contentsList + renderBody(docs),
         graph: {
             "@context": "https://schema.org",
@@ -316,13 +390,13 @@ export function buildStatic(
         const nav =
             `<nav class="dd-pager">` +
             (prev
-                ? `<a rel="prev" href="${escapeHtml(urlFor(prev.id))}">${escapeHtml(
+                ? `<a rel="prev" href="${escapeHtml(pathFor(prev.id))}">${escapeHtml(
                       prev.title,
                   )}</a>`
                 : "") +
-            `<a href="${escapeHtml(indexUrl)}">All documentation</a>` +
+            `<a href="${escapeHtml(indexPath)}">All documentation</a>` +
             (next
-                ? `<a rel="next" href="${escapeHtml(urlFor(next.id))}">${escapeHtml(
+                ? `<a rel="next" href="${escapeHtml(pathFor(next.id))}">${escapeHtml(
                       next.title,
                   )}</a>`
                 : "") +
@@ -340,6 +414,7 @@ export function buildStatic(
             canonical: url,
             entity: docs.entity,
             stylesheet: options.stylesheet,
+            chrome: { bar, rail: railFor(section.id) },
             // Children are rendered by renderSection as sibling sections, so a
             // parent's page carries its folder in full while each child keeps
             // its own address.
