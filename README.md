@@ -1,37 +1,78 @@
 # dopedocs
 
-A typed documentation engine. You author your docs once, as TypeScript data;
-dopedocs renders them both as an in-app panel and as crawlable static pages that
-answer engines can read.
+**Documentation for your site, as a drop-in.**
 
-Its premise is that documentation fails on the machine-readable side not because
-there is too little content, but because the same fact gets stated differently
-on different surfaces. So dopedocs makes contradiction a build error rather than
-a review problem.
+You write your docs once, as TypeScript data. dopedocs gives you two finished
+surfaces from it: a documentation panel inside your app, and a real page per
+section at a real URL that anyone — a reader, a search engine, an answer engine
+— can read without running your JavaScript.
 
-## What the compiler enforces
+It exists because this is the part everyone rebuilds. A panel, a nav rail, a
+scrollspy, anchors that survive a reload, a sitemap, structured data, a page
+that works with JavaScript off — none of it is hard, all of it is a week, and
+you end up doing it again on the next project. This is that week, packaged.
 
+## What you get
+
+- A **panel in your app**, mounted in one line, with a nav rail and folders.
+- A **page per section** at `/docs/<id>/`, complete without JavaScript, each one
+  carrying a bar back to your app and a rail of every section.
+- The **machine-readable set**, generated rather than authored: a JSON-LD entity
+  graph, `sitemap.xml`, `robots.txt` that rules search and training crawlers
+  separately, `llms.txt`, and `questions.json`.
+- **Your styling.** dopedocs reads only `--dd-*` custom properties, so it looks
+  like your product rather than like dopedocs.
+
+Nothing here needs a sibling checkout, a link step, or a build in your tree.
+
+## A machine-readable layer, even if the rest of your site isn't one
+
+Most sites are built for people and then hope for the best with search and
+answer engines. dopedocs is the other way round: the pages it emits are the
+part of your site a machine can actually use, and you get them by writing your
+documentation rather than by doing SEO work.
+
+Each section is a real page at a real URL, complete without JavaScript, and it
+arrives annotated — an `Organization` or `SoftwareApplication` entity with one
+stable id, a `TechArticle` per section, `BreadcrumbList`, and a `FAQPage` built
+from the question and answer every section is required to carry. Alongside them
+sit `sitemap.xml`, a `robots.txt` that rules search and training crawlers
+separately, and `llms.txt`.
+
+So a site that is otherwise a single opaque bundle still gets a surface an
+answer engine can quote correctly, and can attribute to the right product —
+which is what `notToBeConfusedWith` is for.
+
+`questions.json` is the other half of that: a list of every question your docs
+claim to answer, with the answer and its URL. It exists so you can ask the
+engines those questions on a schedule and check what comes back, rather than
+guessing whether any of this landed.
+
+## Why you can trust what it says
+
+Documentation goes wrong quietly. The panel says one thing, the page says
+another, and the structured data says a third — usually because someone updated
+one of them. dopedocs is built so that cannot happen, and so the parts a machine
+quotes are checked rather than hoped for:
+
+- **One source, two surfaces.** The panel and the static page render from the
+  same document, so they cannot drift apart.
+- **Facts are defined once and interpolated.** The sentence a reader sees and
+  the value in the structured data are the same string.
 - **Every section carries a question and a self-contained answer.** They are
-  required fields, not conventions, so an unannotated section does not compile
-  and the `FAQPage` graph is generated rather than authored.
-- **Every factual claim is defined once, in a facts registry, and interpolated
-  into prose.** The sentence a reader sees and the value in the structured data
-  are the same string, so they cannot drift.
-- **The entity declares what it is not.** Name collisions are the common way an
-  answer engine gets a product wrong, so disambiguation is required input.
-
-## What it emits
-
-One source produces the in-app panel, a static page per section at a real URL,
-the JSON-LD entity graph, `sitemap.xml`, `robots.txt` with search and training
-crawlers ruled separately, `llms.txt`, and `questions.json` for regression
-testing what the engines actually say back.
+  required fields, not conventions, so the `FAQPage` graph is generated from
+  what you wrote rather than maintained beside it.
+- **The entity declares what it is not.** A name collision is the ordinary way
+  an answer engine attributes someone else's facts to your product.
+- **Contradiction is a build error.** A missing answer, a fact that does not
+  exist, an unlabelled image: the build fails at your keyboard rather than in a
+  reader's browser.
 
 ---
 
 # Integration
 
-Five steps. Nothing here needs a sibling checkout or a link step.
+Five steps.
 
 ## 1. Install
 
@@ -96,6 +137,9 @@ The unthemed defaults are deliberately plain greyscale on the system font stack.
 If your docs still look monochrome, `--dd-accent` is the token you have not set.
 Full list in [`styles/TOKENS.md`](./styles/TOKENS.md).
 
+These same aliases style the static pages' bar and rail, so the chrome matches
+your product without a second stylesheet.
+
 ## 4. Write the content
 
 ```ts
@@ -114,6 +158,15 @@ export const docs = defineDocs({
         legalName: "Your Company Ltd",
         notToBeConfusedWith: ["YourApp Analytics", "Your App (the band)"],
         sameAs: ["https://github.com/you"],
+    },
+    // Optional: the release card at the top of the docs. `mark` points at a
+    // file you serve — drop it if you have not got one yet.
+    identity: {
+        name: "Your App",
+        version: "1.4.0",
+        channel: "Beta",
+        maker: { name: "Your Company", href: "#who-makes-this" },
+        mark: "/logo.png",
     },
     title: "How Your App works",
     lead: "Your App does one thing, and this page is how.",
@@ -157,8 +210,8 @@ export const docs = defineDocs({
 A section fails the build if its `id` is not a URL-safe slug, its `question` is
 empty, its `answer` opens with an outward-referring pronoun ("It stores…" rather
 than "Your App stores…") or runs past 320 characters, it nests more than one
-level deep, or it references a fact that is not in the registry. Stale
-`reviewed` dates are reported but do not block.
+level deep, or it references a fact that is not in the registry. An `image` with
+a blank `alt` fails too. Stale `reviewed` dates are reported but do not block.
 
 ## 5. Mount the panel
 
@@ -170,8 +223,85 @@ const panel = mountPanel(document.body, docs);
 document.querySelector("#docsButton")!.addEventListener("click", () => panel.open());
 ```
 
-The panel reads the URL on mount, so arriving at `/docs/what-it-is/` from a
-search result opens it at that section. Do not also call `open()` on boot.
+The panel reads the URL when it mounts, so do not also call `open()` on boot.
+Opening it pushes `/docs/<id>/` through the History API, which is why in-app
+navigation keeps the address bar in step without a page load.
+
+That is in-app navigation. Someone who *arrives* at that address from outside
+gets the static page — see below.
+
+---
+
+## What a reader gets at `/docs/<id>/`
+
+A section owns one address, and two correct behaviours want it. Inside your app
+the panel opens at that path with no server request. But a request that actually
+reaches the server — a search result, a pasted link, a reload — is always served
+**the static page**, because that is what a crawler must receive, and serving
+people something different from crawlers is the shape of cloaking.
+
+So the static page is a destination, not a fragment. Every one carries:
+
+- a **bar** linking back to your app, labelled with `entity.name`;
+- a **rail** of every section, children nested under their parent, with the
+  current one marked;
+- the section itself, and links to the previous and next.
+
+All of it is derived from the document you already wrote — `entity.url`,
+`entity.name`, `docs.title`, the section tree — so there is nothing to configure
+and nothing to keep in step. The back link's destination comes from
+`entity.url`: a site at a domain root gets `/`, one served under `/product/`
+gets `/product/`.
+
+Links a reader follows are paths, not absolute URLs, so a local build or a
+preview deployment stays where it is instead of bouncing you to production.
+Addresses a machine reads — the canonical tag, `og:url`, the JSON-LD ids,
+`sitemap.xml` and `llms.txt` — stay absolute, because there the whole point is
+naming one address unambiguously.
+
+The page is complete with JavaScript disabled. dopedocs adds no script to it.
+
+---
+
+## The document
+
+### `entity` — what the docs are about
+
+| Field | |
+| --- | --- |
+| `name` | Required. |
+| `url` | Required. The site's address; the back link and every canonical URL derive from it. |
+| `notToBeConfusedWith` | Required, and required for a reason: it generates `disambiguatingDescription`. |
+| `legalName` | Registered name, when it differs from the trading name. |
+| `tagline` | One line, used as the entity's description. |
+| `logo` | Used for `og:image`. |
+| `sameAs` | Authoritative profiles elsewhere. |
+| `contactEmail` | Published as the entity's `email`. |
+
+### `identity` — the release card
+
+Optional. Omit it and nothing renders; include it and the docs open with a card
+naming the product, its version and who makes it.
+
+| Field | |
+| --- | --- |
+| `name` | Required when `identity` is present. |
+| `version` | e.g. `"1.4.0"`. Also published as `softwareVersion` when `entityType` is a software type. |
+| `channel` | e.g. `"Preview"`, `"Beta"`. |
+| `maker` | `{ name, href? }`. An `href` of `#some-id` links to that section. |
+| `mark` | A brandmark — see [Brandmarks](#brandmarks). |
+
+### `sections`
+
+| Field | |
+| --- | --- |
+| `id` | Required. URL-safe slug; it is the public address, so renaming one breaks links. |
+| `title` | Required. |
+| `question` | Required. The query this section is retrieved for. |
+| `answer` | Required. Self-contained, at most 320 characters. |
+| `blocks` | The body — see [Block kinds](#block-kinds). |
+| `children` | One level of nesting, rendered as a folder. |
+| `keywords` | Optional, published as the article's keywords. |
 
 ---
 
@@ -257,7 +387,21 @@ Search: `Googlebot`, `Bingbot`, `OAI-SearchBot`, `PerplexityBot`,
 `Claude-SearchBot`, `DuckDuckBot`. Training: `GPTBot`, `ClaudeBot`,
 `Google-Extended`, `CCBot`. Both lists are replaceable.
 
-An existing `robots.txt` or `sitemap.xml` of your own is merged, not replaced.
+An existing `robots.txt` or `sitemap.xml` of your own is merged, not replaced,
+and merging is idempotent — building twice never repeats a rule or an entry.
+
+## Options
+
+Everything the plugin accepts besides `docs`. `buildStatic` takes the same set.
+
+| Option | Default | |
+| --- | --- | --- |
+| `stylesheet` | none | `true` emits and links dopedocs' sheet; a string is an href you serve; an array links each in order. |
+| `entityType` | `"Organization"` | The schema.org type for your entity. **Usually worth setting** — `"SoftwareApplication"` for an app, `"Product"`, `"WebApplication"`. |
+| `basePath` | `"docs"` | Where the pages live, so `/help/<id>/` instead of `/docs/<id>/`. |
+| `robots` | search allowed, training refused | See [Crawler policy](#crawler-policy). |
+| `staleAfterDays` | `365` | How old a fact's `reviewed` date may be before it is reported. |
+| `now` | the clock | Injected for deterministic output. |
 
 ## Without Vite
 
