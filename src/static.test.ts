@@ -8,6 +8,7 @@ import {
     InvalidDocumentError,
     buildStatic,
 } from "./static.js";
+import { mergeCrawlerFile } from "./vite.js";
 
 const facts = defineFacts({
     price: { value: "free", reviewed: "2026-09-02" },
@@ -455,5 +456,61 @@ describe("link form", () => {
         expect(nested).toContain(
             '<link rel="canonical" href="https://example.test/product/docs/data/">',
         );
+    });
+});
+
+/* ── Crawler-file merging is idempotent (ENG-05) ─────────────────────────── */
+
+describe("mergeCrawlerFile", () => {
+    const theirRobots = "User-agent: Ahrefsbot\nDisallow: /\n";
+    const theirSitemap =
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+        "  <url><loc>https://noceremony.app/pricing/</loc></url>\n" +
+        "</urlset>\n";
+
+    it("keeps a consumer's own robots rules and adds ours once", () => {
+        const once = mergeCrawlerFile("robots.txt", theirRobots, out["robots.txt"]!);
+        expect(once).toContain("User-agent: Ahrefsbot");
+        expect(once).toContain("Googlebot");
+        expect(once.match(/Googlebot/g)).toHaveLength(1);
+    });
+
+    it("merging robots into its own output changes nothing", () => {
+        const once = mergeCrawlerFile("robots.txt", theirRobots, out["robots.txt"]!);
+        const twice = mergeCrawlerFile("robots.txt", once, out["robots.txt"]!);
+        expect(twice).toBe(once);
+        // The regression this guards: stanzas accumulating one build at a time.
+        expect(twice.match(/Googlebot/g)).toHaveLength(1);
+        expect(twice).toContain("User-agent: Ahrefsbot");
+    });
+
+    it("survives many builds into a directory that is never emptied", () => {
+        let file = theirRobots;
+        for (let i = 0; i < 5; i++) file = mergeCrawlerFile("robots.txt", file, out["robots.txt"]!);
+        expect(file.match(/Googlebot/g)).toHaveLength(1);
+        expect(file.match(/User-agent: Ahrefsbot/g)).toHaveLength(1);
+    });
+
+    it("keeps a consumer's own sitemap entries and adds ours once", () => {
+        const once = mergeCrawlerFile("sitemap.xml", theirSitemap, out["sitemap.xml"]!);
+        expect(once).toContain("https://noceremony.app/pricing/");
+        expect(once.match(/<loc>https:\/\/noceremony\.app\/docs\/data\/<\/loc>/g)).toHaveLength(1);
+    });
+
+    it("merging a sitemap into its own output changes nothing", () => {
+        const once = mergeCrawlerFile("sitemap.xml", theirSitemap, out["sitemap.xml"]!);
+        const twice = mergeCrawlerFile("sitemap.xml", once, out["sitemap.xml"]!);
+        expect(twice).toBe(once);
+        expect(twice.match(/<url>/g)).toHaveLength(once.match(/<url>/g)!.length);
+        expect(twice).toContain("https://noceremony.app/pricing/");
+        expect(twice.match(/<\/urlset>/g)).toHaveLength(1);
+    });
+
+    it("survives many sitemap builds without repeating an entry", () => {
+        let file = theirSitemap;
+        for (let i = 0; i < 5; i++) file = mergeCrawlerFile("sitemap.xml", file, out["sitemap.xml"]!);
+        expect(file.match(/<loc>https:\/\/noceremony\.app\/docs\/data\/<\/loc>/g)).toHaveLength(1);
+        expect(file.match(/<loc>https:\/\/noceremony\.app\/pricing\/<\/loc>/g)).toHaveLength(1);
     });
 });

@@ -59,26 +59,62 @@ export interface DopedocsPluginOptions extends Omit<BuildStaticOptions, "stylesh
 /** Files that merge with a consumer's own copy rather than replacing it. */
 const MERGED = new Set(["robots.txt", "sitemap.xml"]);
 
+/** Marks where dopedocs' own robots rules begin, so a re-merge replaces them. */
+const ROBOTS_MARKER = "# --- dopedocs ---";
+
+/** One `<url>…</url>` entry, non-greedy, with any whitespace before it. */
+const URL_ENTRY = /\s*<url>[\s\S]*?<\/url>/g;
+
+const LOCATION = /<loc>([^<]*)<\/loc>/;
+
+/** Every URL a sitemap fragment names. */
+const locationsIn = (xml: string): string[] =>
+    [...xml.matchAll(/<loc>([^<]*)<\/loc>/g)].map((m) => m[1]!);
+
 /**
  * Joins two robots or sitemap documents.
  *
  * A consumer who already maintains one of these has rules dopedocs knows
  * nothing about, so replacing the file would silently drop them. Sitemaps merge
  * inside the single `<urlset>` element an XML sitemap is allowed to have.
+ *
+ * Merging is idempotent, because the existing file is often dopedocs' own
+ * previous output: a build into an `outDir` that was not emptied reads back
+ * what the last build wrote. Appending there would repeat every rule and every
+ * entry, once per build, which is exactly what it used to do.
  */
 export function mergeCrawlerFile(name: string, existing: string, generated: string): string {
     if (!existing.trim()) return generated;
+
     if (name === "robots.txt") {
-        return `${existing.trimEnd()}\n\n# --- dopedocs ---\n${generated}`;
+        // Everything from the marker on is a previous build's work, so it is
+        // replaced rather than appended to.
+        const at = existing.indexOf(ROBOTS_MARKER);
+        const theirs = (at === -1 ? existing : existing.slice(0, at)).trimEnd();
+        return theirs ? `${theirs}\n\n${ROBOTS_MARKER}\n${generated}` : generated;
     }
+
     const entries = generated.slice(
         generated.indexOf("<url>"),
         generated.lastIndexOf("</url>") + "</url>".length,
     );
     if (!entries) return existing;
-    const close = existing.lastIndexOf("</urlset>");
+
+    // Drop any entry the existing file already has for a URL we are about to
+    // write — which, on a re-merge, is every entry we wrote last time. A
+    // consumer's own entries name other URLs and are left exactly as they are.
+    const ours = new Set(locationsIn(entries));
+    const deduped = existing.replace(URL_ENTRY, (block) => {
+        const loc = block.match(LOCATION)?.[1];
+        return loc !== undefined && ours.has(loc) ? "" : block;
+    });
+
+    const close = deduped.lastIndexOf("</urlset>");
     if (close === -1) return generated;
-    return `${existing.slice(0, close)}${entries}\n${existing.slice(close)}`;
+    // The head is normalised to end in exactly one newline, so a second merge
+    // reproduces the first byte for byte rather than drifting whitespace.
+    const head = deduped.slice(0, close).replace(/\s*$/, "\n");
+    return `${head}${entries}\n${deduped.slice(close)}`;
 }
 
 /**
