@@ -39,6 +39,7 @@ interface ResolvedConfigLike {
     publicDir?: string | false;
 }
 
+/** Everything the plugin accepts: a document, plus the static build's options. */
 export interface DopedocsPluginOptions extends Omit<BuildStaticOptions, "stylesheet"> {
     /** The documentation set to publish. */
     docs: DocSet;
