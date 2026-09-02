@@ -10,8 +10,8 @@
  * easiest to skip.
  */
 
-import type { FactMap } from "./facts";
-import { referencedFacts } from "./facts";
+import type { FactMap } from "./facts.js";
+import { referencedFacts } from "./facts.js";
 
 /* ── Blocks ──────────────────────────────────────────────────────────────── */
 

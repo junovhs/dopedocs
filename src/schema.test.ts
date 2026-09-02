@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defineFacts, resolveFact, referencedFacts } from "./facts";
+import { defineFacts, resolveFact, referencedFacts } from "./facts.js";
 import {
     MAX_ANSWER_LENGTH,
     defineDocs,
@@ -9,7 +9,7 @@ import {
     type DocSection,
     type DocSet,
     type FindingCode,
-} from "./schema";
+} from "./schema.js";
 
 /* ── A full authoring round trip ─────────────────────────────────────────────
    This module is the sample content a consumer writes: an entity, a facts

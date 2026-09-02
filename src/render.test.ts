@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { defineFacts } from "./facts";
+import { defineFacts } from "./facts.js";
 import {
     UnknownFactError,
     escapeHtml,
@@ -9,8 +9,8 @@ import {
     renderBody,
     renderLead,
     renderSection,
-} from "./render";
-import { defineDocs, type DocBlock, type DocSection } from "./schema";
+} from "./render.js";
+import { defineDocs, type DocBlock, type DocSection } from "./schema.js";
 
 const facts = defineFacts({
     price: { value: "free", reviewed: "2026-09-02" },

@@ -9,9 +9,9 @@
  * overrides any rule with ordinary CSS, so renaming one is a breaking change.
  */
 
-import type { FactMap } from "./facts";
-import { FACT_REFERENCE } from "./facts";
-import type { DocBlock, DocSection, DocSet } from "./schema";
+import type { FactMap } from "./facts.js";
+import { FACT_REFERENCE } from "./facts.js";
+import type { DocBlock, DocSection, DocSet } from "./schema.js";
 
 /**
  * Thrown when prose references a fact the registry does not hold. Shipping a
