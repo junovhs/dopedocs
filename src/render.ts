@@ -1,0 +1,192 @@
+/**
+ * Blocks to HTML.
+ *
+ * Pure string production with no DOM dependency, so the same code runs in the
+ * browser panel and in the static build — one renderer means the page a crawler
+ * reads and the page a person reads cannot disagree about anything.
+ *
+ * Class names are prefixed `dd-` and are public API per DEC-05: a consumer
+ * overrides any rule with ordinary CSS, so renaming one is a breaking change.
+ */
+
+import type { FactMap } from "./facts";
+import { FACT_REFERENCE } from "./facts";
+import type { DocBlock, DocSection, DocSet } from "./schema";
+
+/**
+ * Thrown when prose references a fact the registry does not hold. Shipping a
+ * literal `{fact:price}` to a reader is worse than failing the build, so this
+ * is a throw rather than a finding.
+ */
+export class UnknownFactError extends Error {
+    constructor(
+        readonly key: string,
+        readonly where: string,
+    ) {
+        super(
+            `Unknown fact "${key}" referenced in ${where}. Add it to the registry or correct the reference.`,
+        );
+        this.name = "UnknownFactError";
+    }
+}
+
+/** Escapes the four characters that could otherwise close or open markup. */
+export const escapeHtml = (raw: string): string =>
+    raw.replace(
+        /[&<>"]/g,
+        (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!,
+    );
+
+/**
+ * Renders one authored string.
+ *
+ * The order is deliberate and load-bearing:
+ *
+ * 1. **Escape.** Authored prose is data. Running this first means no content —
+ *    and no fact value — can introduce markup.
+ * 2. **Inline marks.** The only two we accept, applied to text that is already
+ *    safe, so the tags we emit are the only tags present.
+ * 3. **Substitute facts.** Last, and each value escaped as it lands, so a fact
+ *    holding a backtick or a pair of asterisks stays a literal claim instead of
+ *    being re-read as markup. Substituting earlier would let the value's own
+ *    characters change the shape of the document that quotes it.
+ *
+ * A reference inside a mark still works — `**{fact:price}**` marks the
+ * placeholder, then fills it.
+ */
+export function inline(raw: string, facts: FactMap, where: string): string {
+    const marked = escapeHtml(raw)
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+    return marked.replace(FACT_REFERENCE, (_match, key: string) => {
+        const fact = facts[key];
+        if (!fact) throw new UnknownFactError(key, where);
+        return escapeHtml(fact.value);
+    });
+}
+
+/** Reports a block kind that the union gained and this module never learned. */
+function assertNever(value: never): never {
+    throw new Error(`Unhandled block kind: ${JSON.stringify(value)}`);
+}
+
+/**
+ * Renders one block.
+ *
+ * The switch is exhaustive over `DocBlock` and its `default` arm narrows to
+ * `never`, so a new member of the union is a compile error here rather than a
+ * block that silently renders as nothing.
+ */
+export function renderBlock(block: DocBlock, facts: FactMap, where: string): string {
+    const text = (raw: string) => inline(raw, facts, where);
+
+    switch (block.kind) {
+        case "p":
+            return `<p class="dd-p">${text(block.text)}</p>`;
+
+        case "list": {
+            const tag = block.ordered ? "ol" : "ul";
+            const items = block.items.map((i) => `<li>${text(i)}</li>`).join("");
+            return `<${tag} class="dd-list">${items}</${tag}>`;
+        }
+
+        case "callout":
+            return `<div class="dd-callout dd-callout--${block.tone ?? "note"}"><p>${text(
+                block.text,
+            )}</p></div>`;
+
+        case "keys":
+            return `<div class="dd-keys">${block.rows
+                .map(([keys, does]) => `<kbd>${text(keys)}</kbd><span>${text(does)}</span>`)
+                .join("")}</div>`;
+
+        case "table":
+            return `<div class="dd-table-scroll"><table class="dd-table"><thead><tr>${block.head
+                .map((h) => `<th>${text(h)}</th>`)
+                .join("")}</tr></thead><tbody>${block.rows
+                .map(([a, b]) => `<tr><td>${text(a)}</td><td>${text(b)}</td></tr>`)
+                .join("")}</tbody></table></div>`;
+
+        case "facts": {
+            const title = block.title
+                ? `<p class="dd-facts-title">${text(block.title)}</p>`
+                : "";
+            const rows = block.rows
+                .map(([label, value]) => `<dt>${text(label)}</dt><dd>${text(value)}</dd>`)
+                .join("");
+            return `<div class="dd-facts">${title}<dl class="dd-facts-rows">${rows}</dl></div>`;
+        }
+
+        default:
+            // Reached only if `DocBlock` gains a member this switch does not
+            // handle — and then `block` is no longer `never`, so this line
+            // fails to compile rather than rendering the block as nothing.
+            return assertNever(block);
+    }
+}
+
+export interface SectionRenderOptions {
+    /** Heading level for this section; children render one level deeper. */
+    headingLevel?: 2 | 3 | 4;
+    /**
+     * Renders the section's `answer` as a lead paragraph. On by default: it is
+     * the sentence a machine quotes, and a claim shown to machines but hidden
+     * from people is the drift this project exists to prevent.
+     */
+    showAnswer?: boolean;
+}
+
+/** Renders one section and, beneath it, any folder children it carries. */
+export function renderSection(
+    section: DocSection,
+    facts: FactMap,
+    options: SectionRenderOptions = {},
+): string {
+    const { headingLevel = 2, showAnswer = true } = options;
+    const where = `section "${section.id}"`;
+    const h = `h${headingLevel}`;
+
+    const answer = showAnswer
+        ? `<p class="dd-answer">${inline(section.answer, facts, where)}</p>`
+        : "";
+
+    const body = section.blocks
+        .map((block) => renderBlock(block, facts, where))
+        .join("");
+
+    const children = (section.children ?? [])
+        .map((child) =>
+            renderSection(child, facts, {
+                ...options,
+                headingLevel: Math.min(headingLevel + 1, 4) as 3 | 4,
+            }),
+        )
+        .join("");
+
+    return (
+        `<section class="dd-section" id="${escapeHtml(section.id)}">` +
+        `<${h} class="dd-section-title">${escapeHtml(section.title)}</${h}>` +
+        answer +
+        body +
+        `</section>` +
+        children
+    );
+}
+
+/** Renders every section of a document in reading order. */
+export function renderBody(docs: DocSet, options: SectionRenderOptions = {}): string {
+    return docs.sections
+        .map((section) => renderSection(section, docs.facts, options))
+        .join("");
+}
+
+/** Renders the document's title and lead, above the sections. */
+export function renderLead(docs: DocSet): string {
+    return (
+        `<header class="dd-header">` +
+        `<h1 class="dd-title">${escapeHtml(docs.title)}</h1>` +
+        `<p class="dd-lead">${inline(docs.lead, docs.facts, "the document lead")}</p>` +
+        `</header>`
+    );
+}
