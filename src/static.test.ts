@@ -295,3 +295,40 @@ describe("refusing to publish a faulty document", () => {
         expect(() => buildStatic(stale, { now })).not.toThrow();
     });
 });
+
+describe("stylesheet links", () => {
+    const linksIn = (html: string) =>
+        [...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)].map((m) => m[1]);
+
+    it("links none by default", () => {
+        expect(linksIn(out["docs/index.html"]!)).toEqual([]);
+    });
+
+    it("links a single href, as before", () => {
+        const one = buildStatic(docs, { now, stylesheet: "/docs.css" });
+        expect(linksIn(one["docs/index.html"]!)).toEqual(["/docs.css"]);
+        expect(linksIn(one["docs/data/index.html"]!)).toEqual(["/docs.css"]);
+    });
+
+    it("links every href of an array, in order", () => {
+        // Order is the point: the consumer's aliases must come after dopedocs'
+        // own sheet or they cannot override its tokens.
+        const many = buildStatic(docs, {
+            now,
+            stylesheet: ["/docs/dopedocs.css", "/docs-theme.css"],
+        });
+        expect(linksIn(many["docs/index.html"]!)).toEqual([
+            "/docs/dopedocs.css",
+            "/docs-theme.css",
+        ]);
+        expect(linksIn(many["docs/the-order/index.html"] ?? many["docs/data/index.html"]!)).toEqual([
+            "/docs/dopedocs.css",
+            "/docs-theme.css",
+        ]);
+    });
+
+    it("escapes an href rather than trusting it", () => {
+        const evil = buildStatic(docs, { now, stylesheet: '"><script>x</script>' });
+        expect(evil["docs/index.html"]!).not.toContain("<script>x");
+    });
+});

@@ -51,7 +51,7 @@ export interface DopedocsPluginOptions extends Omit<BuildStaticOptions, "stylesh
      * that quietly render unstyled if nothing else emits that file. A string is
      * an href you are emitting yourself; omitting it leaves the pages unstyled.
      */
-    stylesheet?: string | true;
+    stylesheet?: string | true | (string | true)[];
 }
 
 /** Files that merge with a consumer's own copy rather than replacing it. */
@@ -88,9 +88,14 @@ export function dopedocs(options: DopedocsPluginOptions) {
     const basePath = (docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the plugin emits it. */
     const ownSheetPath = `${basePath}/dopedocs.css`;
+    const sheets = stylesheet === undefined ? [] : [stylesheet].flat();
+    /** True when dopedocs must emit its own sheet as well as link it. */
+    const emitsOwnSheet = sheets.includes(true);
     const buildOptions: BuildStaticOptions = {
         ...rest,
-        stylesheet: stylesheet === true ? `/${ownSheetPath}` : stylesheet,
+        // Order is preserved, so a consumer's alias sheet listed after `true`
+        // overrides the tokens dopedocs' own sheet defines.
+        stylesheet: sheets.map((s) => (s === true ? `/${ownSheetPath}` : s)),
     };
     let outDir = "dist";
     let root = process.cwd();
@@ -129,7 +134,7 @@ export function dopedocs(options: DopedocsPluginOptions) {
                 let tree: Record<string, string>;
                 try {
                     tree = build();
-                    if (stylesheet === true) {
+                    if (emitsOwnSheet) {
                         tree[ownSheetPath] = ownSheet ??= readFileSync(
                             fileURLToPath(new URL("../styles/dopedocs.css", import.meta.url)),
                             "utf8",
@@ -169,7 +174,7 @@ export function dopedocs(options: DopedocsPluginOptions) {
 
         async closeBundle() {
             const tree = build();
-            if (stylesheet === true) {
+            if (emitsOwnSheet) {
                 // Read from the installed package, never from a source checkout
                 // (DEC-06): this path resolves inside node_modules for a real
                 // consumer.

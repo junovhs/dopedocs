@@ -56,6 +56,18 @@ export default defineConfig({
 Pass an href string instead only if you are emitting that file yourself —
 getting that wrong renders the static pages unstyled with no error.
 
+**To theme the static pages, pass a list.** The in-app panel picks up your
+`--dd-*` aliases from your app's bundled CSS, but the static pages load only
+what they link — so without this they render in the neutral fallback palette,
+and the pages search engines see are the ones that look nothing like your app:
+
+```ts
+dopedocs({ docs, stylesheet: [true, "/docs-theme.css"] })
+```
+
+Sheets link in order, so put your aliases last. `/docs-theme.css` is yours to
+serve — in Vite, `public/docs-theme.css` holding just the `:root` alias block.
+
 ## 3. Alias your design tokens
 
 dopedocs reads only `--dd-*` custom properties, so it looks like your app rather

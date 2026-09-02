@@ -44,8 +44,16 @@ export interface BuildStaticOptions {
     entityType?: string;
     /** Crawler policy; the defaults allow search and refuse training. */
     robots?: RobotsPolicy;
-    /** Href for a stylesheet to link from every page, e.g. `/assets/docs.css`. */
-    stylesheet?: string;
+    /**
+     * Stylesheet href(s) to link from every page, e.g. `/assets/docs.css`.
+     *
+     * An array links each in order, so a consumer puts dopedocs' own sheet
+     * first and their `--dd-*` token aliases after it. Without that the static
+     * pages render in the fallback palette while the in-app panel — which picks
+     * up aliases from the app bundle — does not, and the pages search engines
+     * see are the ones that look nothing like the product.
+     */
+    stylesheet?: string | string[];
     /** Injected for deterministic output. Defaults to now. */
     now?: Date;
     /** Findings older than this many days mark a fact stale. Default 365. */
@@ -157,7 +165,7 @@ interface PageInput {
     body: string;
     graph: unknown;
     entity: SiteEntity;
-    stylesheet?: string;
+    stylesheet?: string | string[];
 }
 
 function page(input: PageInput): string {
@@ -180,7 +188,10 @@ function page(input: PageInput): string {
 ${entity.logo ? `<meta property="og:image" content="${esc(entity.logo)}">\n` : ""}<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
-${input.stylesheet ? `<link rel="stylesheet" href="${esc(input.stylesheet)}">\n` : ""}<script type="application/ld+json">
+${[input.stylesheet ?? []]
+    .flat()
+    .map((href) => `<link rel="stylesheet" href="${esc(href)}">\n`)
+    .join("")}<script type="application/ld+json">
 ${jsonLd(graph)}
 </script>
 </head>
