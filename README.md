@@ -184,11 +184,36 @@ search result opens it at that section. Do not also call `open()` on boot.
 | `callout` | `{ kind: "callout", text, tone?: "note" \| "warn" }` |
 | `keys` | `{ kind: "keys", rows: [keys, does][] }` |
 | `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
-| `facts` | `{ kind: "facts", title?, rows: [label, value][] }` |
+| `facts` | `{ kind: "facts", title?, mark?, rows: [label, value][] }` |
 
 Prose carries two inline marks - `` `code` `` and `**strong**` - plus
 `{fact:key}` references. Anything richer becomes a new block kind, never new
 syntax.
+
+## Brandmarks
+
+`identity.mark` and a `facts` block's `mark` each take one of two forms:
+
+```ts
+mark: "/logo.png"                       // any image: png, jpg, webp, or an .svg file
+mark: '<svg viewBox="0 0 32 32">...'    // inline SVG
+```
+
+**An image URL always works**, because it needs no stylesheet.
+
+**Inline SVG must be self-contained** — presentation attributes or
+`currentColor`, never class names styled from your app's CSS. The static pages
+link dopedocs' stylesheet, not your bundle, so a mark drawn by your own classes
+falls back to SVG's defaults there: a `<circle>` meant as a ring renders as a
+filled disc, on the pages search engines see, with no error to warn you.
+
+```ts
+// Works everywhere: the stroke is on the element.
+'<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="5"/></svg>'
+```
+
+A mark is decorative — the card names the thing in text beside it — so it is
+hidden from assistive technology rather than given invented alt text.
 
 ## Crawler policy
 

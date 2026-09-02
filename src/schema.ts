@@ -30,7 +30,13 @@ export type DocBlock =
     | { kind: "callout"; text: string; tone?: "note" | "warn" }
     | { kind: "keys"; rows: [keys: string, does: string][] }
     | { kind: "table"; head: [string, string]; rows: [string, string][] }
-    | { kind: "facts"; title?: string; rows: [label: string, value: string][] };
+    | {
+          kind: "facts";
+          title?: string;
+          /** A brandmark for the card: inline SVG, or the URL of an image. */
+          mark?: string;
+          rows: [label: string, value: string][];
+      };
 
 /* ── Sections ────────────────────────────────────────────────────────────── */
 
@@ -90,11 +96,20 @@ export interface DocIdentity {
     /** Who makes it, optionally linking to the section that explains them. */
     maker?: { name: string; href?: string };
     /**
-     * Raw inline SVG for a brandmark.
+     * A brandmark: either the URL of an image file, or raw inline SVG.
      *
-     * The one field rendered without escaping, because a brandmark is markup.
-     * It is trusted author input from the content module — never put user input
-     * here.
+     * A URL — `.png`, `.jpg`, `.webp`, `.svg` — is the form that always works,
+     * because it needs no stylesheet.
+     *
+     * Inline SVG must be **self-contained**: give it presentation attributes or
+     * `currentColor`, never class names styled from your app's CSS. The static
+     * page links dopedocs' stylesheet, not your bundle, so a mark drawn by your
+     * own classes silently falls back to SVG's defaults there — a `<circle>`
+     * meant as a ring renders as a filled disc, with no error to warn you.
+     *
+     * Inline SVG is the one value rendered without escaping, because it is
+     * markup. It is trusted author input from the content module — never put
+     * user input here.
      */
     mark?: string;
 }

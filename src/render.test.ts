@@ -297,3 +297,58 @@ describe("release identity", () => {
         expect(html.indexOf("dd-identity")).toBeLessThan(html.indexOf("dd-title"));
     });
 });
+
+/* ── Marks (ENG-06) ──────────────────────────────────────────────────────── */
+
+describe("brandmarks", () => {
+    it("emits inline SVG as markup", () => {
+        const html = renderIdentity({ name: "App", mark: '<svg viewBox="0 0 1 1"></svg>' });
+        expect(html).toContain(
+            '<span class="dd-identity-mark" aria-hidden="true"><svg viewBox="0 0 1 1"></svg></span>',
+        );
+        expect(html).not.toContain("<img");
+    });
+
+    it("treats anything else as the URL of an image", () => {
+        for (const src of ["/logo.png", "logo.jpg", "https://cdn.test/m.svg", "/a.webp"]) {
+            const html = renderIdentity({ name: "App", mark: src });
+            expect(html).toContain(`<img src="${src}" alt="">`);
+        }
+    });
+
+    it("escapes a URL, so a mark cannot inject markup", () => {
+        const html = renderIdentity({ name: "App", mark: '/x.png" onerror="alert(1)' });
+        expect(html).toContain("&quot;");
+        expect(html).not.toContain('onerror="alert(1)"');
+    });
+
+    it("leading whitespace does not make SVG look like a URL", () => {
+        const html = renderIdentity({ name: "App", mark: "\n  <svg></svg>" });
+        expect(html).not.toContain("<img");
+    });
+
+    it("puts a mark on a facts card, beside its title", () => {
+        const html = renderBlock({
+            kind: "facts",
+            title: "Strange Systems",
+            mark: "/glyph.png",
+            rows: [["Based in", "Eugene, Oregon"]],
+        }, {}, "a facts card");
+        expect(html).toContain('<div class="dd-facts-head">');
+        expect(html).toContain('<span class="dd-facts-mark" aria-hidden="true">');
+        expect(html).toContain('<img src="/glyph.png" alt="">');
+        expect(html).toContain('<p class="dd-facts-title">Strange Systems</p>');
+    });
+
+    it("leaves a facts card without a mark exactly as it was", () => {
+        const html = renderBlock({
+            kind: "facts",
+            title: "Strange Systems",
+            rows: [["Based in", "Eugene, Oregon"]],
+        }, {}, "a facts card");
+        expect(html).toBe(
+            '<div class="dd-facts"><p class="dd-facts-title">Strange Systems</p>' +
+                '<dl class="dd-facts-rows"><dt>Based in</dt><dd>Eugene, Oregon</dd></dl></div>',
+        );
+    });
+});

@@ -113,10 +113,18 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
             const title = block.title
                 ? `<p class="dd-facts-title">${text(block.title)}</p>`
                 : "";
+            // A card with a mark gets a head to lay the two out side by side;
+            // one without emits exactly what it always has.
+            const head = block.mark
+                ? `<div class="dd-facts-head">${renderMark(
+                      block.mark,
+                      "dd-facts-mark",
+                  )}${title}</div>`
+                : title;
             const rows = block.rows
                 .map(([label, value]) => `<dt>${text(label)}</dt><dd>${text(value)}</dd>`)
                 .join("");
-            return `<div class="dd-facts">${title}<dl class="dd-facts-rows">${rows}</dl></div>`;
+            return `<div class="dd-facts">${head}<dl class="dd-facts-rows">${rows}</dl></div>`;
         }
 
         default:
@@ -184,9 +192,30 @@ export function renderBody(docs: DocSet, options: SectionRenderOptions = {}): st
 }
 
 /**
+ * A brandmark, given either as the URL of an image or as inline SVG.
+ *
+ * A value that opens with `<` is markup and is emitted unescaped — trusted
+ * author input, never user input. Anything else is a URL and becomes an
+ * `<img>`, which is the form that needs no stylesheet at all: inline SVG that
+ * draws itself with the author's own class names renders wrong on a static
+ * page, because that page links dopedocs' stylesheet and not the app's bundle.
+ *
+ * Decorative in both forms — the card states the name in text beside it — so
+ * it is hidden from assistive technology rather than given invented alt text.
+ */
+export function renderMark(mark: string, className: string): string {
+    const markup = mark.trimStart().startsWith("<");
+    return (
+        `<span class="${className}" aria-hidden="true">` +
+        (markup ? mark : `<img src="${escapeHtml(mark)}" alt="">`) +
+        `</span>`
+    );
+}
+
+/**
  * Renders the release card: which product, which version, made by whom.
  *
- * Every text field is escaped. `mark` is not, because it is inline SVG — see
+ * Every text field is escaped. A `mark` is not, when it is inline SVG — see
  * the warning on `DocIdentity.mark`.
  */
 export function renderIdentity(identity: DocIdentity): string {
@@ -204,9 +233,7 @@ export function renderIdentity(identity: DocIdentity): string {
 
     return (
         `<section class="dd-identity">` +
-        (identity.mark
-            ? `<span class="dd-identity-mark" aria-hidden="true">${identity.mark}</span>`
-            : "") +
+        (identity.mark ? renderMark(identity.mark, "dd-identity-mark") : "") +
         `<div class="dd-identity-text">` +
         `<p class="dd-identity-name">${escapeHtml(identity.name)}</p>` +
         // Separators are joined between present fields only, so an absent
