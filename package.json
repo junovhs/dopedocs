@@ -1,9 +1,9 @@
 {
     "name": "dopedocs",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "private": false,
     "type": "module",
-    "description": "A typed documentation engine that renders one source to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
+    "description": "A typed documentation engine: one source renders to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
     "license": "MIT",
     "files": [
         "dist",
@@ -32,7 +32,9 @@
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
         "check": "tsc --noEmit",
-        "test": "vitest run"
+        "test": "vitest run",
+        "prepare": "npm run build",
+        "prepublishOnly": "npm run check && npm test && npm run build"
     },
     "devDependencies": {
         "@types/node": "^22.20.1",
@@ -46,5 +48,32 @@
         "vite": {
             "optional": true
         }
+    },
+    "keywords": [
+        "documentation",
+        "docs",
+        "aeo",
+        "geo",
+        "seo",
+        "schema.org",
+        "json-ld",
+        "vite-plugin",
+        "static-site",
+        "llms-txt"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/junovhs/dopedocs.git"
+    },
+    "homepage": "https://github.com/junovhs/dopedocs#readme",
+    "bugs": {
+        "url": "https://github.com/junovhs/dopedocs/issues"
+    },
+    "author": "Spencer Nunamaker (Strange Systems)",
+    "sideEffects": [
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=18"
     }
 }
