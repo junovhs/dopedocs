@@ -37,6 +37,8 @@ interface ResolvedConfigLike {
     build?: { outDir?: string };
     root?: string;
     publicDir?: string | false;
+    /** "build" or "serve"; anything but a real build must write nothing. */
+    command?: string;
 }
 
 /** Everything the plugin accepts: a document, plus the static build's options. */
@@ -100,6 +102,7 @@ export function dopedocs(options: DopedocsPluginOptions) {
     let outDir = "dist";
     let root = process.cwd();
     let publicDir: string | false | undefined;
+    let command: string | undefined;
     /** The bundled sheet, read once and reused across dev requests. */
     let ownSheet: string | undefined;
 
@@ -124,6 +127,7 @@ export function dopedocs(options: DopedocsPluginOptions) {
             outDir = config.build?.outDir ?? "dist";
             root = config.root ?? process.cwd();
             publicDir = config.publicDir;
+            command = config.command;
         },
 
         configureServer(server: ViteServerLike) {
@@ -173,6 +177,17 @@ export function dopedocs(options: DopedocsPluginOptions) {
         },
 
         async closeBundle() {
+            // Only a real build writes files. `closeBundle` fires in any Vite
+            // pipeline that resolves this config, and a test runner is one:
+            // Vitest resolves it with `command: "serve"` and `build.outDir` set
+            // to the sentinel "dummy-non-existing-folder", so without this
+            // guard `vitest run` scattered a whole copy of the documentation
+            // site into the consumer's project root on every test run. The
+            // command is the honest discriminator; the sentinel's name is not
+            // a contract. Dev is served per request by `configureServer`, which
+            // writes nothing, so nothing is lost by staying quiet there too.
+            if (command !== "build") return;
+
             const tree = build();
             if (emitsOwnSheet) {
                 // Read from the installed package, never from a source checkout
