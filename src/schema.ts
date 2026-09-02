@@ -36,6 +36,30 @@ export type DocBlock =
           /** A brandmark for the card: inline SVG, or the URL of an image. */
           mark?: string;
           rows: [label: string, value: string][];
+      }
+    | {
+          kind: "image";
+          src: string;
+          /**
+           * What the image says, for a reader who cannot see it.
+           *
+           * Required, in the spirit of DEC-02: the annotation that makes a
+           * document answerable must not be the part that is easiest to skip.
+           * Plain text — inline marks and fact references do not apply, because
+           * this ends up inside an attribute.
+           */
+          alt: string;
+          caption?: string;
+          /** Rendered as attributes when given, so the page does not reflow. */
+          width?: number;
+          height?: number;
+      }
+    | {
+          kind: "video";
+          src: string;
+          /** A still shown before playback starts. */
+          poster?: string;
+          caption?: string;
       };
 
 /* ── Sections ────────────────────────────────────────────────────────────── */
@@ -149,7 +173,8 @@ export type FindingCode =
     | "nesting-too-deep"
     | "unknown-fact-reference"
     | "invalid-review-date"
-    | "stale-fact";
+    | "stale-fact"
+    | "empty-image-alt";
 
 /**
  * One problem found in a document. Findings are returned, never thrown: the
@@ -231,6 +256,11 @@ function proseOf(block: DocBlock): string[] {
             return [...block.head, ...block.rows.flat()];
         case "facts":
             return [...(block.title ? [block.title] : []), ...block.rows.flat()];
+        // `alt` is deliberately absent: it renders into an attribute, where a
+        // <code> element from an inline mark would be markup in a text slot.
+        case "image":
+        case "video":
+            return block.caption ? [block.caption] : [];
     }
 }
 
@@ -274,6 +304,17 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
                 sectionId: id,
                 message: `Section "${id}" is nested ${depth} levels deep; the rail renders one level of folders, and deeper nesting means the docs want splitting.`,
             });
+        }
+
+        for (const block of section.blocks ?? []) {
+            if (block.kind === "image" && !block.alt.trim()) {
+                findings.push({
+                    code: "empty-image-alt",
+                    severity: "fatal",
+                    sectionId: id,
+                    message: `An image in "${id}" has a blank alt; an unlabelled image is invisible to a screen reader and to an answer engine alike. Say what it shows.`,
+                });
+            }
         }
 
         if (!section.question.trim()) {

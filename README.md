@@ -185,10 +185,35 @@ search result opens it at that section. Do not also call `open()` on boot.
 | `keys` | `{ kind: "keys", rows: [keys, does][] }` |
 | `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
 | `facts` | `{ kind: "facts", title?, mark?, rows: [label, value][] }` |
+| `image` | `{ kind: "image", src, alt, caption?, width?, height? }` |
+| `video` | `{ kind: "video", src, poster?, caption? }` |
 
 Prose carries two inline marks - `` `code` `` and `**strong**` - plus
 `{fact:key}` references. Anything richer becomes a new block kind, never new
 syntax.
+
+## Pictures and video
+
+```ts
+{ kind: "image", src: "/shot.png", alt: "The order, most urgent first",
+  caption: "The list as it appears.", width: 1200, height: 800 }
+
+{ kind: "video", src: "/tour.webm", poster: "/tour-still.png", caption: "A two minute tour." }
+```
+
+Both render as a `<figure>` sized to the reading column, styled from the same
+tokens as the prose around them, so a screenshot needs no CSS of yours.
+
+`alt` is **required** — an unlabelled image is invisible to a screen reader and
+to an answer engine alike, so omitting it is a compile error and leaving it
+blank is a build finding. `width` and `height` are optional and become
+attributes, which lets the browser reserve the space before the file arrives.
+
+Video is `controls preload="metadata"` and nothing else: no autoplay, no
+tracking, no third-party embed. A `src` is a `src` — host the file yourself.
+
+Captions are prose, so `**strong**`, `` `code` `` and `{fact:key}` all work in
+them. `alt` is plain text, because it ends up inside an attribute.
 
 ## Brandmarks
 

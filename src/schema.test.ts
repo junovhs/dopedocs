@@ -6,6 +6,7 @@ import {
     defineDocs,
     hasFatal,
     validate,
+    type DocBlock,
     type DocSection,
     type DocSet,
     type FindingCode,
@@ -235,8 +236,13 @@ export const missingQuestionIsATypeError: DocSection = {
 };
 
 export const unknownBlockKindIsATypeError: DocSection = section({
-    // @ts-expect-error - "video" is not a member of the DocBlock union
-    blocks: [{ kind: "video", src: "x.mp4" }],
+    // @ts-expect-error - "carousel" is not a member of the DocBlock union
+    blocks: [{ kind: "carousel", slides: [] }],
+});
+
+export const imageWithoutAltIsATypeError: DocSection = section({
+    // @ts-expect-error - `alt` is required on an image
+    blocks: [{ kind: "image", src: "/shot.png" }],
 });
 
 export const entityMustDisambiguate = () =>
@@ -257,3 +263,43 @@ export const factKeysAreLiteral = () => {
     resolveFact(registry, "colour");
     return known;
 };
+
+describe("image alt", () => {
+    const withBlocks = (blocks: DocBlock[]) =>
+        defineDocs({
+            entity: {
+                name: "Example",
+                url: "https://example.test",
+                notToBeConfusedWith: ["Example Co"],
+            },
+            title: "Doc",
+            lead: "Example documents itself.",
+            facts: {},
+            sections: [
+                {
+                    id: "s",
+                    title: "S",
+                    question: "What is Example?",
+                    answer: "Example is a product that documents itself.",
+                    blocks,
+                },
+            ],
+        });
+
+    it("is a fatal finding when blank", () => {
+        const findings = validate(
+            withBlocks([{ kind: "image", src: "/a.png", alt: "   " }]),
+        );
+        const alt = findings.filter((f) => f.code === "empty-image-alt");
+        expect(alt).toHaveLength(1);
+        expect(alt[0]!.severity).toBe("fatal");
+        expect(alt[0]!.sectionId).toBe("s");
+    });
+
+    it("passes when it says something", () => {
+        const findings = validate(
+            withBlocks([{ kind: "image", src: "/a.png", alt: "The order, top first" }]),
+        );
+        expect(findings.filter((f) => f.code === "empty-image-alt")).toHaveLength(0);
+    });
+});

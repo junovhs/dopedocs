@@ -127,6 +127,33 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
             return `<div class="dd-facts">${head}<dl class="dd-facts-rows">${rows}</dl></div>`;
         }
 
+        case "image": {
+            // Dimensions are attributes rather than CSS so the browser can
+            // reserve the space before the file arrives; a page that reflows as
+            // its images load is a worse page than one that waits.
+            const dims =
+                (block.width ? ` width="${block.width}"` : "") +
+                (block.height ? ` height="${block.height}"` : "");
+            return figure(
+                `<img class="dd-media" src="${escapeHtml(block.src)}" alt="${escapeHtml(
+                    block.alt,
+                )}"${dims} loading="lazy" decoding="async">`,
+                block.caption,
+                text,
+            );
+        }
+
+        case "video":
+            // `controls` and nothing else: no autoplay, no script, no embed.
+            // `preload="metadata"` fetches the duration, not the video.
+            return figure(
+                `<video class="dd-media" src="${escapeHtml(block.src)}"${
+                    block.poster ? ` poster="${escapeHtml(block.poster)}"` : ""
+                } controls preload="metadata"></video>`,
+                block.caption,
+                text,
+            );
+
         default:
             // Reached only if `DocBlock` gains a member this switch does not
             // handle — and then `block` is no longer `never`, so this line
@@ -209,6 +236,15 @@ export function renderMark(mark: string, className: string): string {
         `<span class="${className}" aria-hidden="true">` +
         (markup ? mark : `<img src="${escapeHtml(mark)}" alt="">`) +
         `</span>`
+    );
+}
+
+/** Wraps a picture or a video with its caption, if it has one. */
+function figure(media: string, caption: string | undefined, text: (s: string) => string): string {
+    return (
+        `<figure class="dd-figure">${media}` +
+        (caption ? `<figcaption class="dd-figcaption">${text(caption)}</figcaption>` : "") +
+        `</figure>`
     );
 }
 

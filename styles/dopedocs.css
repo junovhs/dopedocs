@@ -892,3 +892,30 @@ h3.dd-section-title {
         max-height: 154px;
     }
 }
+
+/* ==========================================================================
+   Pictures and video (ENG-07)
+   Sized to the reading column and styled from the same tokens as the prose
+   around them, so a consumer writes no CSS to put a screenshot in a document.
+   ========================================================================== */
+
+.dd-figure {
+    max-width: var(--dd-measure);
+    margin: 4px 0 22px;
+}
+
+.dd-media {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel-muted);
+}
+
+.dd-figcaption {
+    margin: 9px 2px 0;
+    color: var(--dd-muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+}

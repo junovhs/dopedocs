@@ -217,6 +217,8 @@ export const everyBlockKindIsRendered: Record<DocBlock["kind"], true> = {
     keys: true,
     table: true,
     facts: true,
+    image: true,
+    video: true,
 };
 
 /* ── Release identity ────────────────────────────────────────────────────── */
@@ -350,5 +352,61 @@ describe("brandmarks", () => {
             '<div class="dd-facts"><p class="dd-facts-title">Strange Systems</p>' +
                 '<dl class="dd-facts-rows"><dt>Based in</dt><dd>Eugene, Oregon</dd></dl></div>',
         );
+    });
+});
+
+/* ── Pictures and video (ENG-07) ─────────────────────────────────────────── */
+
+describe("image and video blocks", () => {
+    const render = (block: DocBlock) => renderBlock(block, {}, "a media block");
+
+    it("renders a picture with its alt, inside a figure", () => {
+        const html = render({ kind: "image", src: "/shot.png", alt: "The order, top first" });
+        expect(html).toBe(
+            '<figure class="dd-figure"><img class="dd-media" src="/shot.png"' +
+                ' alt="The order, top first" loading="lazy" decoding="async"></figure>',
+        );
+    });
+
+    it("reserves space when told the dimensions", () => {
+        const html = render({
+            kind: "image",
+            src: "/shot.png",
+            alt: "A screenshot",
+            width: 1200,
+            height: 800,
+        });
+        expect(html).toContain('width="1200" height="800"');
+    });
+
+    it("renders a caption as prose, with marks and facts", () => {
+        const html = renderBlock(
+            { kind: "image", src: "/s.png", alt: "A shot", caption: "It is **{fact:price}**." },
+            { price: { value: "free", reviewed: "2026-09-02" } },
+            "a media block",
+        );
+        expect(html).toContain(
+            '<figcaption class="dd-figcaption">It is <strong>free</strong>.</figcaption>',
+        );
+    });
+
+    it("renders a video with controls and no autoplay", () => {
+        const html = render({ kind: "video", src: "/tour.mp4", poster: "/tour.jpg" });
+        expect(html).toContain('<video class="dd-media" src="/tour.mp4"');
+        expect(html).toContain('poster="/tour.jpg"');
+        expect(html).toContain("controls");
+        expect(html).toContain('preload="metadata"');
+        expect(html).not.toContain("autoplay");
+    });
+
+    it("escapes a src and an alt, so neither can inject markup", () => {
+        const html = render({
+            kind: "image",
+            src: '/x.png" onerror="alert(1)',
+            alt: '"><script>alert(1)</script>',
+        });
+        expect(html).not.toContain("<script>");
+        expect(html).not.toContain('onerror="alert(1)"');
+        expect(html).toContain("&quot;");
     });
 });
