@@ -1,0 +1,32 @@
+{
+    "name": "dopedocs",
+    "version": "0.0.0",
+    "private": false,
+    "type": "module",
+    "description": "A typed documentation engine that renders one source to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
+    "license": "MIT",
+    "files": ["dist", "styles"],
+    "exports": {
+        ".": "./dist/index.js",
+        "./panel": "./dist/panel.js",
+        "./static": "./dist/static.js",
+        "./vite": "./dist/vite.js",
+        "./styles.css": "./styles/dopedocs.css"
+    },
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json",
+        "check": "tsc --noEmit",
+        "test": "vitest run"
+    },
+    "devDependencies": {
+        "typescript": "~5.6.2",
+        "vitest": "^3.2.7"
+    },
+    "peerDependencies": {
+        "vite": ">=5"
+    },
+    "peerDependenciesMeta": {
+        "vite": { "optional": true }
+    }
+}
