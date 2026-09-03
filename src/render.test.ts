@@ -308,6 +308,7 @@ export const everyBlockKindIsRendered: Record<DocBlock["kind"], true> = {
     table: true,
     facts: true,
     image: true,
+    gallery: true,
     video: true,
 };
 
@@ -453,7 +454,7 @@ describe("image and video blocks", () => {
     it("renders a picture with its alt, inside a figure", () => {
         const html = render({ kind: "image", src: "/shot.png", alt: "The order, top first" });
         expect(html).toBe(
-            '<figure class="dd-figure"><img class="dd-media" src="/shot.png"' +
+            '<figure class="dd-figure"><img class="dd-media dd-media--center" src="/shot.png"' +
                 ' alt="The order, top first" loading="lazy" decoding="async"></figure>',
         );
     });
@@ -467,6 +468,60 @@ describe("image and video blocks", () => {
             height: 800,
         });
         expect(html).toContain('width="1200" height="800"');
+    });
+
+    it("renders responsive and art-directed candidates with loading hints", () => {
+        const html = render({
+            kind: "image",
+            src: "/wide-1200.jpg",
+            srcset: "/wide-640.jpg 640w, /wide-1200.jpg 1200w",
+            sizes: "(max-width: 700px) 100vw, 660px",
+            sources: [
+                { srcset: "/portrait.webp", media: "(max-width: 500px)", type: "image/webp" },
+            ],
+            alt: "A responsive product screen",
+            loading: "eager",
+            fetchPriority: "high",
+            position: "top",
+        });
+        expect(html).toContain("<picture>");
+        expect(html).toContain(
+            '<source srcset="/portrait.webp" media="(max-width: 500px)" type="image/webp">',
+        );
+        expect(html).toContain('srcset="/wide-640.jpg 640w, /wide-1200.jpg 1200w"');
+        expect(html).toContain('sizes="(max-width: 700px) 100vw, 660px"');
+        expect(html).toContain('loading="eager" fetchpriority="high"');
+        expect(html).toContain("dd-media--top");
+    });
+
+    it("can link a figure to its full-size rendition", () => {
+        const html = render({
+            kind: "image",
+            src: "/small.jpg",
+            href: '/original.jpg?download="yes"',
+            alt: "A linked product screen",
+        });
+        expect(html).toContain(
+            '<a class="dd-media-link" href="/original.jpg?download=&quot;yes&quot;">',
+        );
+        expect(html).toContain("</a></figure>");
+    });
+
+    it("renders an accessible gallery with individually captioned figures", () => {
+        const html = render({
+            kind: "gallery",
+            columns: 3,
+            label: "Three ways to view the list",
+            images: [
+                { src: "/one.png", alt: "Day view", caption: "**Day** view" },
+                { src: "/two.png", alt: "Week view" },
+            ],
+        });
+        expect(html).toContain(
+            '<div class="dd-gallery dd-gallery--3" role="group" aria-label="Three ways to view the list">',
+        );
+        expect(html.match(/<figure class="dd-gallery-item">/g)).toHaveLength(2);
+        expect(html).toContain('<figcaption class="dd-figcaption"><strong>Day</strong> view</figcaption>');
     });
 
     it("renders a caption as prose, with marks and facts", () => {

@@ -182,13 +182,18 @@ describe("validate", () => {
                     { kind: "keys", rows: [["Esc", "{fact:s}"]] },
                     { kind: "table", head: ["h", "{fact:t}"], rows: [["r", "{fact:u}"]] },
                     { kind: "facts", rows: [["Price", "{fact:v}"]] },
+                    {
+                        kind: "gallery",
+                        label: "A gallery",
+                        images: [{ src: "/shot.png", alt: "A shot", caption: "{fact:w}" }],
+                    },
                 ],
             }),
         ]);
         const keys = validate(docs, { today: new Date("2026-09-02") })
             .filter((f) => f.code === "unknown-fact-reference")
             .map((f) => f.factKey);
-        expect(keys).toEqual("abcdefghijklmnopqrstuv".split(""));
+        expect(keys).toEqual("abcdefghijklmnopqrstuvw".split(""));
     });
 
     it("reports a malformed review date instead of guessing at it", () => {
@@ -318,5 +323,30 @@ describe("image alt", () => {
             withBlocks([{ kind: "image", src: "/a.png", alt: "The order, top first" }]),
         );
         expect(findings.filter((f) => f.code === "empty-image-alt")).toHaveLength(0);
+    });
+
+    it("checks every image in a gallery", () => {
+        const findings = validate(
+            withBlocks([
+                {
+                    kind: "gallery",
+                    images: [
+                        { src: "/a.png", alt: "First view" },
+                        { src: "/b.png", alt: " " },
+                    ],
+                },
+            ]),
+        );
+        expect(findings.filter((f) => f.code === "empty-image-alt")).toHaveLength(1);
+    });
+
+    it("rejects non-positive and fractional dimensions", () => {
+        const findings = validate(
+            withBlocks([
+                { kind: "image", src: "/a.png", alt: "A", width: 0 },
+                { kind: "image", src: "/b.png", alt: "B", height: 12.5 },
+            ]),
+        );
+        expect(findings.filter((f) => f.code === "invalid-image-dimensions")).toHaveLength(2);
     });
 });

@@ -148,7 +148,10 @@ breaking change.
 `dd-compare`, `dd-compare-item` with `dd-compare-item--before` /
 `dd-compare-item--after`, `dd-compare-title`, `dd-compare-text`,
 `dd-keys`, `dd-table-scroll`, `dd-table`,
-`dd-facts`, `dd-facts-title`, `dd-facts-rows`.
+`dd-facts`, `dd-facts-title`, `dd-facts-rows`,
+`dd-figure`, `dd-media`, `dd-media-link`, `dd-figcaption`, `dd-gallery`,
+`dd-gallery-item`, `dd-gallery--2`, `dd-gallery--3`, and image position classes
+`dd-media--center` / `--top` / `--bottom` / `--left` / `--right`.
 
 **Panel chrome** -
 `dd-overlay` (with `is-open`), `dd-shell`,

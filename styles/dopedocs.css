@@ -1231,6 +1231,32 @@ a.dd-card:focus-visible,
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel-muted);
+    object-fit: cover;
+    object-position: center;
+}
+
+.dd-media--top { object-position: center top; }
+.dd-media--bottom { object-position: center bottom; }
+.dd-media--left { object-position: left center; }
+.dd-media--right { object-position: right center; }
+
+.dd-figure picture,
+.dd-gallery-item picture,
+.dd-media-link {
+    display: block;
+}
+
+.dd-media-link {
+    border-radius: var(--dd-radius);
+}
+
+.dd-media-link:focus-visible {
+    outline: 2px solid var(--dd-accent);
+    outline-offset: 3px;
+}
+
+.dd-media-link:hover .dd-media {
+    border-color: var(--dd-accent);
 }
 
 .dd-figcaption {
@@ -1238,4 +1264,31 @@ a.dd-card:focus-visible,
     color: var(--dd-muted);
     font-size: 13.5px;
     line-height: 1.5;
+}
+
+.dd-gallery {
+    display: grid;
+    gap: 14px;
+    max-width: var(--dd-measure);
+    margin: 6px 0 24px;
+}
+
+.dd-gallery--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dd-gallery--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dd-gallery-item {
+    min-width: 0;
+    margin: 0;
+}
+
+@media (max-width: 620px) {
+    .dd-gallery--2,
+    .dd-gallery--3 {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }

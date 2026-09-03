@@ -24,6 +24,27 @@ import { referencedFacts } from "./facts.js";
  * `{fact:key}` references. Anything richer becomes a new block kind; it never
  * becomes new syntax.
  */
+export interface DocImage {
+    src: string;
+    /** A comma-separated responsive candidate list for the fallback image. */
+    srcset?: string;
+    /** The rendered slot size paired with `srcset`. */
+    sizes?: string;
+    /** Art-directed sources, evaluated in order before the fallback image. */
+    sources?: { srcset: string; media?: string; type?: string }[];
+    /** What the image says, for a reader who cannot see it. */
+    alt: string;
+    caption?: string;
+    /** Rendered as attributes when given, so the page does not reflow. */
+    width?: number;
+    height?: number;
+    loading?: "lazy" | "eager";
+    fetchPriority?: "high" | "low" | "auto";
+    position?: "center" | "top" | "bottom" | "left" | "right";
+    /** Makes the image a link to a larger or original rendition. */
+    href?: string;
+}
+
 export type DocBlock =
     | { kind: "p"; text: string }
     | { kind: "list"; items: string[]; ordered?: boolean }
@@ -75,22 +96,13 @@ export type DocBlock =
           mark?: string;
           rows: [label: string, value: string][];
       }
+    | ({ kind: "image" } & DocImage)
     | {
-          kind: "image";
-          src: string;
-          /**
-           * What the image says, for a reader who cannot see it.
-           *
-           * Required, in the spirit of DEC-02: the annotation that makes a
-           * document answerable must not be the part that is easiest to skip.
-           * Plain text — inline marks and fact references do not apply, because
-           * this ends up inside an attribute.
-           */
-          alt: string;
-          caption?: string;
-          /** Rendered as attributes when given, so the page does not reflow. */
-          width?: number;
-          height?: number;
+          kind: "gallery";
+          images: DocImage[];
+          columns?: 2 | 3;
+          /** Optional accessible name for the group of figures. */
+          label?: string;
       }
     | {
           kind: "video";
@@ -212,7 +224,8 @@ export type FindingCode =
     | "unknown-fact-reference"
     | "invalid-review-date"
     | "stale-fact"
-    | "empty-image-alt";
+    | "empty-image-alt"
+    | "invalid-image-dimensions";
 
 /**
  * One problem found in a document. Findings are returned, never thrown: the
@@ -324,6 +337,11 @@ function proseOf(block: DocBlock): string[] {
         // `alt` is deliberately absent: it renders into an attribute, where a
         // <code> element from an inline mark would be markup in a text slot.
         case "image":
+            return block.caption ? [block.caption] : [];
+        case "gallery":
+            return block.images.flatMap((image) =>
+                image.caption ? [image.caption] : [],
+            );
         case "video":
             return block.caption ? [block.caption] : [];
     }
@@ -372,13 +390,34 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         }
 
         for (const block of section.blocks ?? []) {
-            if (block.kind === "image" && !block.alt.trim()) {
-                findings.push({
-                    code: "empty-image-alt",
-                    severity: "fatal",
-                    sectionId: id,
-                    message: `An image in "${id}" has a blank alt; an unlabelled image is invisible to a screen reader and to an answer engine alike. Say what it shows.`,
-                });
+            const images =
+                block.kind === "image"
+                    ? [block]
+                    : block.kind === "gallery"
+                      ? block.images
+                      : [];
+            for (const image of images) {
+                if (!image.alt.trim()) {
+                    findings.push({
+                        code: "empty-image-alt",
+                        severity: "fatal",
+                        sectionId: id,
+                        message: `An image in "${id}" has a blank alt; an unlabelled image is invisible to a screen reader and to an answer engine alike. Say what it shows.`,
+                    });
+                }
+                const invalid = [image.width, image.height].some(
+                    (dimension) =>
+                        dimension !== undefined &&
+                        (!Number.isInteger(dimension) || dimension <= 0),
+                );
+                if (invalid) {
+                    findings.push({
+                        code: "invalid-image-dimensions",
+                        severity: "fatal",
+                        sectionId: id,
+                        message: `An image in "${id}" has a non-positive or fractional width or height; image dimensions must be positive whole pixels.`,
+                    });
+                }
             }
         }
 

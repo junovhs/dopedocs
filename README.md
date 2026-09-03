@@ -322,7 +322,8 @@ naming the product, its version and who makes it.
 | `keys` | `{ kind: "keys", rows: [keys, does][] }` |
 | `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
 | `facts` | `{ kind: "facts", title?, mark?, rows: [label, value][] }` |
-| `image` | `{ kind: "image", src, alt, caption?, width?, height? }` |
+| `image` | `{ kind: "image", src, alt, caption?, width?, height?, srcset?, sizes?, sources?, loading?, fetchPriority?, position?, href? }` |
+| `gallery` | `{ kind: "gallery", images, columns?: 2 \| 3, label? }` |
 | `video` | `{ kind: "video", src, poster?, caption? }` |
 
 Prose carries two inline marks - `` `code` `` and `**strong**` - plus
@@ -383,16 +384,45 @@ screens.
 { kind: "image", src: "/shot.png", alt: "The order, most urgent first",
   caption: "The list as it appears.", width: 1200, height: 800 }
 
+{ kind: "image",
+  src: "/tour-wide-1200.webp",
+  srcset: "/tour-wide-640.webp 640w, /tour-wide-1200.webp 1200w",
+  sizes: "(max-width: 700px) 100vw, 660px",
+  sources: [
+    { srcset: "/tour-tall.webp", media: "(max-width: 500px)", type: "image/webp" },
+  ],
+  alt: "The guided intake on a narrow phone and a wide desktop",
+  width: 1200, height: 760, loading: "eager", fetchPriority: "high",
+  position: "top", href: "/tour-wide-original.webp" }
+
+{ kind: "gallery", columns: 3, label: "The three setup screens", images: [
+  { src: "/setup-1.webp", alt: "Name your task", caption: "1. Name it." },
+  { src: "/setup-2.webp", alt: "Choose a deadline", caption: "2. Date it." },
+  { src: "/setup-3.webp", alt: "Review the ordered list", caption: "3. Start." },
+] }
+
 { kind: "video", src: "/tour.webm", poster: "/tour-still.png", caption: "A two minute tour." }
 ```
 
 Both render as a `<figure>` sized to the reading column, styled from the same
 tokens as the prose around them, so a screenshot needs no CSS of yours.
 
-`alt` is **required** — an unlabelled image is invisible to a screen reader and
-to an answer engine alike, so omitting it is a compile error and leaving it
-blank is a build finding. `width` and `height` are optional and become
-attributes, which lets the browser reserve the space before the file arrives.
+`alt` is **required** on standalone and gallery images — an unlabelled image is
+invisible to a screen reader and to an answer engine alike, so omitting it is a
+compile error and leaving it blank is a build finding. `width` and `height` are
+optional positive whole-pixel attributes, which let the browser reserve space
+before the file arrives.
+
+`srcset` and `sizes` describe resolution candidates on the fallback `<img>`.
+`sources` adds ordered `<source>` elements for art direction or newer formats;
+the required `src` remains the universal fallback. `loading` defaults to
+`"lazy"`; use `"eager"` with `fetchPriority: "high"` only for the first image
+a reader sees. `position` publishes an object-position class for cropped
+screenshots, and `href` links to a full-size original without adding a lightbox
+or script.
+
+A gallery is an accessible group of ordinary figures. Each image keeps its own
+alt text and caption, and the grid collapses to one column below 620px.
 
 Video is `controls preload="metadata"` and nothing else: no autoplay, no
 tracking, no third-party embed. A `src` is a `src` — host the file yourself.

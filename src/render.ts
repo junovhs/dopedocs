@@ -11,7 +11,7 @@
 
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
-import type { DocBlock, DocIdentity, DocSection, DocSet } from "./schema.js";
+import type { DocBlock, DocIdentity, DocImage, DocSection, DocSet } from "./schema.js";
 
 /**
  * Thrown when prose references a fact the registry does not hold. Shipping a
@@ -209,21 +209,21 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
             return `<div class="dd-facts">${head}<dl class="dd-facts-rows">${rows}</dl></div>`;
         }
 
-        case "image": {
-            // Dimensions are attributes rather than CSS so the browser can
-            // reserve the space before the file arrives; a page that reflows as
-            // its images load is a worse page than one that waits.
-            const dims =
-                (block.width ? ` width="${block.width}"` : "") +
-                (block.height ? ` height="${block.height}"` : "");
-            return figure(
-                `<img class="dd-media" src="${escapeHtml(block.src)}" alt="${escapeHtml(
-                    block.alt,
-                )}"${dims} loading="lazy" decoding="async">`,
-                block.caption,
-                text,
+        case "image":
+            return imageFigure(block, text);
+
+        case "gallery":
+            return (
+                `<div class="dd-gallery dd-gallery--${block.columns ?? 2}"${
+                    block.label
+                        ? ` role="group" aria-label="${escapeHtml(block.label)}"`
+                        : ""
+                }>` +
+                block.images
+                    .map((image) => imageFigure(image, text, "dd-gallery-item"))
+                    .join("") +
+                `</div>`
             );
-        }
 
         case "video":
             // `controls` and nothing else: no autoplay, no script, no embed.
@@ -322,12 +322,53 @@ export function renderMark(mark: string, className: string): string {
 }
 
 /** Wraps a picture or a video with its caption, if it has one. */
-function figure(media: string, caption: string | undefined, text: (s: string) => string): string {
+function figure(
+    media: string,
+    caption: string | undefined,
+    text: (s: string) => string,
+    className = "dd-figure",
+): string {
     return (
-        `<figure class="dd-figure">${media}` +
+        `<figure class="${className}">${media}` +
         (caption ? `<figcaption class="dd-figcaption">${text(caption)}</figcaption>` : "") +
         `</figure>`
     );
+}
+
+/** Renders one responsive image, shared by standalone figures and galleries. */
+function imageFigure(
+    image: DocImage,
+    text: (s: string) => string,
+    className?: string,
+): string {
+    // Dimensions are attributes rather than CSS so the browser reserves space
+    // before the file arrives. Source order is preserved for art direction.
+    const attrs =
+        (image.srcset ? ` srcset="${escapeHtml(image.srcset)}"` : "") +
+        (image.sizes ? ` sizes="${escapeHtml(image.sizes)}"` : "") +
+        (image.width !== undefined ? ` width="${image.width}"` : "") +
+        (image.height !== undefined ? ` height="${image.height}"` : "") +
+        ` loading="${image.loading ?? "lazy"}"` +
+        (image.fetchPriority ? ` fetchpriority="${image.fetchPriority}"` : "") +
+        ` decoding="async"`;
+    const img = `<img class="dd-media dd-media--${image.position ?? "center"}" src="${escapeHtml(
+        image.src,
+    )}" alt="${escapeHtml(image.alt)}"${attrs}>`;
+    const picture = image.sources?.length
+        ? `<picture>${image.sources
+              .map(
+                  (source) =>
+                      `<source srcset="${escapeHtml(source.srcset)}"` +
+                      (source.media ? ` media="${escapeHtml(source.media)}"` : "") +
+                      (source.type ? ` type="${escapeHtml(source.type)}"` : "") +
+                      `>`,
+              )
+              .join("")}${img}</picture>`
+        : img;
+    const linked = image.href
+        ? `<a class="dd-media-link" href="${escapeHtml(image.href)}">${picture}</a>`
+        : picture;
+    return figure(linked, image.caption, text, className);
 }
 
 /**
