@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { defineFacts } from "./facts.js";
@@ -185,7 +187,9 @@ describe("block markup", () => {
             text: "It is optional.",
             open: true,
         });
-        expect(html).toContain('<details class="dd-details" open>');
+        expect(html).toContain(
+            '<details class="dd-details" data-dd-print="It is optional." open>',
+        );
         expect(html).toContain("<summary>Why is this <strong>hidden</strong>?</summary>");
         expect(html).toContain("<p>It is optional.</p>");
     });
@@ -553,5 +557,28 @@ describe("image and video blocks", () => {
         expect(html).not.toContain("<script>");
         expect(html).not.toContain('onerror="alert(1)"');
         expect(html).toContain("&quot;");
+    });
+});
+
+describe("manual accessibility presentation", () => {
+    const stylesheet = readFileSync(
+        new URL("../styles/dopedocs.css", import.meta.url),
+        "utf8",
+    );
+
+    it("publishes reduced-motion and forced-colors adaptations", () => {
+        expect(stylesheet).toContain("@media (prefers-reduced-motion: reduce)");
+        expect(stylesheet).toContain("@media (forced-colors: active)");
+        expect(stylesheet).toContain(".dd-media-link:focus-visible");
+    });
+
+    it("publishes a print layout that expands disclosures and avoids clipped tables", () => {
+        expect(stylesheet).toContain("@media print");
+        expect(stylesheet).toContain(".dd-details::details-content");
+        expect(stylesheet).toContain("content: attr(data-dd-print)");
+        expect(stylesheet).toContain(":root:root");
+        expect(stylesheet).toContain("*:has(> .dd-overlay.is-open)");
+        expect(stylesheet).toMatch(/\.dd-table-scroll\s*\{\s*overflow: visible;/);
+        expect(stylesheet).toMatch(/\.dd-gallery-item,[\s\S]*break-inside: avoid;/);
     });
 });

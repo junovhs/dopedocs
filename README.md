@@ -424,6 +424,20 @@ or script.
 A gallery is an accessible group of ordinary figures. Each image keeps its own
 alt text and caption, and the grid collapses to one column below 620px.
 
+### Accessible manuals and printing
+
+The bundled stylesheet treats manuals as documents, not only screens. Keyboard
+focus is visible on navigation, disclosure summaries, cards and linked images;
+Windows High Contrast and other forced-colour modes receive system-colour token
+aliases; and reduced-motion preferences remove panel travel and widget hover
+motion.
+
+Printing a static page or an open documentation panel removes panel chrome,
+expands disclosure content, prevents individual widgets and figures from being
+split where the browser can avoid it, and lets wide tables wrap instead of
+clipping inside a horizontal scroller. Consumer themes need no print overrides,
+though they can still add product-specific headers or footers around dopedocs.
+
 Video is `controls preload="metadata"` and nothing else: no autoplay, no
 tracking, no third-party embed. A `src` is a `src` — host the file yourself.
 

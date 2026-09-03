@@ -119,12 +119,17 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
                 })
                 .join("")}</ul>`;
 
-        case "details":
+        case "details": {
+            // Closed native details content is not exposed to print by older
+            // engines. A plain-text attribute lets the stylesheet provide a
+            // print-only fallback without duplicating content on screen.
+            const printable = text(block.text).replace(/<\/?(?:code|strong)>/g, "");
             return (
-                `<details class="dd-details"${block.open ? " open" : ""}>` +
+                `<details class="dd-details" data-dd-print="${printable}"${block.open ? " open" : ""}>` +
                 `<summary>${text(block.summary)}</summary>` +
                 `<div class="dd-details-body"><p>${text(block.text)}</p></div></details>`
             );
+        }
 
         case "cards":
             return `<div class="dd-cards">${block.items

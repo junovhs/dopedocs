@@ -980,10 +980,15 @@ a.dd-card:focus-visible,
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
+    .dd-overlay,
+    .dd-overlay::before,
     .dd-shell,
-    .dd-overlay.is-open .dd-shell {
+    .dd-overlay.is-open .dd-shell,
+    a.dd-card,
+    a.dd-card:hover {
         transform: none;
-        transition: opacity 0.12s linear;
+        transition-duration: 0.01ms;
+        transition-delay: 0s;
     }
 
     .dd-back svg,
@@ -995,6 +1000,176 @@ a.dd-card:focus-visible,
 
     .dd-back:hover svg {
         transform: none;
+    }
+}
+
+/* ==========================================================================
+   Keyboard and high-contrast access
+   ========================================================================== */
+
+.dd-back:focus-visible,
+.dd-nav-link:focus-visible,
+.dd-nav-group > summary:focus-visible,
+.dd-details > summary:focus-visible,
+a.dd-card:focus-visible,
+.dd-media-link:focus-visible,
+.dd-contents a:focus-visible,
+.dd-pager a:focus-visible {
+    outline: 2px solid var(--dd-accent);
+    outline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+    :root:root {
+        --dd-bg: Canvas;
+        --dd-panel: Canvas;
+        --dd-panel-muted: Canvas;
+        --dd-ink: CanvasText;
+        --dd-text: CanvasText;
+        --dd-text-soft: CanvasText;
+        --dd-muted: GrayText;
+        --dd-on-ink: Canvas;
+        --dd-on-ink-strong: Canvas;
+        --dd-on-accent: HighlightText;
+        --dd-line: CanvasText;
+        --dd-line-soft: CanvasText;
+        --dd-edge: CanvasText;
+        --dd-accent: Highlight;
+        --dd-scrim: Canvas;
+        --dd-shadow-lift: none;
+    }
+
+    .dd-step::before,
+    .dd-check.is-checked .dd-check-icon,
+    .dd-nav-link.is-active {
+        border: 1px solid var(--dd-ink);
+    }
+
+    .dd-media-link {
+        text-decoration: underline;
+    }
+}
+
+/* ==========================================================================
+   Print and document export
+   Print the manual itself, not the modal controls around it. Widgets stay
+   together where practical, native disclosures are expanded, and horizontal
+   scrollers become ordinary wrapping content so nothing is clipped.
+   ========================================================================== */
+
+@media print {
+    :root:root {
+        --dd-bg: #ffffff;
+        --dd-panel: #ffffff;
+        --dd-panel-muted: #ffffff;
+        --dd-ink: #000000;
+        --dd-text: #000000;
+        --dd-text-soft: #000000;
+        --dd-muted: #000000;
+        --dd-on-ink: #ffffff;
+        --dd-on-ink-strong: #ffffff;
+        --dd-on-accent: #ffffff;
+        --dd-line: #777777;
+        --dd-line-soft: #aaaaaa;
+        --dd-edge: #555555;
+        --dd-accent: #000000;
+        --dd-shadow-lift: none;
+    }
+
+    .dd-overlay.is-open {
+        position: static;
+        width: auto;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .dd-overlay::before,
+    .dd-bar,
+    .dd-nav,
+    .dd-pager {
+        display: none;
+    }
+
+    .dd-shell,
+    .dd-body {
+        position: static;
+        display: block;
+        width: auto;
+        height: auto;
+        min-height: 0;
+        overflow: visible;
+        box-shadow: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .dd-main,
+    .dd-page {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .dd-header,
+    .dd-section,
+    .dd-facts,
+    .dd-contents,
+    .dd-pager {
+        max-width: none;
+    }
+
+    .dd-details::details-content {
+        display: block !important;
+        content-visibility: visible !important;
+    }
+
+    /* Browsers without `::details-content` still print the authored answer.
+       The renderer carries a plain-text copy only for this fallback. */
+    @supports not selector(details::details-content) {
+        .dd-details:not([open])::after {
+            content: attr(data-dd-print);
+            display: block;
+            padding: 13px 16px 15px;
+            color: var(--dd-text-soft);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+    }
+
+    .dd-table-scroll {
+        overflow: visible;
+    }
+
+    .dd-table {
+        table-layout: fixed;
+    }
+
+    .dd-table th,
+    .dd-table td,
+    .dd-card,
+    .dd-compare-item,
+    .dd-metric {
+        overflow-wrap: anywhere;
+    }
+
+    .dd-callout,
+    .dd-step,
+    .dd-check,
+    .dd-details,
+    .dd-card,
+    .dd-quote,
+    .dd-metric,
+    .dd-compare-item,
+    .dd-figure,
+    .dd-gallery-item,
+    .dd-facts,
+    .dd-table tr {
+        break-inside: avoid;
+    }
+
+    .dd-media {
+        max-height: 8in;
+        object-fit: contain;
     }
 }
 
@@ -1290,5 +1465,37 @@ a.dd-card:focus-visible,
     .dd-gallery--2,
     .dd-gallery--3 {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* Print rules live above with the other preference adaptations. These final
+   selectors deliberately outrank component rules declared later in this file. */
+@media print {
+    /* Print only the open manual, even when it is mounted beside the app's
+       ordinary UI inside a consumer-selected target. */
+    *:has(> .dd-overlay.is-open) > :not(.dd-overlay.is-open) {
+        display: none !important;
+    }
+
+    .dd-overlay:not(.is-open) {
+        display: none;
+    }
+
+    .dd-static .dd-bar,
+    .dd-static .dd-nav,
+    .dd-static .dd-pager,
+    .dd-overlay.is-open .dd-bar,
+    .dd-overlay.is-open .dd-nav,
+    .dd-overlay.is-open .dd-pager {
+        display: none;
+    }
+
+    .dd-static .dd-page {
+        grid-column: auto;
+    }
+
+    .dd-static .dd-media,
+    .dd-overlay.is-open .dd-media {
+        object-fit: contain;
     }
 }
