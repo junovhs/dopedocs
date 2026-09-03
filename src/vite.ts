@@ -12,7 +12,7 @@
 
 import { readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, posix } from "node:path";
+import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { DocSet } from "./schema.js";
@@ -225,6 +225,11 @@ export function dopedocs(options: DopedocsPluginOptions) {
             if (command !== "build") return;
 
             const tree = build();
+            // Vite accepts both project-relative and absolute output paths.
+            // `join(root, outDir, path)` treats even an absolute `outDir` as a
+            // fragment, nesting `/tmp/site` below the project root. Resolve the
+            // output root once so both forms have Vite's intended meaning.
+            const outputRoot = resolve(root, outDir);
             if (emitsOwnSheet) {
                 // Read from the installed package, never from a source checkout
                 // (DEC-06): this path resolves inside node_modules for a real
@@ -235,7 +240,7 @@ export function dopedocs(options: DopedocsPluginOptions) {
                 );
             }
             for (const [path, contents] of Object.entries(tree)) {
-                const target = join(root, outDir, path);
+                const target = join(outputRoot, path);
                 await mkdir(dirname(target), { recursive: true });
 
                 let body = contents;
