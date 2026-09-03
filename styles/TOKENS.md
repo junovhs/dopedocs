@@ -140,6 +140,13 @@ breaking change.
 `dd-section`, `dd-section-title`, `dd-answer`,
 `dd-p`, `dd-list`,
 `dd-callout` with `dd-callout--note` / `dd-callout--warn`,
+`dd-steps`, `dd-step`, `dd-step-body`, `dd-step-title`, `dd-step-text`,
+`dd-checklist`, `dd-check` (with `is-checked`), `dd-check-icon`,
+`dd-details`, `dd-details-body`,
+`dd-cards`, `dd-card`, `dd-card-title`, `dd-card-text`, `dd-card-label`,
+`dd-quote`, `dd-metrics`, `dd-metric`, `dd-metric-value`, `dd-metric-detail`,
+`dd-compare`, `dd-compare-item` with `dd-compare-item--before` /
+`dd-compare-item--after`, `dd-compare-title`, `dd-compare-text`,
 `dd-keys`, `dd-table-scroll`, `dd-table`,
 `dd-facts`, `dd-facts-title`, `dd-facts-rows`.
 

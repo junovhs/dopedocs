@@ -162,16 +162,33 @@ describe("validate", () => {
             section({
                 blocks: [
                     { kind: "list", items: ["{fact:a}"] },
-                    { kind: "keys", rows: [["Esc", "{fact:b}"]] },
-                    { kind: "table", head: ["h", "{fact:c}"], rows: [["r", "{fact:d}"]] },
-                    { kind: "facts", rows: [["Price", "{fact:e}"]] },
+                    { kind: "steps", items: [{ title: "{fact:b}", text: "{fact:c}" }] },
+                    { kind: "checklist", items: [{ text: "{fact:d}" }] },
+                    { kind: "details", summary: "{fact:e}", text: "{fact:f}" },
+                    {
+                        kind: "cards",
+                        items: [{ title: "{fact:g}", text: "{fact:h}", label: "{fact:i}" }],
+                    },
+                    { kind: "quote", text: "{fact:j}", attribution: "{fact:k}" },
+                    {
+                        kind: "metrics",
+                        items: [{ value: "{fact:l}", label: "{fact:m}", detail: "{fact:n}" }],
+                    },
+                    {
+                        kind: "compare",
+                        before: { title: "{fact:o}", text: "{fact:p}" },
+                        after: { title: "{fact:q}", text: "{fact:r}" },
+                    },
+                    { kind: "keys", rows: [["Esc", "{fact:s}"]] },
+                    { kind: "table", head: ["h", "{fact:t}"], rows: [["r", "{fact:u}"]] },
+                    { kind: "facts", rows: [["Price", "{fact:v}"]] },
                 ],
             }),
         ]);
         const keys = validate(docs, { today: new Date("2026-09-02") })
             .filter((f) => f.code === "unknown-fact-reference")
             .map((f) => f.factKey);
-        expect(keys).toEqual(["a", "b", "c", "d", "e"]);
+        expect(keys).toEqual("abcdefghijklmnopqrstuv".split(""));
     });
 
     it("reports a malformed review date instead of guessing at it", () => {

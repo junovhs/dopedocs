@@ -97,6 +97,88 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
                 block.text,
             )}</p></div>`;
 
+        case "steps":
+            return `<ol class="dd-steps">${block.items
+                .map(
+                    ({ title, text: body }) =>
+                        `<li class="dd-step"><div class="dd-step-body">` +
+                        `<p class="dd-step-title">${text(title)}</p>` +
+                        `<p class="dd-step-text">${text(body)}</p></div></li>`,
+                )
+                .join("")}</ol>`;
+
+        case "checklist":
+            return `<ul class="dd-checklist">${block.items
+                .map(({ text: item, checked = false }) => {
+                    const state = checked ? "Complete" : "Not complete";
+                    return (
+                        `<li class="dd-check${checked ? " is-checked" : ""}">` +
+                        `<span class="dd-check-icon" aria-hidden="true">${checked ? "&#10003;" : ""}</span>` +
+                        `<span><span class="dd-visually-hidden">${state}: </span>${text(item)}</span></li>`
+                    );
+                })
+                .join("")}</ul>`;
+
+        case "details":
+            return (
+                `<details class="dd-details"${block.open ? " open" : ""}>` +
+                `<summary>${text(block.summary)}</summary>` +
+                `<div class="dd-details-body"><p>${text(block.text)}</p></div></details>`
+            );
+
+        case "cards":
+            return `<div class="dd-cards">${block.items
+                .map(({ title, text: body, href, label }) => {
+                    const tag = href ? "a" : "article";
+                    const target = href ? ` href="${escapeHtml(href)}"` : "";
+                    const action = label
+                        ? `<span class="dd-card-label">${text(label)}${href ? '<span aria-hidden="true"> &rarr;</span>' : ""}</span>`
+                        : "";
+                    return (
+                        `<${tag} class="dd-card"${target}>` +
+                        `<span class="dd-card-title">${text(title)}</span>` +
+                        `<span class="dd-card-text">${text(body)}</span>${action}</${tag}>`
+                    );
+                })
+                .join("")}</div>`;
+
+        case "quote":
+            return (
+                `<figure class="dd-quote"><blockquote${
+                    block.cite ? ` cite="${escapeHtml(block.cite)}"` : ""
+                }><p>${text(block.text)}</p></blockquote>` +
+                (block.attribution
+                    ? `<figcaption>${text(block.attribution)}</figcaption>`
+                    : "") +
+                `</figure>`
+            );
+
+        case "metrics":
+            return `<dl class="dd-metrics">${block.items
+                .map(
+                    ({ value, label, detail }) =>
+                        `<div class="dd-metric"><dt>${text(label)}</dt>` +
+                        `<dd><span class="dd-metric-value">${text(value)}</span>` +
+                        (detail ? `<span class="dd-metric-detail">${text(detail)}</span>` : "") +
+                        `</dd></div>`,
+                )
+                .join("")}</dl>`;
+
+        case "compare":
+            return `<div class="dd-compare">${(
+                [
+                    ["before", block.before],
+                    ["after", block.after],
+                ] as const
+            )
+                .map(
+                    ([side, item]) =>
+                        `<article class="dd-compare-item dd-compare-item--${side}">` +
+                        `<p class="dd-compare-title">${text(item.title)}</p>` +
+                        `<p class="dd-compare-text">${text(item.text)}</p></article>`,
+                )
+                .join("")}</div>`;
+
         case "keys":
             return `<div class="dd-keys">${block.rows
                 .map(([keys, does]) => `<kbd>${text(keys)}</kbd><span>${text(does)}</span>`)

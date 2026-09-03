@@ -28,6 +28,44 @@ export type DocBlock =
     | { kind: "p"; text: string }
     | { kind: "list"; items: string[]; ordered?: boolean }
     | { kind: "callout"; text: string; tone?: "note" | "warn" }
+    | {
+          kind: "steps";
+          /** Ordered instructions. Titles make the sequence scannable. */
+          items: { title: string; text: string }[];
+      }
+    | {
+          kind: "checklist";
+          /** A static readiness or completion list, not application state. */
+          items: { text: string; checked?: boolean }[];
+      }
+    | {
+          kind: "details";
+          summary: string;
+          text: string;
+          /** Native disclosure state; remains usable without JavaScript. */
+          open?: boolean;
+      }
+    | {
+          kind: "cards";
+          /** Cards with an href render as links; the others are articles. */
+          items: { title: string; text: string; href?: string; label?: string }[];
+      }
+    | {
+          kind: "quote";
+          text: string;
+          attribution?: string;
+          /** Optional source URL, applied to the semantic blockquote. */
+          cite?: string;
+      }
+    | {
+          kind: "metrics";
+          items: { value: string; label: string; detail?: string }[];
+      }
+    | {
+          kind: "compare";
+          before: { title: string; text: string };
+          after: { title: string; text: string };
+      }
     | { kind: "keys"; rows: [keys: string, does: string][] }
     | { kind: "table"; head: [string, string]; rows: [string, string][] }
     | {
@@ -250,6 +288,33 @@ function proseOf(block: DocBlock): string[] {
             return block.items;
         case "callout":
             return [block.text];
+        case "steps":
+            return block.items.flatMap(({ title, text }) => [title, text]);
+        case "checklist":
+            return block.items.map(({ text }) => text);
+        case "details":
+            return [block.summary, block.text];
+        case "cards":
+            return block.items.flatMap(({ title, text, label }) => [
+                title,
+                text,
+                ...(label ? [label] : []),
+            ]);
+        case "quote":
+            return [block.text, ...(block.attribution ? [block.attribution] : [])];
+        case "metrics":
+            return block.items.flatMap(({ value, label, detail }) => [
+                value,
+                label,
+                ...(detail ? [detail] : []),
+            ]);
+        case "compare":
+            return [
+                block.before.title,
+                block.before.text,
+                block.after.title,
+                block.after.text,
+            ];
         case "keys":
             return block.rows.flat();
         case "table":

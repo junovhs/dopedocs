@@ -154,6 +154,89 @@ describe("block markup", () => {
             "dd-facts-title",
         );
     });
+
+    it("renders numbered instructional steps", () => {
+        const html = out({
+            kind: "steps",
+            items: [{ title: "Choose **one** task", text: "Open it while it is {fact:price}." }],
+        });
+        expect(html).toContain('<ol class="dd-steps">');
+        expect(html).toContain('<li class="dd-step">');
+        expect(html).toContain('<p class="dd-step-title">Choose <strong>one</strong> task</p>');
+        expect(html).toContain('<p class="dd-step-text">Open it while it is free.</p>');
+    });
+
+    it("renders checklist state accessibly without interactive controls", () => {
+        const html = out({
+            kind: "checklist",
+            items: [{ text: "Finished", checked: true }, { text: "Still to do" }],
+        });
+        expect(html).toContain('<ul class="dd-checklist">');
+        expect(html).toContain('class="dd-check is-checked"');
+        expect(html).toContain('<span class="dd-visually-hidden">Complete: </span>Finished');
+        expect(html).toContain('<span class="dd-visually-hidden">Not complete: </span>Still to do');
+        expect(html).not.toContain("<input");
+    });
+
+    it("renders a native disclosure that works without JavaScript", () => {
+        const html = out({
+            kind: "details",
+            summary: "Why is this **hidden**?",
+            text: "It is optional.",
+            open: true,
+        });
+        expect(html).toContain('<details class="dd-details" open>');
+        expect(html).toContain("<summary>Why is this <strong>hidden</strong>?</summary>");
+        expect(html).toContain("<p>It is optional.</p>");
+    });
+
+    it("renders linked and unlinked cards with escaped destinations", () => {
+        const html = out({
+            kind: "cards",
+            items: [
+                { title: "Start", text: "Take the tour", href: '/tour?x=1&y="2"', label: "Open" },
+                { title: "Remember", text: "A plain note" },
+            ],
+        });
+        expect(html).toContain('<a class="dd-card" href="/tour?x=1&amp;y=&quot;2&quot;">');
+        expect(html).toContain('<span class="dd-card-label">Open<span aria-hidden="true"> &rarr;</span></span>');
+        expect(html).toContain('<article class="dd-card">');
+    });
+
+    it("renders a semantic quotation and optional citation", () => {
+        const html = out({
+            kind: "quote",
+            text: "Do the **next** thing.",
+            attribution: "A calm guide",
+            cite: "https://example.test/source?a=1&b=2",
+        });
+        expect(html).toContain('<blockquote cite="https://example.test/source?a=1&amp;b=2">');
+        expect(html).toContain("Do the <strong>next</strong> thing.");
+        expect(html).toContain("<figcaption>A calm guide</figcaption>");
+    });
+
+    it("renders metric items as a description list", () => {
+        const html = out({
+            kind: "metrics",
+            items: [{ value: "{fact:price}", label: "Price", detail: "Forever" }],
+        });
+        expect(html).toContain('<dl class="dd-metrics">');
+        expect(html).toContain("<dt>Price</dt>");
+        expect(html).toContain('<span class="dd-metric-value">free</span>');
+        expect(html).toContain('<span class="dd-metric-detail">Forever</span>');
+    });
+
+    it("renders a two-sided comparison", () => {
+        const html = out({
+            kind: "compare",
+            before: { title: "Before", text: "A scattered list" },
+            after: { title: "After", text: "One clear next step" },
+        });
+        expect(html).toContain('<div class="dd-compare">');
+        expect(html).toContain('dd-compare-item--before');
+        expect(html).toContain('dd-compare-item--after');
+        expect(html).toContain("One clear next step");
+    });
 });
 
 describe("sections", () => {
@@ -214,6 +297,13 @@ export const everyBlockKindIsRendered: Record<DocBlock["kind"], true> = {
     p: true,
     list: true,
     callout: true,
+    steps: true,
+    checklist: true,
+    details: true,
+    cards: true,
+    quote: true,
+    metrics: true,
+    compare: true,
     keys: true,
     table: true,
     facts: true,

@@ -475,6 +475,322 @@ h3.dd-section-title {
     background: var(--dd-ink);
 }
 
+/* --- instructional widgets ---------------------------------------------- */
+
+.dd-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.dd-steps {
+    counter-reset: dd-step;
+    margin: 22px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dd-step {
+    counter-increment: dd-step;
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 13px;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.dd-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 34px;
+    bottom: 0;
+    left: 16px;
+    border-left: 1px solid var(--dd-line);
+}
+
+.dd-step::before {
+    content: counter(dd-step);
+    display: grid;
+    place-items: center;
+    z-index: 1;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--dd-accent);
+    color: var(--dd-on-accent);
+    font: 700 12px/1 var(--dd-mono);
+}
+
+.dd-step-title,
+.dd-step-text {
+    margin: 0;
+}
+
+.dd-step-title {
+    padding-top: 3px;
+    color: var(--dd-text);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.dd-step-text {
+    margin-top: 3px;
+    color: var(--dd-text-soft);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.dd-checklist {
+    display: grid;
+    gap: 9px;
+    margin: 18px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dd-check {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    color: var(--dd-text-soft);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.dd-check-icon {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border: 1px solid var(--dd-edge);
+    border-radius: var(--dd-radius-sm);
+    color: var(--dd-on-accent);
+    font: 700 12px/1 var(--dd-sans);
+}
+
+.dd-check.is-checked .dd-check-icon {
+    border-color: var(--dd-accent);
+    background: var(--dd-accent);
+}
+
+.dd-check.is-checked > span:last-child {
+    color: var(--dd-text);
+}
+
+.dd-details {
+    margin: 18px 0;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel);
+}
+
+.dd-details > summary {
+    padding: 13px 42px 13px 16px;
+    color: var(--dd-text);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+    cursor: pointer;
+}
+
+.dd-details[open] > summary {
+    border-bottom: 1px solid var(--dd-line);
+}
+
+.dd-details-body {
+    padding: 13px 16px 15px;
+}
+
+.dd-details-body p {
+    margin: 0;
+    color: var(--dd-text-soft);
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.dd-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.dd-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel);
+    color: var(--dd-text);
+    text-decoration: none;
+}
+
+a.dd-card {
+    transition: border-color 0.14s, background 0.14s, transform 0.14s var(--dd-ease);
+}
+
+a.dd-card:hover {
+    border-color: var(--dd-accent);
+    background: var(--dd-panel-muted);
+    transform: translateY(-1px);
+}
+
+a.dd-card:focus-visible,
+.dd-details > summary:focus-visible {
+    outline: 2px solid var(--dd-accent);
+    outline-offset: 3px;
+}
+
+.dd-card-title {
+    font-size: 15px;
+    font-weight: 750;
+    line-height: 1.35;
+}
+
+.dd-card-text {
+    margin-top: 6px;
+    color: var(--dd-text-soft);
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+
+.dd-card-label {
+    margin-top: auto;
+    padding-top: 14px;
+    color: var(--dd-accent);
+    font: 700 11px/1.3 var(--dd-mono);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dd-quote {
+    margin: 22px 0;
+    padding: 18px 20px;
+    border-left: 3px solid var(--dd-accent);
+    background: var(--dd-panel-muted);
+}
+
+.dd-quote blockquote,
+.dd-quote p {
+    margin: 0;
+}
+
+.dd-quote p {
+    color: var(--dd-text);
+    font-size: 17px;
+    font-weight: 550;
+    line-height: 1.55;
+}
+
+.dd-quote figcaption {
+    margin-top: 10px;
+    color: var(--dd-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.dd-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px;
+    margin: 20px 0;
+    padding: 1px;
+    border-radius: var(--dd-radius);
+    background: var(--dd-line);
+    overflow: hidden;
+}
+
+.dd-metric {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 6px;
+    min-width: 0;
+    padding: 15px;
+    background: var(--dd-panel);
+}
+
+.dd-metric dt {
+    color: var(--dd-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.35;
+    text-transform: uppercase;
+}
+
+.dd-metric dd {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin: 0;
+}
+
+.dd-metric-value {
+    color: var(--dd-text);
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+}
+
+.dd-metric-detail {
+    color: var(--dd-text-soft);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.dd-compare {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    margin: 20px 0;
+    padding: 1px;
+    border-radius: var(--dd-radius);
+    background: var(--dd-line);
+    overflow: hidden;
+}
+
+.dd-compare-item {
+    padding: 17px;
+    background: var(--dd-panel);
+}
+
+.dd-compare-item--after {
+    background: var(--dd-panel-muted);
+}
+
+.dd-compare-title,
+.dd-compare-text {
+    margin: 0;
+}
+
+.dd-compare-title {
+    color: var(--dd-muted);
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.dd-compare-text {
+    margin-top: 8px;
+    color: var(--dd-text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
 /* --- table ---------------------------------------------------------------- */
 
 /* Wide content scrolls inside its own container so the page body never does. */
@@ -650,6 +966,10 @@ h3.dd-section-title {
 
     .dd-title {
         font-size: 27px;
+    }
+
+    .dd-compare {
+        grid-template-columns: minmax(0, 1fr);
     }
 }
 

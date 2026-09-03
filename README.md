@@ -312,6 +312,13 @@ naming the product, its version and who makes it.
 | `p` | `{ kind: "p", text }` |
 | `list` | `{ kind: "list", items, ordered? }` |
 | `callout` | `{ kind: "callout", text, tone?: "note" \| "warn" }` |
+| `steps` | `{ kind: "steps", items: { title, text }[] }` |
+| `checklist` | `{ kind: "checklist", items: { text, checked? }[] }` |
+| `details` | `{ kind: "details", summary, text, open? }` |
+| `cards` | `{ kind: "cards", items: { title, text, href?, label? }[] }` |
+| `quote` | `{ kind: "quote", text, attribution?, cite? }` |
+| `metrics` | `{ kind: "metrics", items: { value, label, detail? }[] }` |
+| `compare` | `{ kind: "compare", before: { title, text }, after: { title, text } }` |
 | `keys` | `{ kind: "keys", rows: [keys, does][] }` |
 | `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
 | `facts` | `{ kind: "facts", title?, mark?, rows: [label, value][] }` |
@@ -321,6 +328,54 @@ naming the product, its version and who makes it.
 Prose carries two inline marks - `` `code` `` and `**strong**` - plus
 `{fact:key}` references. Anything richer becomes a new block kind, never new
 syntax.
+
+## Widgets for manuals and walkthroughs
+
+These blocks are for product tours, setup guides, handbooks and user manuals,
+not only API documentation. They render as semantic HTML in both surfaces and
+need no JavaScript:
+
+```ts
+{ kind: "steps", items: [
+  { title: "Write down the task", text: "Use the words already in your head." },
+  { title: "Answer three prompts", text: "Rough answers are enough." },
+  { title: "Start at the top", text: "The list puts the next thing first." },
+] }
+
+{ kind: "checklist", items: [
+  { text: "The task has a clear outcome", checked: true },
+  { text: "The deadline is recorded" },
+] }
+
+{ kind: "details", summary: "Why am I being asked this?",
+  text: "The answer helps the product order the list.", open: false }
+
+{ kind: "cards", items: [
+  { title: "Take the tour", text: "Create a first task in two minutes.",
+    href: "/docs/first-task/", label: "Start" },
+  { title: "Keep nearby", text: "A plain reference card does not need a link." },
+] }
+
+{ kind: "quote", text: "I stopped negotiating with my list.",
+  attribution: "A reader", cite: "https://example.com/story" }
+
+{ kind: "metrics", items: [
+  { value: "3", label: "Questions", detail: "For a useful first pass" },
+  { value: "{fact:price}", label: "Price" },
+] }
+
+{ kind: "compare",
+  before: { title: "Before", text: "Everything looked equally urgent." },
+  after: { title: "After", text: "One clear next task sits at the top." } }
+```
+
+`steps` describe an ordered procedure. `checklist` is intentionally static:
+its checked state records what the manual says is complete, but it does not
+pretend to be application state. `details` uses the native disclosure element,
+so it remains keyboard-operable with JavaScript disabled. Cards with `href`
+are links; cards without one are informational articles. Metric items render
+as a description list, and comparisons collapse to one column on narrow
+screens.
 
 ## Pictures and video
 
