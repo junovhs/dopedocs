@@ -378,6 +378,14 @@
     scroll-margin-top: 20px;
 }
 
+/* Shared section rhythm: each section after the first gets 20px of additional
+   breathing room and a quiet separator. This applies to every dopedocs surface
+   unless a consumer deliberately overrides it. */
+.dd-section + .dd-section {
+    padding-top: 20px;
+    border-top: 1px solid var(--dd-line-soft);
+}
+
 .dd-section:last-child {
     margin-bottom: 0;
 }
