@@ -378,14 +378,6 @@
     scroll-margin-top: 20px;
 }
 
-/* Shared section rhythm: each section after the first gets 20px of additional
-   breathing room and a quiet separator. This applies to every dopedocs surface
-   unless a consumer deliberately overrides it. */
-.dd-section + .dd-section {
-    padding-top: 20px;
-    border-top: 1px solid var(--dd-line-soft);
-}
-
 .dd-section:last-child {
     margin-bottom: 0;
 }
@@ -1374,6 +1366,15 @@ a.dd-card:focus-visible,
 
 .dd-static .dd-page {
     grid-column: 3;
+}
+
+/* Full-scrolling index only: give each section after the first 20px more
+   vertical separation, with a quiet rule so the shared default is easy to
+   verify across consuming apps. Individual section pages and the in-app panel
+   keep their existing rhythm. */
+.dd-static .dd-contents ~ .dd-section {
+    padding-top: 20px;
+    border-top: 1px solid var(--dd-line-soft);
 }
 
 /* Children sit indented under their parent. A static page has no script to
