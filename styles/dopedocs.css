@@ -391,7 +391,8 @@
     letter-spacing: -0.025em;
 }
 
-h3.dd-section-title {
+h3.dd-section-title,
+.dd-page--section h2.dd-section-title {
     font-size: clamp(16px, 2vw, 18px);
 }
 

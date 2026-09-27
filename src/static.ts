@@ -168,6 +168,8 @@ interface PageInput {
     stylesheet?: string | string[];
     /** The bar and rail wrapped around the article (DEC-07). */
     chrome: { bar: string; rail: string };
+    /** Marks a single section's page, whose own title is the page's h1. */
+    section?: boolean;
 }
 
 function page(input: PageInput): string {
@@ -201,9 +203,11 @@ ${jsonLd(graph)}
 ${chrome.bar}
 <div class="dd-body">
 ${chrome.rail}
-<article class="dd-page">
+<main class="dd-page${input.section ? " dd-page--section" : ""}">
+<article>
 ${body}
 </article>
+</main>
 </div>
 </body>
 </html>
@@ -419,10 +423,12 @@ export function buildStatic(
             entity: docs.entity,
             stylesheet: options.stylesheet,
             chrome: { bar, rail: railFor(section.id) },
+            section: true,
             // Children are rendered by renderSection as sibling sections, so a
             // parent's page carries its folder in full while each child keeps
-            // its own address.
-            body: renderSection(section, facts) + nav,
+            // its own address. The section is the page, so its title is the
+            // page's one h1 — the heading a text extractor takes as the topic.
+            body: renderSection(section, facts, { headingLevel: 1 }) + nav,
             graph: {
                 "@context": "https://schema.org",
                 "@graph": [

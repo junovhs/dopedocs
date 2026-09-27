@@ -251,8 +251,11 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
 
 /** How a section is drawn; every field has a working default. */
 export interface SectionRenderOptions {
-    /** Heading level for this section; children render one level deeper. */
-    headingLevel?: 2 | 3 | 4;
+    /**
+     * Heading level for this section; children render one level deeper. A
+     * static section page passes 1, because there the section is the page.
+     */
+    headingLevel?: 1 | 2 | 3 | 4;
     /**
      * Renders the section's `answer` as a lead paragraph. On by default: it is
      * the sentence a machine quotes, and a claim shown to machines but hidden
@@ -283,7 +286,7 @@ export function renderSection(
         .map((child) =>
             renderSection(child, facts, {
                 ...options,
-                headingLevel: Math.min(headingLevel + 1, 4) as 3 | 4,
+                headingLevel: Math.min(headingLevel + 1, 4) as 2 | 3 | 4,
             }),
         )
         .join("");

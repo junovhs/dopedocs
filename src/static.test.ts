@@ -92,7 +92,7 @@ describe("a section page", () => {
     const html = out["docs/what-it-is/index.html"]!;
 
     it("carries its heading and prose in the served HTML, with no JavaScript", () => {
-        expect(html).toContain("<h2 class=\"dd-section-title\">What this is</h2>");
+        expect(html).toContain("<h1 class=\"dd-section-title\">What this is</h1>");
         expect(html).toContain("Storage tools keep work; this one orders it.");
         expect(html).not.toContain("<script src");
     });
@@ -372,7 +372,7 @@ describe("static page chrome", () => {
             expect(html).toContain('<body class="dd-static">');
             expect(html).toContain('<div class="dd-bar">');
             expect(html).toContain('<nav class="dd-nav" aria-label="Contents">');
-            expect(html).toContain('<article class="dd-page">');
+            expect(html).toContain('<main class="dd-page');
         }
     });
 
@@ -417,6 +417,40 @@ describe("static page chrome", () => {
         const bare = buildStatic(docs, { now })["docs/data/index.html"]!;
         expect(bare).toContain('<a class="dd-back" href="/">');
         expect(bare).toContain('<nav class="dd-nav"');
+    });
+});
+
+/* ── Landmarks a text extractor keys on ─────────────────────────────────── */
+
+describe("page landmarks", () => {
+    const pages = Object.entries(out).filter(([path]) => path.endsWith(".html"));
+    const count = (html: string, re: RegExp) => html.match(re)?.length ?? 0;
+
+    it("gives every page exactly one <main> and exactly one <h1>", () => {
+        expect(pages.length).toBeGreaterThan(2);
+        for (const [path, html] of pages) {
+            expect(count(html, /<main[\s>]/g), `${path} <main> count`).toBe(1);
+            expect(count(html, /<h1[\s>]/g), `${path} <h1> count`).toBe(1);
+        }
+    });
+
+    it("titles a section page with its own section, as the h1", () => {
+        const html = out["docs/what-it-is/index.html"]!;
+        expect(html).toContain('<h1 class="dd-section-title">What this is</h1>');
+        expect(html).toContain('<main class="dd-page dd-page--section">');
+    });
+
+    it("steps a child down to h2 on its parent's page", () => {
+        const html = out["docs/data/index.html"]!;
+        expect(html).toContain('<h1 class="dd-section-title">Your data</h1>');
+        expect(html).toMatch(/<section class="dd-section" id="export"><h2 class="dd-section-title">/);
+    });
+
+    it("keeps the index titled by the document, with sections as h2", () => {
+        const html = out["docs/index.html"]!;
+        expect(html).toContain('<h1 class="dd-title">');
+        expect(html).toContain('<h2 class="dd-section-title">What this is</h2>');
+        expect(html).not.toContain("dd-page--section");
     });
 });
 
