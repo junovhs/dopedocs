@@ -1,6 +1,6 @@
 {
     "name": "dopedocs",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "private": false,
     "type": "module",
     "description": "A typed documentation engine: one source renders to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
