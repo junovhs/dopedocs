@@ -1369,6 +1369,14 @@ a.dd-card:focus-visible,
     grid-column: 3;
 }
 
+/* The content comes before the rail in the source (for text extractors), so
+   both are pinned to the first row; auto-placement would otherwise drop the
+   rail onto a second row beneath the content. */
+.dd-static .dd-page,
+.dd-static .dd-nav {
+    grid-row: 1;
+}
+
 /* Full-scrolling index only: give each section after the first 20px more
    vertical separation, with a quiet rule so the shared default is easy to
    verify across consuming apps. Individual section pages and the in-app panel
@@ -1388,6 +1396,7 @@ a.dd-card:focus-visible,
 @media (max-width: 860px) {
     .dd-static .dd-page {
         grid-column: 1;
+        grid-row: 2;
     }
 
     /* Matches the panel's narrow rail: a short scrollable strip above the

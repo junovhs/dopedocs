@@ -172,6 +172,12 @@ interface PageInput {
     section?: boolean;
 }
 
+/**
+ * The content is emitted before the rail. A text extractor reads in source
+ * order, and with the rail first every page opened with the same list of every
+ * section title before a word of its own. The stylesheet places the rail back
+ * on the left (above, when narrow), so a person sees no difference.
+ */
 function page(input: PageInput): string {
     const { title, description, canonical, body, graph, entity, chrome } = input;
     const esc = escapeHtml;
@@ -202,12 +208,12 @@ ${jsonLd(graph)}
 <body class="dd-static">
 ${chrome.bar}
 <div class="dd-body">
-${chrome.rail}
 <main class="dd-page${input.section ? " dd-page--section" : ""}">
 <article>
 ${body}
 </article>
 </main>
+${chrome.rail}
 </div>
 </body>
 </html>

@@ -434,6 +434,18 @@ describe("page landmarks", () => {
         }
     });
 
+    it("puts the content before the rail in the source", () => {
+        // Extractors read in source order; the stylesheet puts the rail back
+        // on the left for people.
+        for (const [path, html] of pages) {
+            const main = html.indexOf("<main");
+            const rail = html.indexOf('<nav class="dd-nav"');
+            expect(main, `${path} has no <main>`).toBeGreaterThan(-1);
+            expect(rail, `${path} has no rail`).toBeGreaterThan(-1);
+            expect(main, `${path} rail comes first`).toBeLessThan(rail);
+        }
+    });
+
     it("titles a section page with its own section, as the h1", () => {
         const html = out["docs/what-it-is/index.html"]!;
         expect(html).toContain('<h1 class="dd-section-title">What this is</h1>');
