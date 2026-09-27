@@ -58,7 +58,21 @@ export interface BuildStaticOptions {
     now?: Date;
     /** Findings older than this many days mark a fact stale. Default 365. */
     staleAfterDays?: number;
+    /**
+     * The visible note telling a reader, and an AI assistant, that the complete
+     * documentation is one page. Each string is plain text with placeholders:
+     * `{title}` is the document title, `{link}` (section pages) becomes a link
+     * to the index showing its address, and `{words}` (the index) is the
+     * rounded word count of the whole document. `false` leaves the note out.
+     */
+    fullManualNote?: false | { section?: string; index?: string };
 }
+
+/** The default wording of the full-manual note. */
+export const DEFAULT_FULL_MANUAL_NOTE = {
+    section: "This page is one part of {title}. The complete manual is a single page, short enough to read in one go: {link}",
+    index: "This page is the whole of {title}: every section, about {words} words. It is short enough to read in one go.",
+};
 
 /** Raised when a document has a fault that must not reach a published page. */
 export class InvalidDocumentError extends Error {
@@ -67,6 +81,17 @@ export class InvalidDocumentError extends Error {
         super(`dopedocs refused to build ${findings.length} fatal finding(s):\n${lines}`);
         this.name = "InvalidDocumentError";
     }
+}
+
+/**
+ * A word count rounded for prose: to the nearest hundred below 1,000 words,
+ * else to the nearest thousand, with thousands separators.
+ */
+function roundWords(html: string): string {
+    const text = html.replace(/<[^>]+>/g, " ");
+    const count = text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+    const step = count < 1000 ? 100 : 1000;
+    return (Math.max(step, Math.round(count / step) * step)).toLocaleString("en-US");
 }
 
 /** The crawlers ruled by default, named individually rather than by wildcard. */
@@ -170,6 +195,8 @@ interface PageInput {
     chrome: { bar: string; rail: string };
     /** Marks a single section's page, whose own title is the page's h1. */
     section?: boolean;
+    /** The whole document on one page, linked as the alternate reading. */
+    whole?: { url: string; title: string };
 }
 
 /**
@@ -195,7 +222,7 @@ function page(input: PageInput): string {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(canonical)}">
-${entity.logo ? `<meta property="og:image" content="${esc(entity.logo)}">\n` : ""}<meta name="twitter:card" content="summary_large_image">
+${input.whole ? `<link rel="alternate" type="text/html" title="${esc(input.whole.title)}" href="${esc(input.whole.url)}">\n` : ""}${entity.logo ? `<meta property="og:image" content="${esc(entity.logo)}">\n` : ""}<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
 ${[input.stylesheet ?? []]
@@ -347,6 +374,35 @@ export function buildStatic(
             : {}),
     };
 
+    /* --- the full-manual note -------------------------------------------
+       The index already carries every section back to back. Saying so on
+       every page, in text people see too, is how an AI assistant that lands
+       on one section learns the whole manual is one read away. */
+
+    const noteText = options.fullManualNote === false
+        ? undefined
+        : { ...DEFAULT_FULL_MANUAL_NOTE, ...options.fullManualNote };
+    const fill = (template: string, values: Record<string, string>): string =>
+        escapeHtml(template).replace(/\{(title|words|link)\}/g, (m, key: string) =>
+            values[key] ?? m,
+        );
+    const indexLink =
+        `<a href="${escapeHtml(indexPath)}">` +
+        `${escapeHtml(indexUrl.replace(/^https?:\/\//, ""))}</a>`;
+    const sectionNote = noteText
+        ? `<p class="dd-fullnote">${fill(noteText.section, {
+              title: escapeHtml(docs.title),
+              link: indexLink,
+          })}</p>`
+        : "";
+    const indexBody = renderLead(docs) + renderBody(docs);
+    const indexNote = noteText
+        ? `<p class="dd-fullnote">${fill(noteText.index, {
+              title: escapeHtml(docs.title),
+              words: roundWords(indexBody),
+          })}</p>`
+        : "";
+
     /* --- index --------------------------------------------------------- */
 
     const contentsList =
@@ -368,7 +424,7 @@ export function buildStatic(
         entity: docs.entity,
         stylesheet: options.stylesheet,
         chrome: { bar, rail: railFor() },
-        body: renderLead(docs) + contentsList + renderBody(docs),
+        body: renderLead(docs) + indexNote + contentsList + renderBody(docs),
         graph: {
             "@context": "https://schema.org",
             "@graph": [
@@ -408,7 +464,7 @@ export function buildStatic(
                       prev.title,
                   )}</a>`
                 : "") +
-            `<a href="${escapeHtml(indexPath)}">All documentation</a>` +
+            `<a href="${escapeHtml(indexPath)}">Complete manual (one page)</a>` +
             (next
                 ? `<a rel="next" href="${escapeHtml(pathFor(next.id))}">${escapeHtml(
                       next.title,
@@ -430,11 +486,12 @@ export function buildStatic(
             stylesheet: options.stylesheet,
             chrome: { bar, rail: railFor(section.id) },
             section: true,
+            whole: { url: indexUrl, title: `${docs.title}, complete on one page` },
             // Children are rendered by renderSection as sibling sections, so a
             // parent's page carries its folder in full while each child keeps
             // its own address. The section is the page, so its title is the
             // page's one h1 — the heading a text extractor takes as the topic.
-            body: renderSection(section, facts, { headingLevel: 1 }) + nav,
+            body: sectionNote + renderSection(section, facts, { headingLevel: 1 }) + nav,
             graph: {
                 "@context": "https://schema.org",
                 "@graph": [
@@ -448,6 +505,7 @@ export function buildStatic(
                         dateModified: lastmod,
                         about: { "@id": entityId },
                         publisher: { "@id": entityId },
+                        isPartOf: { "@id": `${indexUrl}#page` },
                         ...(section.keywords?.length
                             ? { keywords: section.keywords.join(", ") }
                             : {}),

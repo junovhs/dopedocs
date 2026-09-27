@@ -500,6 +500,7 @@ Everything the plugin accepts besides `docs`. `buildStatic` takes the same set.
 | `basePath` | `"docs"` | Where the pages live, so `/help/<id>/` instead of `/docs/<id>/`. |
 | `robots` | search allowed, training refused | See [Crawler policy](#crawler-policy). |
 | `staleAfterDays` | `365` | How old a fact's `reviewed` date may be before it is reported. |
+| `fullManualNote` | on | A visible line on every page saying the whole manual is one page (the index), so a reader or an AI assistant landing on one section knows where the rest is. Override the wording with `{ section, index }` using `{title}`, `{link}` and `{words}`; `false` turns it off. |
 | `now` | the clock | Injected for deterministic output. |
 
 ## Without Vite

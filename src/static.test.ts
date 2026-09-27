@@ -111,7 +111,7 @@ describe("a section page", () => {
 
     it("links the previous and next sections and the index", () => {
         expect(html).toContain('rel="next" href="/docs/data/"');
-        expect(html).toContain("All documentation");
+        expect(html).toContain("Complete manual (one page)");
     });
 });
 
@@ -463,6 +463,70 @@ describe("page landmarks", () => {
         expect(html).toContain('<h1 class="dd-title">');
         expect(html).toContain('<h2 class="dd-section-title">What this is</h2>');
         expect(html).not.toContain("dd-page--section");
+    });
+});
+
+/* ── The full-manual note ────────────────────────────────────────────────── */
+
+describe("full-manual note", () => {
+    const sectionPages = Object.entries(out).filter(
+        ([path]) => path.endsWith("/index.html") && path !== "docs/index.html",
+    );
+    const index = out["docs/index.html"]!;
+
+    it("tells every section page the complete manual is one page, and links it", () => {
+        expect(sectionPages.length).toBeGreaterThan(1);
+        for (const [path, html] of sectionPages) {
+            expect(html, path).toContain(
+                '<p class="dd-fullnote">This page is one part of How No Ceremony works. ' +
+                    "The complete manual is a single page, short enough to read in one go: " +
+                    '<a href="/docs/">noceremony.app/docs/</a></p>',
+            );
+            expect(html, path).toContain(
+                '<link rel="alternate" type="text/html" ' +
+                    'title="How No Ceremony works, complete on one page" ' +
+                    'href="https://noceremony.app/docs/">',
+            );
+            expect(html, path).toContain('"isPartOf": {\n');
+        }
+    });
+
+    it("puts the note above the page's title, inside <main>", () => {
+        const html = out["docs/what-it-is/index.html"]!;
+        const main = html.indexOf("<main");
+        const note = html.indexOf('class="dd-fullnote"');
+        const h1 = html.indexOf("<h1");
+        expect(main).toBeLessThan(note);
+        expect(note).toBeLessThan(h1);
+    });
+
+    it("says on the index that it is the complete manual, with a word count", () => {
+        expect(index).toMatch(
+            /<p class="dd-fullnote">This page is the whole of How No Ceremony works: every section, about [\d,]+ words\. It is short enough to read in one go\.<\/p>/,
+        );
+        // The index is the whole; it does not point at itself.
+        expect(index).not.toContain('rel="alternate"');
+    });
+
+    it("takes wording from the option, and can be turned off", () => {
+        const custom = buildStatic(docs, {
+            now,
+            fullManualNote: { section: "Part of {title}. All of it: {link}", index: "All {words} words of {title}." },
+        });
+        expect(custom["docs/data/index.html"]).toContain(
+            '<p class="dd-fullnote">Part of How No Ceremony works. All of it: <a href="/docs/">noceremony.app/docs/</a></p>',
+        );
+        expect(custom["docs/index.html"]).toMatch(/<p class="dd-fullnote">All [\d,]+ words of How No Ceremony works\.<\/p>/);
+
+        const off = buildStatic(docs, { now, fullManualNote: false });
+        for (const [path, html] of Object.entries(off)) {
+            if (path.endsWith(".html")) expect(html, path).not.toContain("dd-fullnote");
+        }
+    });
+
+    it("escapes wording supplied by the consumer", () => {
+        const evil = buildStatic(docs, { now, fullManualNote: { section: "<b>{title}</b>" } });
+        expect(evil["docs/data/index.html"]).toContain("&lt;b&gt;How No Ceremony works&lt;/b&gt;");
     });
 });
 
