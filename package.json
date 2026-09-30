@@ -26,7 +26,11 @@
             "types": "./dist/vite.d.ts",
             "import": "./dist/vite.js"
         },
-        "./styles.css": "./styles/dopedocs.css"
+        "./styles.css": "./styles/dopedocs.css",
+        "./shots": {
+            "types": "./dist/shots.d.ts",
+            "import": "./dist/shots.js"
+        }
     },
     "types": "./dist/index.d.ts",
     "scripts": {
@@ -42,10 +46,14 @@
         "vitest": "^3.2.7"
     },
     "peerDependencies": {
-        "vite": ">=5"
+        "vite": ">=5",
+        "playwright": ">=1.40"
     },
     "peerDependenciesMeta": {
         "vite": {
+            "optional": true
+        },
+        "playwright": {
             "optional": true
         }
     },
@@ -75,5 +83,8 @@
     ],
     "engines": {
         "node": ">=18"
+    },
+    "bin": {
+        "dopedocs-shots": "dist/shots-cli.js"
     }
 }

@@ -14,12 +14,14 @@ you end up doing it again on the next project. This is that week, packaged.
 
 ## What you get
 
-- A **panel in your app**, mounted in one line, with a nav rail and folders.
+- A **panel in your app**, mounted in one line, with a nav rail and folding chapters.
 - A **page per section** at `/docs/<id>/`, complete without JavaScript, each one
   carrying a bar back to your app and a rail of every section.
 - The **machine-readable set**, generated rather than authored: a JSON-LD entity
   graph, `sitemap.xml`, `robots.txt` that rules search and training crawlers
   separately, `llms.txt`, and `questions.json`.
+- **Screenshots taken from your running app**, reproducibly, with their sizes
+  fed straight into the image declarations (`npx dopedocs-shots`).
 - **Your styling.** dopedocs reads only `--dd-*` custom properties, so it looks
   like your product rather than like dopedocs.
 
@@ -464,6 +466,77 @@ tracking, no third-party embed. A `src` is a `src` — host the file yourself.
 
 Captions are prose, so `**strong**`, `` `code` `` and `{fact:key}` all work in
 them. `alt` is plain text, because it ends up inside an attribute.
+
+## Screenshots from your app
+
+A manual's pictures go stale the moment the interface moves, and a picture
+nobody can retake is how an invented image ends up in documentation. dopedocs
+takes them for you, from the running app, the same way every time.
+
+```sh
+npm i -D playwright && npx playwright install chromium
+```
+
+Declare the set in `dopedocs.shots.mjs` at the project root:
+
+```js
+import { defineShots } from "dopedocs/shots";
+
+export default defineShots({
+    out: "public/docs-assets",          // pictures and shots.json go here
+    time: "2026-09-04T10:30:00-07:00",  // the page's clock is frozen here
+    timezone: "America/Los_Angeles",
+    fonts: ["Inter"],                   // refuse to shoot in fallback fonts
+    storage: { "my-app-state": { tasks: [/* seeded, made-up content */] } },
+    css: ".toast { visibility: hidden !important; }",
+    shots: [
+        { name: "home", viewport: { width: 1200, height: 900 }, widths: [700], webp: true },
+        { name: "editor", dpr: 2, frame: ".editor", pad: -6,
+          before: async (page) => { await page.click("#new"); await page.fill("#name", "Pay the bill"); } },
+    ],
+});
+```
+
+```sh
+npx dopedocs-shots              # every shot
+npx dopedocs-shots --only editor
+npx dopedocs-shots --list
+```
+
+With no `url`, a Vite dev server is started for the run (with `env` in its
+environment) and stopped after it.
+
+What is pinned, so two runs write byte-identical files: the clock, zone and
+locale; each shot's viewport and pixel ratio; the app's localStorage (cleared,
+then seeded before the page loads); web fonts (Google Fonts by default,
+fetched once and then served from `node_modules/.cache/dopedocs-shots`); and
+motion (reduced motion, animations removed, transitions finished, pointer and
+focus parked). A shot frames the viewport, the full `page`, one element, or
+the union of several, with optional `pad`: never a freehand rectangle, so a
+crop cannot cut a glyph. `widths` adds resized PNGs and `webp` adds WebP
+copies, drawn by the same browser.
+
+It also writes `shots.json`, the real size of every file. Declare images from
+it and their dimensions can never drift from the pictures:
+
+```ts
+import { shotImage, type ShotManifest } from "dopedocs";
+import shots from "../public/docs-assets/shots.json";
+
+{ kind: "image", ...shotImage(shots as ShotManifest, "home", {
+    alt: "The home screen with three tasks in order",
+    caption: "Open the app and the order is already settled.",
+}) }
+```
+
+`shotImage` fills `src`, `width`, `height`, `srcset` and the WebP `sources`,
+and throws on a name the manifest does not have, so a removed shot fails the
+build instead of shipping a broken image.
+
+**Adding a picture, for a person or an agent:** add a row to `shots`, run
+`npx dopedocs-shots --only <name>`, open the PNG and look at it, then use
+`shotImage(shots, "<name>", { alt })` where it belongs. Seed only made-up
+content: these pictures are public.
 
 ## Brandmarks
 

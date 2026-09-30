@@ -4,3 +4,4 @@ export * from "./panel.js";
 export * from "./render.js";
 export * from "./schema.js";
 export * from "./static.js";
+export * from "./shot-image.js";
