@@ -342,7 +342,7 @@ A section is a **page** or a **group**.
 | `compare` | `{ kind: "compare", before: { title, text }, after: { title, text } }` |
 | `keys` | `{ kind: "keys", rows: [keys, does][] }` |
 | `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
-| `facts` | `{ kind: "facts", title?, mark?, rows: [label, value][] }` |
+| `facts` | `{ kind: "facts", title?, mark?, href?, rows: [label, value][] }` — `href` links the head (mark and title) and shows the address; an http(s) URL opens in a new tab. |
 | `image` | `{ kind: "image", src, alt, caption?, width?, height?, srcset?, sizes?, sources?, loading?, fetchPriority?, position?, href? }` |
 | `gallery` | `{ kind: "gallery", images, columns?: 2 \| 3, label? }` |
 | `video` | `{ kind: "video", src, poster?, caption? }` |

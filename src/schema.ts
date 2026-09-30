@@ -94,6 +94,12 @@ export type DocBlock =
           title?: string;
           /** A brandmark for the card: inline SVG, or the URL of an image. */
           mark?: string;
+          /**
+           * Where the card's subject lives on the web. The head (mark and
+           * title) becomes a link there and shows the address; an absolute
+           * http(s) URL opens in a new tab so an in-app reader keeps their place.
+           */
+          href?: string;
           rows: [label: string, value: string][];
       }
     | ({ kind: "image" } & DocImage)

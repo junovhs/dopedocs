@@ -440,6 +440,19 @@ describe("brandmarks", () => {
         expect(html).toContain('<p class="dd-facts-title">Strange Systems</p>');
     });
 
+    it("links a facts card's head to its subject's site, in a new tab when external", () => {
+        const html = renderBlock({
+            kind: "facts",
+            title: "Strange Systems",
+            mark: "/glyph.png",
+            href: "https://strangesystems.dev/",
+            rows: [["Based in", "Eugene, Oregon"]],
+        }, {}, "a facts card");
+        expect(html).toContain('<a class="dd-facts-head dd-facts-link" href="https://strangesystems.dev/" target="_blank" rel="noopener">');
+        expect(html).toContain('<span class="dd-facts-url">strangesystems.dev<span aria-hidden="true"> ↗</span></span></a>');
+        expect(html).toContain('<img src="/glyph.png" alt="">');
+    });
+
     it("leaves a facts card without a mark exactly as it was", () => {
         const html = renderBlock({
             kind: "facts",

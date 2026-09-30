@@ -200,14 +200,19 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
             const title = block.title
                 ? `<p class="dd-facts-title">${text(block.title)}</p>`
                 : "";
-            // A card with a mark gets a head to lay the two out side by side;
-            // one without emits exactly what it always has.
-            const head = block.mark
-                ? `<div class="dd-facts-head">${renderMark(
-                      block.mark,
-                      "dd-facts-mark",
-                  )}${title}</div>`
-                : title;
+            // A card with a mark or a link gets a head to lay them out side by
+            // side; one with neither emits exactly what it always has.
+            const mark = block.mark ? renderMark(block.mark, "dd-facts-mark") : "";
+            const external = /^https?:\/\//i.test(block.href ?? "");
+            const head = block.href
+                ? `<a class="dd-facts-head dd-facts-link" href="${escapeHtml(block.href)}"` +
+                  (external ? ` target="_blank" rel="noopener"` : "") +
+                  `>${mark}${title}<span class="dd-facts-url">${escapeHtml(
+                      block.href.replace(/^https?:\/\//i, "").replace(/\/$/, ""),
+                  )}${external ? '<span aria-hidden="true"> ↗</span>' : ""}</span></a>`
+                : block.mark
+                  ? `<div class="dd-facts-head">${mark}${title}</div>`
+                  : title;
             const rows = block.rows
                 .map(([label, value]) => `<dt>${text(label)}</dt><dd>${text(value)}</dd>`)
                 .join("");
