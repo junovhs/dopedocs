@@ -13,8 +13,11 @@ import { escapeHtml, inline, renderBody, renderLead, renderSection } from "./ren
 import {
     hasFatal,
     validate,
+    type DocPage,
     type DocSection,
     type DocSet,
+    isGroup,
+    pagesOf,
     type Finding,
     type SiteEntity,
 } from "./schema.js";
@@ -115,15 +118,9 @@ const trimSlashes = (s: string) => s.replace(/^\/+|\/+$/g, "");
 const jsonLd = (value: unknown): string =>
     JSON.stringify(value, null, 2).replace(/</g, "\\u003c");
 
-/** Flattens a section tree into reading order, keeping parentage for breadcrumbs. */
-function flatten(
-    sections: DocSection[],
-    parent?: DocSection,
-): { section: DocSection; parent?: DocSection }[] {
-    return sections.flatMap((section) => [
-        { section, parent },
-        ...flatten(section.children ?? [], section),
-    ]);
+/** Every page in reading order. Groups are labels and get no page of their own. */
+function flatten(sections: DocSection[]): { section: DocPage }[] {
+    return pagesOf(sections).map(({ page }) => ({ section: page }));
 }
 
 /** Strips marks and fills facts, for values that must be plain text. */
@@ -336,25 +333,25 @@ export function buildStatic(
         `</div>`;
 
     /** One rail link, marked when it is the page being read. */
-    const navLink = (s: DocSection, currentId?: string): string =>
+    const navLink = (s: DocPage, currentId?: string): string =>
         `<a class="dd-nav-link${s.id === currentId ? " is-active" : ""}"` +
         ` href="${escapeHtml(pathFor(s.id))}"` +
         (s.id === currentId ? ` aria-current="page"` : "") +
         `>${escapeHtml(s.title)}</a>`;
 
-    // Children are listed under their parent rather than folded into a
-    // collapsed group: there is no script on this page to open a folder, so
-    // anything hidden would be hidden for good — from a reader and a crawler
-    // alike.
-    /** A rail entry, with any children listed beneath it. */
+    // A group is a native <details>, open by default: it folds without any
+    // script, and nothing is hidden from a crawler, which reads closed
+    // <details> content anyway. Its summary is a label, not a link: a group
+    // has no page.
+    /** A rail entry: a page link, or a group label with its pages beneath. */
     const railItem = (s: DocSection, currentId?: string): string =>
-        `<li>${navLink(s, currentId)}` +
-        (s.children?.length
-            ? `<ul class="dd-nav-list">` +
-              s.children.map((child) => railItem(child, currentId)).join("") +
-              `</ul>`
-            : "") +
-        `</li>`;
+        isGroup(s)
+            ? `<li><details class="dd-nav-group" open>` +
+              `<summary>${escapeHtml(s.title)}</summary>` +
+              `<ul class="dd-nav-list">` +
+              s.children.map((page) => `<li>${navLink(page, currentId)}</li>`).join("") +
+              `</ul></details></li>`
+            : `<li>${navLink(s, currentId)}</li>`;
 
     /** The whole rail; `currentId` is absent on the index, which is nobody's section. */
     const railFor = (currentId?: string): string =>
@@ -405,14 +402,17 @@ export function buildStatic(
 
     /* --- index --------------------------------------------------------- */
 
+    const contentsLink = (page: DocPage) =>
+        `<li><a href="${escapeHtml(pathFor(page.id))}">${escapeHtml(page.title)}</a></li>`;
     const contentsList =
         `<nav class="dd-contents"><h2>Contents</h2><ul class="dd-list">` +
-        all
-            .map(
-                ({ section }) =>
-                    `<li><a href="${escapeHtml(pathFor(section.id))}">${escapeHtml(
-                        section.title,
-                    )}</a></li>`,
+        docs.sections
+            .map((section) =>
+                isGroup(section)
+                    ? `<li>${escapeHtml(section.title)}<ul class="dd-list">` +
+                      section.children.map(contentsLink).join("") +
+                      `</ul></li>`
+                    : contentsLink(section),
             )
             .join("") +
         `</ul></nav>`;
@@ -451,7 +451,7 @@ export function buildStatic(
 
     /* --- one page per section ------------------------------------------ */
 
-    for (const [index, { section, parent }] of all.entries()) {
+    for (const [index, { section }] of all.entries()) {
         const url = urlFor(section.id);
         const entry = entries[index]!;
         const prev = all[index - 1]?.section;
@@ -472,9 +472,10 @@ export function buildStatic(
                 : "") +
             `</nav>`;
 
+        // A group has no URL, so it is not a crumb: a breadcrumb step must
+        // lead somewhere.
         const crumbs = [
             { name: docs.title, item: indexUrl },
-            ...(parent ? [{ name: parent.title, item: urlFor(parent.id) }] : []),
             { name: section.title, item: url },
         ];
 
@@ -487,10 +488,8 @@ export function buildStatic(
             chrome: { bar, rail: railFor(section.id) },
             section: true,
             whole: { url: indexUrl, title: `${docs.title}, complete on one page` },
-            // Children are rendered by renderSection as sibling sections, so a
-            // parent's page carries its folder in full while each child keeps
-            // its own address. The section is the page, so its title is the
-            // page's one h1 — the heading a text extractor takes as the topic.
+            // The section is the page, so its title is the page's one h1 — the
+            // heading a text extractor takes as the topic.
             body: sectionNote + renderSection(section, facts, { headingLevel: 1 }) + nav,
             graph: {
                 "@context": "https://schema.org",

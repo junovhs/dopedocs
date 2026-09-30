@@ -328,6 +328,44 @@
     border-left: 1px solid var(--dd-line);
 }
 
+/* Opening and closing a group glides rather than snaps, and closes the same
+   way it opened. Where ::details-content or interpolate-size are missing, the
+   group simply opens and closes at once. */
+.dd-nav-group {
+    interpolate-size: allow-keywords;
+}
+
+.dd-nav-group::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+        block-size 0.26s var(--dd-ease),
+        content-visibility 0.26s allow-discrete;
+}
+
+.dd-nav-group[open]::details-content {
+    block-size: auto;
+}
+
+/* A group in the body is only its label and its pages: a quiet kicker above
+   the first page, never a heading of its own, never something to read. */
+.dd-group {
+    margin: 0 0 46px;
+}
+
+.dd-group:last-child {
+    margin-bottom: 0;
+}
+
+.dd-group-label {
+    max-width: var(--dd-measure);
+    margin: 0 0 10px;
+    color: var(--dd-accent);
+    font: 700 11px/1.3 var(--dd-mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
 .dd-main {
     grid-column: 3;
     padding: 44px 46px 110px;
@@ -995,7 +1033,8 @@ a.dd-card:focus-visible,
     .dd-back svg,
     .dd-back:hover svg,
     .dd-nav-group > summary::before,
-    .dd-nav-group[open] > summary::before {
+    .dd-nav-group[open] > summary::before,
+    .dd-nav-group::details-content {
         transition: none;
     }
 
@@ -1408,7 +1447,8 @@ a.dd-card:focus-visible,
    vertical separation, with a quiet rule so the shared default is easy to
    verify across consuming apps. Individual section pages and the in-app panel
    keep their existing rhythm. */
-.dd-static .dd-contents ~ .dd-section {
+.dd-static .dd-contents ~ .dd-section,
+.dd-static .dd-contents ~ .dd-group {
     padding-top: 20px;
     border-top: 1px solid var(--dd-line-soft);
 }

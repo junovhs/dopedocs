@@ -13,7 +13,7 @@ import {
     renderLead,
     renderSection,
 } from "./render.js";
-import { defineDocs, type DocBlock, type DocSection } from "./schema.js";
+import { defineDocs, type DocBlock, type DocPage } from "./schema.js";
 
 const facts = defineFacts({
     price: { value: "free", reviewed: "2026-09-02" },
@@ -24,7 +24,7 @@ const facts = defineFacts({
 const where = "a test";
 const render = (raw: string) => inline(raw, facts, where);
 
-const section = (over: Partial<DocSection> = {}): DocSection => ({
+const section = (over: Partial<DocPage> = {}): DocPage => ({
     id: "s",
     title: "S",
     question: "Q?",
@@ -257,14 +257,17 @@ describe("sections", () => {
         );
     });
 
-    it("renders a child one heading level deeper, as its own anchored section", () => {
+    it("renders a group as a label over its pages, with no section or body of its own", () => {
         const html = renderSection(
-            section({ id: "parent", children: [section({ id: "child", title: "C" })] }),
+            { id: "chapter", title: "Chapter", children: [section({ id: "a", title: "A" }), section({ id: "b", title: "B" })] },
             facts,
         );
-        expect(html).toContain('<h2 class="dd-section-title">S</h2>');
-        expect(html).toContain('<section class="dd-section" id="child">');
-        expect(html).toContain('<h3 class="dd-section-title">C</h3>');
+        expect(html).toContain('<p class="dd-group-label">Chapter</p>');
+        expect(html).not.toContain('id="chapter"');
+        expect(html).toContain('<section class="dd-section" id="a">');
+        // Pages in a group keep the page heading level; the label is not a heading.
+        expect(html).toContain('<h2 class="dd-section-title">B</h2>');
+        expect(html.match(/<section /g)).toHaveLength(2);
     });
 
     it("escapes a title and an id rather than trusting them", () => {

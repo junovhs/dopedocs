@@ -184,12 +184,16 @@ export const docs = defineDocs({
             ],
         },
         {
-            id: "data",
+            id: "your-data",
             title: "Your data",
-            question: "Where does Your App store my data?",
-            answer: "Your App stores your list in {fact:storage}.",
-            blocks: [{ kind: "p", text: "Your list lives in {fact:storage}." }],
             children: [
+                {
+                    id: "data",
+                    title: "Where it lives",
+                    question: "Where does Your App store my data?",
+                    answer: "Your App stores your list in {fact:storage}.",
+                    blocks: [{ kind: "p", text: "Your list lives in {fact:storage}." }],
+                },
                 {
                     id: "export",
                     title: "Export",
@@ -203,14 +207,21 @@ export const docs = defineDocs({
 });
 ```
 
-`children` gives one level of nesting, which the nav rail renders as a folder.
+An entry with `children` is a **group**: a chapter label and the pages inside
+it, nothing more. A group has no `question`, `answer` or `blocks`, no page and
+no URL; the rail folds it open and shut, and opening it navigates nowhere.
+Anything a chapter wants to say belongs on one of its pages, so no page ever
+has to be read together with its chapter to make sense. Groups hold pages only,
+one level deep.
 
 ### Rules the build enforces
 
 A section fails the build if its `id` is not a URL-safe slug, its `question` is
 empty, its `answer` opens with an outward-referring pronoun ("It stores…" rather
 than "Your App stores…") or runs past 320 characters, it nests more than one
-level deep, or it references a fact that is not in the registry. An `image` with
+level deep, or it references a fact that is not in the registry. A group fails
+if it is empty or carries content of its own (a `question`, `answer` or
+`blocks`); a page with `children` is reported the same way. An `image` with
 a blank `alt` fails too. Stale `reviewed` dates are reported but do not block.
 
 ## 5. Mount the panel
@@ -243,8 +254,9 @@ people something different from crawlers is the shape of cloaking.
 So the static page is a destination, not a fragment. Every one carries:
 
 - a **bar** linking back to your app, labelled with `entity.name`;
-- a **rail** of every section, children nested under their parent, with the
-  current one marked;
+- a **rail** of every page, each group a foldable label over its pages (open
+  by default, so nothing is hidden without script), with the current page
+  marked;
 - the section itself, and links to the previous and next.
 
 All of it is derived from the document you already wrote — `entity.url`,
@@ -295,13 +307,22 @@ naming the product, its version and who makes it.
 
 | Field | |
 | --- | --- |
+A section is a **page** or a **group**.
+
+| Page field | |
+| --- | --- |
 | `id` | Required. URL-safe slug; it is the public address, so renaming one breaks links. |
 | `title` | Required. |
 | `question` | Required. The query this section is retrieved for. |
 | `answer` | Required. Self-contained, at most 320 characters. |
 | `blocks` | The body — see [Block kinds](#block-kinds). |
-| `children` | One level of nesting, rendered as a folder. |
 | `keywords` | Optional, published as the article's keywords. |
+
+| Group field | |
+| --- | --- |
+| `id` | Required. A slug that keys the fold; not a URL, since a group has no page. |
+| `title` | Required. The chapter label. |
+| `children` | Required. The pages in the chapter, at least one. |
 
 ---
 

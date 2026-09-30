@@ -7,6 +7,8 @@ import {
     hasFatal,
     validate,
     type DocBlock,
+    type DocGroup,
+    type DocPage,
     type DocSection,
     type DocSet,
     type FindingCode,
@@ -43,12 +45,16 @@ const sample = defineDocs({
             ],
         },
         {
-            id: "data",
+            id: "your-data",
             title: "Your data",
-            question: "Where does Example keep my data?",
-            answer: "Example keeps your data in {fact:storage}.",
-            blocks: [{ kind: "p", text: "Nothing leaves the device." }],
             children: [
+                {
+                    id: "data",
+                    title: "Where it lives",
+                    question: "Where does Example keep my data?",
+                    answer: "Example keeps your data in {fact:storage}.",
+                    blocks: [{ kind: "p", text: "Nothing leaves the device." }],
+                },
                 {
                     id: "export",
                     title: "Export",
@@ -68,7 +74,7 @@ const codesOf = (docs: DocSet, today = new Date("2026-09-02")): FindingCode[] =>
 /** The sample with `sections` swapped out, so each case states only its subject. */
 const withSections = (sections: DocSection[]): DocSet => ({ ...sample, sections });
 
-const section = (over: Partial<DocSection> = {}): DocSection => ({
+const section = (over: Partial<DocPage> = {}): DocPage => ({
     id: "ok",
     title: "Ok",
     question: "Is this section valid?",
@@ -84,7 +90,7 @@ describe("a well-formed document", () => {
 
     it("round-trips its facts by key", () => {
         expect(resolveFact(facts, "price")).toBe("free");
-        expect(referencedFacts(sample.sections[0]!.answer)).toEqual(["price"]);
+        expect(referencedFacts((sample.sections[0] as DocPage).answer)).toEqual(["price"]);
     });
 });
 
@@ -127,23 +133,27 @@ describe("validate", () => {
         expect(codesOf(docs)).toContain("answer-too-long");
     });
 
-    it("reports nesting past one level of folders", () => {
-        const docs = withSections([
-            section({
-                id: "top",
-                children: [
-                    section({ id: "mid", children: [section({ id: "deep" })] }),
-                ],
-            }),
-        ]);
-        expect(codesOf(docs)).toContain("nesting-too-deep");
+    const group = (id: string, children: DocPage[]): DocGroup => ({ id, title: id, children });
+
+    it("reports a group inside a group", () => {
+        const inner = group("mid", [section({ id: "deep" })]) as unknown as DocPage;
+        expect(codesOf(withSections([group("top", [inner])]))).toContain("nesting-too-deep");
     });
 
-    it("accepts one level of folders", () => {
-        const docs = withSections([
-            section({ id: "top", children: [section({ id: "mid" })] }),
-        ]);
-        expect(codesOf(docs)).not.toContain("nesting-too-deep");
+    it("accepts one level of groups", () => {
+        const codes = codesOf(withSections([group("top", [section({ id: "mid" })])]));
+        expect(codes).toEqual([]);
+    });
+
+    it("reports a group with no pages in it", () => {
+        expect(codesOf(withSections([group("empty", [])]))).toContain("empty-group");
+    });
+
+    it("reports a group that carries content of its own, or a page with children", () => {
+        const chapter = { ...group("top", [section({ id: "mid" })]), answer: "Top says things.", blocks: [] };
+        expect(codesOf(withSections([chapter as DocSection]))).toContain("group-with-content");
+        const oldStyle = { ...section({ id: "parent" }), children: [section({ id: "child" })] };
+        expect(codesOf(withSections([oldStyle as DocSection]))).toContain("group-with-content");
     });
 
     it("reports a fact reference that resolves to nothing, naming the key", () => {

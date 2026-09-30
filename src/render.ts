@@ -11,7 +11,7 @@
 
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
-import type { DocBlock, DocIdentity, DocImage, DocSection, DocSet } from "./schema.js";
+import { isGroup, type DocBlock, type DocIdentity, type DocImage, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
 /**
  * Thrown when prose references a fact the registry does not hold. Shipping a
@@ -252,8 +252,9 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
 /** How a section is drawn; every field has a working default. */
 export interface SectionRenderOptions {
     /**
-     * Heading level for this section; children render one level deeper. A
-     * static section page passes 1, because there the section is the page.
+     * Heading level for this page. A static page passes 1, because there the
+     * section is the page. Pages inside a group keep this level: the group is
+     * a label above them, not a heading they sit under.
      */
     headingLevel?: 1 | 2 | 3 | 4;
     /**
@@ -264,40 +265,49 @@ export interface SectionRenderOptions {
     showAnswer?: boolean;
 }
 
-/** Renders one section and, beneath it, any folder children it carries. */
+/** Renders one page: its heading, its answer and its blocks. */
+export function renderPage(
+    page: DocPage,
+    facts: FactMap,
+    options: SectionRenderOptions = {},
+): string {
+    const { headingLevel = 2, showAnswer = true } = options;
+    const where = `section "${page.id}"`;
+    const h = `h${headingLevel}`;
+
+    const answer = showAnswer
+        ? `<p class="dd-answer">${inline(page.answer, facts, where)}</p>`
+        : "";
+
+    const body = page.blocks
+        .map((block) => renderBlock(block, facts, where))
+        .join("");
+
+    return (
+        `<section class="dd-section" id="${escapeHtml(page.id)}">` +
+        `<${h} class="dd-section-title">${escapeHtml(page.title)}</${h}>` +
+        answer +
+        body +
+        `</section>`
+    );
+}
+
+/**
+ * Renders a page, or a group as a quiet chapter label followed by its pages.
+ * The label is not a section: it has no id to scroll to, no answer, no body,
+ * and nothing in it needs reading before the pages below it make sense.
+ */
 export function renderSection(
     section: DocSection,
     facts: FactMap,
     options: SectionRenderOptions = {},
 ): string {
-    const { headingLevel = 2, showAnswer = true } = options;
-    const where = `section "${section.id}"`;
-    const h = `h${headingLevel}`;
-
-    const answer = showAnswer
-        ? `<p class="dd-answer">${inline(section.answer, facts, where)}</p>`
-        : "";
-
-    const body = section.blocks
-        .map((block) => renderBlock(block, facts, where))
-        .join("");
-
-    const children = (section.children ?? [])
-        .map((child) =>
-            renderSection(child, facts, {
-                ...options,
-                headingLevel: Math.min(headingLevel + 1, 4) as 2 | 3 | 4,
-            }),
-        )
-        .join("");
-
+    if (!isGroup(section)) return renderPage(section, facts, options);
     return (
-        `<section class="dd-section" id="${escapeHtml(section.id)}">` +
-        `<${h} class="dd-section-title">${escapeHtml(section.title)}</${h}>` +
-        answer +
-        body +
-        `</section>` +
-        children
+        `<div class="dd-group" data-dd-group-label="${escapeHtml(section.id)}">` +
+        `<p class="dd-group-label">${escapeHtml(section.title)}</p>` +
+        section.children.map((page) => renderPage(page, facts, options)).join("") +
+        `</div>`
     );
 }
 

@@ -4,7 +4,7 @@
  * Three behaviours matter here, and each replaces something that was wrong in
  * the hand-built version this is extracted from:
  *
- * - **Folders** are native `<details>`/`<summary>`, so disclosure semantics,
+ * - **Groups** are native `<details>`/`<summary>`, so disclosure semantics,
  *   keyboard handling and assistive-technology support come from the platform.
  * - **Scrollspy resolves from scroll position, not intersection.** An
  *   `IntersectionObserver` with a read band near the top of the viewport can
@@ -19,7 +19,7 @@
  */
 
 import { escapeHtml, renderBody, renderLead } from "./render.js";
-import type { DocSection, DocSet } from "./schema.js";
+import { isGroup, pagesOf, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
 export interface PanelOptions {
     /** Path the docs live at. Defaults to the document's own, else `/docs`. */
@@ -53,9 +53,9 @@ const END_SLACK = 2;
 
 const trimSlashes = (s: string) => s.replace(/^\/+|\/+$/g, "");
 
-/** Flattens the tree in reading order. */
-function flatten(sections: DocSection[]): DocSection[] {
-    return sections.flatMap((s) => [s, ...flatten(s.children ?? [])]);
+/** Every page in reading order; groups are labels, not places to be. */
+function flatten(sections: DocSection[]): DocPage[] {
+    return pagesOf(sections).map(({ page }) => page);
 }
 
 /**
@@ -121,16 +121,6 @@ export function mountPanel(
     /** The group we last auto-expanded, so a manual collapse is not fought. */
     let expandedFor: string | null = null;
     /**
-     * Groups this code opened, awaiting their `toggle` event.
-     *
-     * `toggle` fires for a programmatic `open = true` exactly as it does for a
-     * click, and the handler navigates on open — so without this, expanding a
-     * folder because the reader scrolled into its child would immediately scroll
-     * them back out to the parent. The event is queued rather than synchronous,
-     * so a plain boolean would already have been reset by the time it arrives.
-     */
-    const autoExpanded = new Set<string>();
-    /**
      * A section the reader explicitly asked for, held active until they scroll.
      *
      * Near the end of the document the end clamp is right about what is on
@@ -149,21 +139,22 @@ export function mountPanel(
     /* --- markup ---------------------------------------------------------- */
 
     /** One rail entry pointing at a section's canonical path. */
-    const link = (s: DocSection) =>
+    const link = (s: DocPage) =>
         `<a class="dd-nav-link" href="${escapeHtml(basePath)}/${escapeHtml(
             s.id,
         )}/" data-dd-link="${escapeHtml(s.id)}">${escapeHtml(s.title)}</a>`;
 
-    /** A rail entry, or a folder when the section has children. */
+    /**
+     * A rail entry: a page link, or a group that folds its pages away. The
+     * summary only folds and unfolds. A group is a label, not a page, so
+     * opening it goes nowhere and there is nothing of its own to read.
+     */
     const railItem = (s: DocSection): string => {
-        if (!s.children?.length) return `<li>${link(s)}</li>`;
-        // The summary both toggles and, when it opens, navigates — so a folder
-        // behaves like the section it actually is, while collapsing stays a
-        // pure "I am done here" gesture that moves nothing.
+        if (!isGroup(s)) return `<li>${link(s)}</li>`;
         return (
             `<li><details class="dd-nav-group" data-dd-group="${escapeHtml(s.id)}">` +
-            `<summary data-dd-link="${escapeHtml(s.id)}">${escapeHtml(s.title)}</summary>` +
-            `<ul class="dd-nav-list">${s.children.map(railItem).join("")}</ul>` +
+            `<summary>${escapeHtml(s.title)}</summary>` +
+            `<ul class="dd-nav-list">${s.children.map((page) => `<li>${link(page)}</li>`).join("")}</ul>` +
             `</details></li>`
         );
     };
@@ -234,7 +225,6 @@ export function mountPanel(
             );
             if (holds && !group.open && expandedFor !== group.dataset.ddGroup) {
                 const gid = group.dataset.ddGroup ?? null;
-                if (gid) autoExpanded.add(gid);
                 group.open = true;
                 expandedFor = gid;
             }
@@ -353,21 +343,13 @@ export function mountPanel(
     };
 
     /**
-     * Navigates when a folder is opened by the reader.
-     *
-     * A summary is not a link, so navigation rides the native toggle: opening a
-     * folder takes you to the section it stands for, collapsing it moves nothing.
+     * Remembers a group the reader folded away while reading inside it, so
+     * scrolling on through its pages does not keep springing it open again.
      */
     const onToggleGroup = (event: Event) => {
         const group = event.target as HTMLDetailsElement;
         const id = group.dataset.ddGroup;
-        if (!id) return;
-        // Our own expansion, not the reader's: acknowledge it and move nothing.
-        if (autoExpanded.delete(id)) return;
-        if (group.open) {
-            expandedFor = id;
-            scrollTo(id, true);
-        }
+        if (id && !group.open) expandedFor = id;
     };
 
     /** Escape closes the panel. */

@@ -36,12 +36,16 @@ const docs = defineDocs({
             blocks: [{ kind: "p", text: "Storage tools keep work; this one orders it." }],
         },
         {
-            id: "data",
+            id: "your-data",
             title: "Your data",
-            question: "Where does No Ceremony store my data?",
-            answer: "No Ceremony stores your list in your browser, with optional sync when signed in.",
-            blocks: [{ kind: "p", text: "Nothing leaves the device unless you sign in." }],
             children: [
+                {
+                    id: "data",
+                    title: "Where it lives",
+                    question: "Where does No Ceremony store my data?",
+                    answer: "No Ceremony stores your list in your browser, with optional sync when signed in.",
+                    blocks: [{ kind: "p", text: "Nothing leaves the device unless you sign in." }],
+                },
                 {
                     id: "export",
                     title: "Export",
@@ -68,7 +72,7 @@ const nodeOf = (html: string, type: string) =>
     nodesOf(html).find((n) => n["@type"] === type)!;
 
 describe("the written tree", () => {
-    it("emits an index, a page per section including folder children, and the crawler files", () => {
+    it("emits an index, a page per page (groups get none), and the crawler files", () => {
         expect(Object.keys(out).sort()).toEqual([
             "docs/data/index.html",
             "docs/export/index.html",
@@ -153,7 +157,7 @@ describe("the entity graph", () => {
         expect(faq.mainEntity[0]!.acceptedAnswer.text).not.toContain("{fact:");
     });
 
-    it("gives a section page a TechArticle and a breadcrumb through its parent", () => {
+    it("gives a page a TechArticle and a breadcrumb that skips its group, which has no URL", () => {
         const html = out["docs/export/index.html"]!;
         expect(nodeOf(html, "TechArticle")["headline"]).toBe("Export");
         const crumbs = nodeOf(html, "BreadcrumbList") as {
@@ -161,7 +165,6 @@ describe("the entity graph", () => {
         };
         expect(crumbs.itemListElement.map((c) => c.name)).toEqual([
             "How No Ceremony works",
-            "Your data",
             "Export",
         ]);
     });
@@ -244,7 +247,7 @@ describe("robots.txt", () => {
 describe("llms.txt and questions.json", () => {
     it("lists every section with its question, answer and URL", () => {
         const txt = out["llms.txt"]!;
-        for (const title of ["What this is", "Your data", "Export"]) {
+        for (const title of ["What this is", "Where it lives", "Export"]) {
             expect(txt).toContain(`### ${title}`);
         }
         expect(txt).toContain("Not to be confused with: No Ceremony (band), Ceremony.");
@@ -383,14 +386,15 @@ describe("static page chrome", () => {
         expect(section).toContain('<span class="dd-bar-page">How No Ceremony works</span>');
     });
 
-    it("lists every section in the rail, children under their parent", () => {
+    it("lists every page in the rail, a group as a foldable label over its pages", () => {
         for (const id of ["what-it-is", "data", "export"]) {
             expect(section).toContain(`href="/docs/${id}/"`);
         }
-        // "export" is a child of "data", so its item is nested in an inner list.
+        // The group is a native, open <details> whose summary is a label, not a link.
         expect(section).toMatch(
-            /\/docs\/data\/"[^>]*>Your data<\/a><ul class="dd-nav-list"><li><a[^>]*export\//,
+            /<details class="dd-nav-group" open><summary>Your data<\/summary><ul class="dd-nav-list"><li><a[^>]*\/docs\/data\/"/,
         );
+        expect(section).not.toContain("/docs/your-data/");
     });
 
     it("marks the current section, and only that one", () => {
@@ -452,10 +456,11 @@ describe("page landmarks", () => {
         expect(html).toContain('<main class="dd-page dd-page--section">');
     });
 
-    it("steps a child down to h2 on its parent's page", () => {
+    it("gives a page in a group its own page, alone, with its title as the h1", () => {
         const html = out["docs/data/index.html"]!;
-        expect(html).toContain('<h1 class="dd-section-title">Your data</h1>');
-        expect(html).toMatch(/<section class="dd-section" id="export"><h2 class="dd-section-title">/);
+        expect(html).toContain('<h1 class="dd-section-title">Where it lives</h1>');
+        // Its sibling is not carried along: a page stands on its own.
+        expect(html).not.toContain('id="export"');
     });
 
     it("keeps the index titled by the document, with sections as h2", () => {

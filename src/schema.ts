@@ -115,10 +115,10 @@ export type DocBlock =
 /* ── Sections ────────────────────────────────────────────────────────────── */
 
 /**
- * One anchored section: a nav entry, a body, and the annotation that lets a
- * machine quote it.
+ * One page: a nav entry, a body, and the annotation that lets a machine quote
+ * it. Pages are the only things with content and the only things with URLs.
  */
-export interface DocSection {
+export interface DocPage {
     /** URL slug and anchor. Public per DEC-04 — renaming one breaks links. */
     id: string;
     /** Nav label. A noun phrase, not a sentence. */
@@ -133,8 +133,39 @@ export interface DocSection {
     /** Optional retrieval vocabulary; never rendered as prose. */
     keywords?: string[];
     blocks: DocBlock[];
-    /** One level of nesting, which the nav rail renders as a folder. */
-    children?: DocSection[];
+}
+
+/**
+ * A chapter: a labelled, collapsible bucket of pages and nothing else.
+ *
+ * A group has no body, no answer and no page of its own. Anything a chapter
+ * would say belongs on one of its pages, so a reader never has to read a
+ * chapter "in concert" with the pages beneath it to get the whole story. The
+ * rail folds it; its id keys the fold and is never a URL.
+ */
+export interface DocGroup {
+    /** A slug identifying the group. Not a URL: groups have no page. */
+    id: string;
+    /** The chapter's label in the rail. */
+    title: string;
+    /** One level only: a group holds pages, never other groups. */
+    children: DocPage[];
+}
+
+/** An entry at the top of the contents: a page, or a group of pages. */
+export type DocSection = DocPage | DocGroup;
+
+/** True for a chapter bucket rather than a page. */
+export const isGroup = (section: DocSection): section is DocGroup =>
+    Array.isArray((section as DocGroup).children);
+
+/** Every page in reading order, each with the group it sits in, if any. */
+export function pagesOf(sections: DocSection[]): { page: DocPage; group?: DocGroup }[] {
+    return sections.flatMap((section) =>
+        isGroup(section)
+            ? section.children.map((page) => ({ page, group: section }))
+            : [{ page: section }],
+    );
 }
 
 /* ── The entity ──────────────────────────────────────────────────────────── */
@@ -221,6 +252,8 @@ export type FindingCode =
     | "answer-opens-with-pronoun"
     | "answer-too-long"
     | "nesting-too-deep"
+    | "empty-group"
+    | "group-with-content"
     | "unknown-fact-reference"
     | "invalid-review-date"
     | "stale-fact"
@@ -281,14 +314,20 @@ const firstWord = (text: string): string =>
 
 const DAY_MS = 86_400_000;
 
-/** Walks a section tree in reading order, reporting each section's depth. */
+/**
+ * Walks a section tree in reading order, reporting each entry's depth. Typed
+ * loosely on purpose: `validate` must report a malformed document (a group
+ * inside a group, a page with children) that the types would reject, because
+ * documents also arrive from plain JavaScript.
+ */
 function* walk(
-    sections: DocSection[],
+    sections: readonly unknown[],
     depth = 0,
 ): Generator<{ section: DocSection; depth: number }> {
-    for (const section of sections) {
+    for (const section of sections as DocSection[]) {
         yield { section, depth };
-        if (section.children) yield* walk(section.children, depth + 1);
+        const children = (section as { children?: unknown }).children;
+        if (Array.isArray(children)) yield* walk(children, depth + 1);
     }
 }
 
@@ -380,13 +419,34 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             });
         }
 
-        if (depth > 1) {
+        if (depth > 1 || (depth === 1 && isGroup(section))) {
             findings.push({
                 code: "nesting-too-deep",
                 severity: "fatal",
                 sectionId: id,
-                message: `Section "${id}" is nested ${depth} levels deep; the rail renders one level of folders, and deeper nesting means the docs want splitting.`,
+                message: `Section "${id}" is nested too deep; a group holds pages only, and deeper nesting means the docs want splitting.`,
             });
+        }
+
+        if (isGroup(section)) {
+            if (section.children.length === 0) {
+                findings.push({
+                    code: "empty-group",
+                    severity: "fatal",
+                    sectionId: id,
+                    message: `Group "${id}" has no pages; a chapter with nothing in it is a dead end in the rail.`,
+                });
+            }
+            const extra = ["question", "answer", "blocks"].filter((key) => key in section);
+            if (extra.length) {
+                findings.push({
+                    code: "group-with-content",
+                    severity: "fatal",
+                    sectionId: id,
+                    message: `Group "${id}" carries ${extra.join(", ")}; a group is only a label for its pages. Move that content onto a page inside it.`,
+                });
+            }
+            continue;
         }
 
         for (const block of section.blocks ?? []) {
