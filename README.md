@@ -19,7 +19,7 @@ you end up doing it again on the next project. This is that week, packaged.
   carrying a bar back to your app and a rail of every section.
 - The **machine-readable set**, generated rather than authored: a JSON-LD entity
   graph, `sitemap.xml`, `robots.txt` that rules search and training crawlers
-  separately, `llms.txt`, and `questions.json`.
+  separately, `llms.txt`, `questions.json`, and `facts.json`.
 - **Screenshots taken from your running app**, reproducibly, with their sizes
   fed straight into the image declarations (`npx dopedocs-shots`).
 - **Your styling.** dopedocs reads only `--dd-*` custom properties, so it looks
@@ -49,6 +49,15 @@ which is what `notToBeConfusedWith` is for.
 claim to answer, with the answer and its URL. It exists so you can ask the
 engines those questions on a schedule and check what comes back, rather than
 guessing whether any of this landed.
+
+`facts.json` is your facts registry as data: every key with its `value` and
+`reviewed` date. A page on another platform — a WordPress template, a Shopify
+theme — can fetch it and show the same price or opening hours the docs state,
+and CI can diff a page against it. The file is published at your site's root
+like `sitemap.xml`, so **everything in the registry is public**: that is
+already true of any fact a page interpolates, but it means a fact value is no
+place for an internal note. Use a fact's `note` for that; notes are never
+rendered and never written to `facts.json`.
 
 ## Why you can trust what it says
 
