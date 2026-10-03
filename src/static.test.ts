@@ -78,6 +78,7 @@ describe("the written tree", () => {
             "docs/export/index.html",
             "docs/index.html",
             "docs/what-it-is/index.html",
+            "facts.json",
             "llms.txt",
             "questions.json",
             "robots.txt",
@@ -263,6 +264,54 @@ describe("llms.txt and questions.json", () => {
             answer: "No Ceremony exports the whole list as JSON at any time.",
             url: "https://noceremony.app/docs/export/",
         });
+    });
+});
+
+describe("facts.json", () => {
+    const registry = defineFacts({
+        fee: { value: "$25 & up, <48h notice>", reviewed: "2026-08-01", note: "internal: ask finance" },
+        hours: { value: "9am to 5pm", reviewed: "2026-09-01" },
+    });
+    const withFacts = buildStatic(
+        {
+            ...docs,
+            lead: "Cancelling costs {fact:fee}.",
+            facts: registry,
+            sections: [
+                {
+                    id: "fees",
+                    title: "Fees",
+                    question: "What does cancelling cost?",
+                    answer: "Cancelling costs {fact:fee}, and support is open {fact:hours}.",
+                    blocks: [{ kind: "p", text: "Support hours are {fact:hours}." }],
+                },
+            ],
+        },
+        { now },
+    );
+    const parsed = JSON.parse(withFacts["facts.json"]!);
+
+    it("carries every registry key with its value and reviewed date, and nothing else", () => {
+        expect(parsed).toEqual({
+            entity: "No Ceremony",
+            generated: "2026-09-02",
+            facts: {
+                fee: { value: "$25 & up, <48h notice>", reviewed: "2026-08-01" },
+                hours: { value: "9am to 5pm", reviewed: "2026-09-01" },
+            },
+        });
+    });
+
+    it("never publishes a fact's reviewer note", () => {
+        expect(withFacts["facts.json"]).not.toContain("internal: ask finance");
+    });
+
+    it("holds the same values the built pages interpolate", () => {
+        const html = withFacts["docs/fees/index.html"]!;
+        for (const { value } of Object.values(parsed.facts) as { value: string }[]) {
+            const escaped = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            expect(html).toContain(escaped);
+        }
     });
 });
 

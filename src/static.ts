@@ -592,5 +592,27 @@ export function buildStatic(
             2,
         ) + "\n";
 
+    /* --- facts.json -----------------------------------------------------
+       The registry as data, for surfaces outside the build — a template on
+       another platform can fetch the same values the pages interpolate. Only
+       `value` and `reviewed` are published; `note` is reviewer context and
+       is never rendered anywhere, so it stays out of this file too. */
+
+    out["facts.json"] =
+        JSON.stringify(
+            {
+                entity: docs.entity.name,
+                generated: lastmod,
+                facts: Object.fromEntries(
+                    Object.entries(facts).map(([key, fact]) => [
+                        key,
+                        { value: fact.value, reviewed: fact.reviewed },
+                    ]),
+                ),
+            },
+            null,
+            2,
+        ) + "\n";
+
     return out;
 }
