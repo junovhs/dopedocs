@@ -621,6 +621,9 @@ Search: `Googlebot`, `Bingbot`, `OAI-SearchBot`, `PerplexityBot`,
 `Claude-SearchBot`, `DuckDuckBot`. Training: `GPTBot`, `ClaudeBot`,
 `Google-Extended`, `CCBot`. Both lists are replaceable.
 
+Not launched yet? `indexing: "noindex"` marks every page `noindex, nofollow`
+and stops robots.txt advertising the sitemap; see [Options](#options).
+
 An existing `robots.txt` or `sitemap.xml` of your own is merged, not replaced,
 and merging is idempotent — building twice never repeats a rule or an entry.
 
@@ -637,6 +640,7 @@ Everything the plugin accepts besides `docs`. `buildStatic` takes the same set.
 | `siteType` | `"WebSite"` | What kind of thing the site the docs belong to is. |
 | `basePath` | `"docs"` | Where the pages live, so `/help/<id>/` instead of `/docs/<id>/`. |
 | `robots` | search allowed, training refused | See [Crawler policy](#crawler-policy). |
+| `indexing` | `"index"` | `"noindex"` keeps the docs out of search, for a site that is not launched yet: every page carries `<meta name="robots" content="noindex, nofollow">` and robots.txt drops its `Sitemap:` line, since advertising a sitemap of noindex pages contradicts the policy. `sitemap.xml` and `llms.txt` are still written, so launching is a rebuild. |
 | `staleAfterDays` | `365` | How old a fact's `reviewed` date may be before it is reported. |
 | `fullManualNote` | on | A visible line on every page saying the whole manual is one page (the index), so a reader or an AI assistant landing on one section knows where the rest is. Override the wording with `{ section, index }` using `{title}`, `{link}` and `{words}`; `false` turns it off. |
 | `now` | the clock | Injected for deterministic output. |

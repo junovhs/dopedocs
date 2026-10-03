@@ -42,6 +42,15 @@ export interface RobotsPolicy {
     allowTraining?: boolean;
 }
 
+/** Whether the pages may appear in search results. */
+export type Indexing = "index" | "noindex";
+
+/** The robots meta each page carries, by indexing policy. */
+const ROBOTS_META: Record<Indexing, string> = {
+    index: "index,follow,max-image-preview:large,max-snippet:-1",
+    noindex: "noindex, nofollow",
+};
+
 export interface BuildStaticOptions {
     /** Where the docs are served. Defaults to the document's own, else `/docs`. */
     basePath?: string;
@@ -59,6 +68,16 @@ export interface BuildStaticOptions {
     siteType?: string;
     /** Crawler policy; the defaults allow search and refuse training. */
     robots?: RobotsPolicy;
+    /**
+     * Whether search engines may index the pages. Default `"index"`.
+     *
+     * `"noindex"` is for a site that is not ready to be found: every page says
+     * `noindex, nofollow`, and robots.txt stops advertising the sitemap,
+     * because pointing a crawler at a list of pages it is told not to index
+     * contradicts the policy. The files are still written, so turning
+     * indexing on later is a rebuild, not a migration.
+     */
+    indexing?: Indexing;
     /**
      * Stylesheet href(s) to link from every page, e.g. `/assets/docs.css`.
      *
@@ -219,6 +238,7 @@ interface PageInput {
     section?: boolean;
     /** The whole document on one page, linked as the alternate reading. */
     whole?: { url: string; title: string };
+    indexing: Indexing;
 }
 
 /**
@@ -237,7 +257,7 @@ function page(input: PageInput): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
-<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">
+<meta name="robots" content="${ROBOTS_META[input.indexing]}">
 <link rel="canonical" href="${esc(canonical)}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="${esc(entity.name)}">
@@ -306,6 +326,7 @@ export function buildStatic(
         siteType = "WebSite",
         now = new Date(),
         robots = {},
+        indexing = "index",
     } = options;
 
     const basePath = trimSlashes(options.basePath ?? docs.basePath ?? "docs");
@@ -451,6 +472,7 @@ export function buildStatic(
         canonical: indexUrl,
         entity: docs.entity,
         stylesheet: options.stylesheet,
+        indexing,
         chrome: { bar, rail: railFor() },
         body: renderLead(docs) + indexNote + contentsList + renderBody(docs),
         graph: {
@@ -513,6 +535,7 @@ export function buildStatic(
             canonical: url,
             entity: docs.entity,
             stylesheet: options.stylesheet,
+            indexing,
             chrome: { bar, rail: railFor(section.id) },
             section: true,
             whole: { url: indexUrl, title: `${docs.title}, complete on one page` },
@@ -586,7 +609,9 @@ export function buildStatic(
         `# Search and answer-engine crawlers\n${rule(search, allowSearch)}\n\n` +
         `# Model-training crawlers — a separate decision from search\n` +
         `${rule(training, allowTraining)}\n\n` +
-        `User-agent: *\nAllow: /\n\nSitemap: ${origin}/sitemap.xml\n`;
+        `User-agent: *\nAllow: /\n` +
+        // A sitemap of pages marked noindex invites the crawl the policy refuses.
+        (indexing === "noindex" ? "" : `\nSitemap: ${origin}/sitemap.xml\n`);
 
     /* --- llms.txt ------------------------------------------------------- */
 

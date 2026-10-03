@@ -77,3 +77,17 @@ describe("Vite output directory resolution", () => {
         );
     });
 });
+
+describe("Vite indexing pass-through", () => {
+    it("writes noindex pages and an unadvertised sitemap when indexing is off", async () => {
+        const root = await temporaryDirectory("dopedocs-project-");
+        const plugin = dopedocs({ docs, indexing: "noindex" });
+        plugin.configResolved({ root, command: "build", build: { outDir: "dist" } });
+        await plugin.closeBundle();
+
+        expect(await readFile(join(root, "dist/docs/start/index.html"), "utf8")).toContain(
+            '<meta name="robots" content="noindex, nofollow">',
+        );
+        expect(await readFile(join(root, "dist/robots.txt"), "utf8")).not.toContain("Sitemap:");
+    });
+});

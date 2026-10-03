@@ -360,6 +360,39 @@ describe("robots.txt", () => {
     });
 });
 
+describe("indexing", () => {
+    const pages = (tree: Record<string, string>) =>
+        Object.entries(tree).filter(([path]) => path.endsWith(".html"));
+
+    it("lets every page be indexed by default", () => {
+        for (const [, html] of pages(out)) {
+            expect(html).toContain(
+                '<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">',
+            );
+        }
+        expect(out["robots.txt"]).toMatch(/Sitemap: https:\/\/noceremony\.app\/sitemap\.xml\n$/);
+    });
+
+    it("marks every page noindex, nofollow and stops advertising the sitemap", () => {
+        const tree = buildStatic(docs, { now, indexing: "noindex" });
+        expect(pages(tree).length).toBeGreaterThan(1);
+        for (const [, html] of pages(tree)) {
+            expect(html).toContain('<meta name="robots" content="noindex, nofollow">');
+            expect(html).not.toContain("index,follow");
+        }
+        expect(tree["robots.txt"]).not.toContain("Sitemap:");
+        // The crawler rules themselves are unchanged.
+        expect(tree["robots.txt"]).toContain("User-agent: GPTBot\nDisallow: /");
+        // The files are still written, so turning indexing on is only a rebuild.
+        expect(tree["sitemap.xml"]).toBeDefined();
+        expect(tree["llms.txt"]).toBeDefined();
+    });
+
+    it("leaves the default output unchanged when indexing is set explicitly", () => {
+        expect(buildStatic(docs, { now, indexing: "index" })).toEqual(out);
+    });
+});
+
 describe("llms.txt and questions.json", () => {
     it("lists every section with its question, answer and URL", () => {
         const txt = out["llms.txt"]!;
