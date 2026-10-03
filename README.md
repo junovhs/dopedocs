@@ -624,4 +624,13 @@ version; the registry install is the supported path.
 
 Early. The API is not stable.
 
-MIT.
+## Licence
+
+dopedocs 1.x is MIT — see [LICENSE](LICENSE). Every version published under
+MIT stays MIT; that grant is not withdrawn.
+
+From 2.0, dopedocs becomes source-available commercial software. The source
+stays public and readable, and personal and open-source use stays free;
+commercial use will need a licence per site. The licence text for 2.0 has not
+been chosen yet, and when it is, `LICENSE`, `package.json` and this section
+change together in the 2.0 release.
