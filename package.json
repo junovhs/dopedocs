@@ -26,6 +26,10 @@
             "types": "./dist/vite.d.ts",
             "import": "./dist/vite.js"
         },
+        "./astro": {
+            "types": "./dist/astro.d.ts",
+            "import": "./dist/astro.js"
+        },
         "./styles.css": "./styles/dopedocs.css",
         "./shots": {
             "types": "./dist/shots.d.ts",
@@ -47,13 +51,17 @@
     },
     "peerDependencies": {
         "vite": ">=5",
-        "playwright": ">=1.40"
+        "playwright": ">=1.40",
+        "astro": ">=4"
     },
     "peerDependenciesMeta": {
         "vite": {
             "optional": true
         },
         "playwright": {
+            "optional": true
+        },
+        "astro": {
             "optional": true
         }
     },
@@ -66,6 +74,7 @@
         "schema.org",
         "json-ld",
         "vite-plugin",
+        "astro-integration",
         "static-site",
         "llms-txt"
     ],

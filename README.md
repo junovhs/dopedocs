@@ -121,6 +121,28 @@ dopedocs({ docs, stylesheet: [true, "/docs-theme.css"] })
 Sheets link in order, so put your aliases last. `/docs-theme.css` is yours to
 serve - in Vite, `public/docs-theme.css` holding just the `:root` alias block.
 
+### Astro
+
+Under Astro, use the integration instead of the Vite plugin:
+
+```ts
+// astro.config.mjs
+import { defineConfig } from "astro/config";
+import dopedocs from "dopedocs/astro";
+import { docs } from "./src/docs.ts";
+
+export default defineConfig({
+    integrations: [dopedocs({ docs, stylesheet: true })],
+});
+```
+
+It takes the same options as the plugin. The Vite plugin is wrong under Astro:
+Astro runs Vite twice per build (a server pass and a client pass), each with an
+internal `outDir` of its own, so a plugin writing in `closeBundle` puts the docs
+in the wrong folder, twice. The integration writes once, in `astro:build:done`,
+into the folder Astro actually built, merging `robots.txt` and `sitemap.xml`
+with your `public/` copies. In `astro dev` it serves the same pages per request.
+
 ## 3. Alias your design tokens
 
 dopedocs reads only `--dd-*` custom properties, so it looks like your app rather
