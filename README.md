@@ -36,7 +36,8 @@ documentation rather than by doing SEO work.
 
 Each section is a real page at a real URL, complete without JavaScript, and it
 arrives annotated — an `Organization` or `SoftwareApplication` entity with one
-stable id, a `TechArticle` per section, `BreadcrumbList`, and a `FAQPage` built
+stable id, a `TechArticle` per section (or `Article`, for a site that is not
+software — see [Options](#options)), `BreadcrumbList`, and a `FAQPage` built
 from the question and answer every section is required to carry. Alongside them
 sit `sitemap.xml`, a `robots.txt` that rules search and training crawlers
 separately, and `llms.txt`.
@@ -590,12 +591,20 @@ Everything the plugin accepts besides `docs`. `buildStatic` takes the same set.
 | Option | Default | |
 | --- | --- | --- |
 | `stylesheet` | none | `true` emits and links dopedocs' sheet; a string is an href you serve; an array links each in order. |
-| `entityType` | `"Organization"` | The schema.org type for your entity. **Usually worth setting** — `"SoftwareApplication"` for an app, `"Product"`, `"WebApplication"`. |
+| `entityType` | `"Organization"` | The schema.org type for your entity. **Usually worth setting** — `"SoftwareApplication"` for an app, `"Product"`, `"WebApplication"`; for a business, its own type: `"TravelAgency"`, `"Plumber"`, `"BankOrCreditUnion"`. |
+| `articleType` | `"TechArticle"` | What kind of page each section is. `TechArticle` suits software documentation; a business answering its customers' questions should set `"Article"` or `"WebPage"`. |
+| `indexType` | `"CollectionPage"` | What kind of page the index (the whole manual on one page) is. |
+| `siteType` | `"WebSite"` | What kind of thing the site the docs belong to is. |
 | `basePath` | `"docs"` | Where the pages live, so `/help/<id>/` instead of `/docs/<id>/`. |
 | `robots` | search allowed, training refused | See [Crawler policy](#crawler-policy). |
 | `staleAfterDays` | `365` | How old a fact's `reviewed` date may be before it is reported. |
 | `fullManualNote` | on | A visible line on every page saying the whole manual is one page (the index), so a reader or an AI assistant landing on one section knows where the rest is. Override the wording with `{ section, index }` using `{title}`, `{link}` and `{words}`; `false` turns it off. |
 | `now` | the clock | Injected for deterministic output. |
+
+**Not documenting software?** Set `entityType` to what your business is and
+`articleType` to `"Article"`; the defaults describe a software product. These
+are passed through as written: dopedocs does not check that a type exists in
+schema.org.
 
 ## Without Vite
 
