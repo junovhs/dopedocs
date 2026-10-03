@@ -291,6 +291,37 @@ The page is complete with JavaScript disabled. dopedocs adds no script to it.
 | `logo` | Used for `og:image`. |
 | `sameAs` | Authoritative profiles elsewhere. |
 | `contactEmail` | Published as the entity's `email`. |
+| `schemaProperties` | Extra schema.org properties for the entity, merged in as written — see below. |
+
+#### `schemaProperties` — what your kind of entity needs
+
+The fields above are what dopedocs guarantees. A business usually needs more —
+a travel agency its `telephone`, `address` and `areaServed`; a plumber its
+`openingHours`. Pass those through:
+
+```ts
+entity: {
+    name: "Wanderly Travel",
+    url: "https://wanderly.example",
+    notToBeConfusedWith: ["Wanderly (the app)"],
+    schemaProperties: {
+        telephone: "+1-555-0100",
+        address: { "@type": "PostalAddress", addressLocality: "Portland", addressCountry: "US" },
+        areaServed: ["Oregon", "Washington"],
+    },
+},
+```
+
+with `entityType: "TravelAgency"` in the [options](#options).
+
+This is the one escape hatch from the typed model, and it costs what you would
+expect: a misspelt property or a wrongly shaped value is published as written.
+dopedocs does not model or validate schema.org, and does not claim to. What it
+does check is that you do not set a property it writes itself — `name`, `url`,
+`description`, `disambiguatingDescription`, any `@` key, and the rest of the
+table above. That is a build error naming the field to use instead, so the
+entity's id and its disambiguation cannot be overwritten by accident, and a
+value is never silently dropped.
 
 ### `identity` — the release card
 
