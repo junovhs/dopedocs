@@ -71,6 +71,70 @@ describe("inline marks", () => {
     });
 });
 
+describe("link marks", () => {
+    it("renders an absolute URL with rel=noopener", () => {
+        expect(render("see [the site](https://example.com/a?b=1&c=2)")).toBe(
+            'see <a class="dd-link" href="https://example.com/a?b=1&amp;c=2" rel="noopener">the site</a>',
+        );
+    });
+
+    it("renders a mailto link", () => {
+        expect(render("[write to us](mailto:help@example.com)")).toBe(
+            '<a class="dd-link" href="mailto:help@example.com">write to us</a>',
+        );
+    });
+
+    it("renders a section reference as the panel anchor by default, in either spelling", () => {
+        const anchor =
+            '<a class="dd-link" href="#troubleshooting" data-dd-link="troubleshooting">Troubleshooting</a>';
+        expect(render("[Troubleshooting](#troubleshooting)")).toBe(anchor);
+        expect(render("[Troubleshooting](section:troubleshooting)")).toBe(anchor);
+    });
+
+    it("lets the caller decide where a section reference points", () => {
+        expect(inline("[Export](#export)", facts, where, (id) => `/docs/${id}/`)).toBe(
+            '<a class="dd-link" href="/docs/export/" data-dd-link="export">Export</a>',
+        );
+    });
+
+    it("keeps other marks inside link text and fills facts in an href", () => {
+        const withEmail = defineFacts({ email: { value: "a@b.co", reviewed: "2026-09-02" } });
+        expect(inline("[**mail** us](mailto:{fact:email})", withEmail, where)).toBe(
+            '<a class="dd-link" href="mailto:a@b.co"><strong>mail</strong> us</a>',
+        );
+    });
+
+    it("leaves an unsupported scheme and a link inside code literal", () => {
+        expect(render("[x](javascript:alert(1))")).not.toContain("<a");
+        expect(render("[x](docs/page)")).toBe("[x](docs/page)");
+        expect(render("`[a](https://example.com)`")).toBe(
+            "<code>[a](https://example.com)</code>",
+        );
+    });
+
+    it("cannot be used to break out of the href attribute", () => {
+        expect(render('[x](https://e.com/"onmouseover="alert(1))')).not.toMatch(/href="[^"]*"onmouseover/);
+    });
+
+    it("keeps a printable details fallback free of markup", () => {
+        const html = renderBlock(
+            { kind: "details", summary: "More", text: "See [Export](#export)." },
+            facts,
+            where,
+        );
+        expect(html).toContain('data-dd-print="See Export."');
+    });
+
+    it("reduces a link in image alt text to its words", () => {
+        const html = renderBlock(
+            { kind: "image", src: "/a.png", alt: "The [export](#export) control" },
+            facts,
+            where,
+        );
+        expect(html).toContain('alt="The export control"');
+    });
+});
+
 describe("fact interpolation", () => {
     it("substitutes a registry value", () => {
         expect(render("Costs {fact:price}.")).toBe("Costs free.");

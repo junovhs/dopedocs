@@ -441,7 +441,9 @@ export function buildStatic(
               link: indexLink,
           })}</p>`
         : "";
-    const indexBody = renderLead(docs) + renderBody(docs);
+    /** Section references in prose lead to that section's own page. */
+    const links = { sectionHref: pathFor };
+    const indexBody = renderLead(docs, links) + renderBody(docs, links);
     const indexNote = noteText
         ? `<p class="dd-fullnote">${fill(noteText.index, {
               title: escapeHtml(docs.title),
@@ -474,7 +476,7 @@ export function buildStatic(
         stylesheet: options.stylesheet,
         indexing,
         chrome: { bar, rail: railFor() },
-        body: renderLead(docs) + indexNote + contentsList + renderBody(docs),
+        body: renderLead(docs, links) + indexNote + contentsList + renderBody(docs, links),
         graph: {
             "@context": "https://schema.org",
             "@graph": [
@@ -541,7 +543,7 @@ export function buildStatic(
             whole: { url: indexUrl, title: `${docs.title}, complete on one page` },
             // The section is the page, so its title is the page's one h1 — the
             // heading a text extractor takes as the topic.
-            body: sectionNote + renderSection(section, facts, { headingLevel: 1 }) + nav,
+            body: sectionNote + renderSection(section, facts, { headingLevel: 1, ...links }) + nav,
             graph: {
                 "@context": "https://schema.org",
                 "@graph": [

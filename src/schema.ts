@@ -12,6 +12,7 @@
 
 import type { FactMap } from "./facts.js";
 import { referencedFacts } from "./facts.js";
+import { linkTarget, referencedLinks } from "./links.js";
 
 /* ── Blocks ──────────────────────────────────────────────────────────────── */
 
@@ -20,8 +21,9 @@ import { referencedFacts } from "./facts.js";
  * renderer switches exhaustively over `kind`, so adding a variant here is a
  * compile error everywhere that must learn to draw it.
  *
- * Prose fields carry two inline marks — `code` and **strong** — plus
- * `{fact:key}` references. Anything richer becomes a new block kind; it never
+ * Prose fields carry three inline marks — `code`, **strong** and
+ * `[text](href)` — plus `{fact:key}` references. A link's href is an absolute
+ * URL, a `mailto:`, or another section as `#id` or `section:id`. Anything richer becomes a new block kind; it never
  * becomes new syntax.
  */
 export interface DocImage {
@@ -315,7 +317,9 @@ export type FindingCode =
     | "stale-fact"
     | "empty-image-alt"
     | "invalid-image-dimensions"
-    | "reserved-schema-property";
+    | "reserved-schema-property"
+    | "unknown-section-link"
+    | "unsupported-link";
 
 /**
  * One problem found in a document. Findings are returned, never thrown: the
@@ -453,6 +457,31 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     const findings: Finding[] = [];
     const seen = new Set<string>();
     const factKeys = new Set(Object.keys(docs.facts));
+    // Only pages can be linked to: a group has no anchor and no page.
+    const pageIds = new Set(pagesOf(docs.sections).map(({ page }) => page.id));
+
+    /** Reports each link in `text` that leads nowhere, or somewhere it must not. */
+    const checkLinks = (text: string, where: string, sectionId?: string) => {
+        for (const { href } of referencedLinks(text)) {
+            const target = linkTarget(href);
+            if (!target) {
+                findings.push({
+                    code: "unsupported-link",
+                    severity: "fatal",
+                    sectionId,
+                    message: `${where} links to "${href}"; a link must be an http(s) URL, a mailto:, or a section as #id or section:id.`,
+                });
+            } else if (target.kind === "section" && !pageIds.has(target.id)) {
+                findings.push({
+                    code: "unknown-section-link",
+                    severity: "fatal",
+                    sectionId,
+                    message: `${where} links to the section "${target.id}", which does not exist.`,
+                });
+            }
+        }
+    };
+    checkLinks(docs.lead, "The document lead");
 
     for (const { section, depth } of walk(docs.sections)) {
         const { id } = section;
@@ -572,6 +601,7 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             ...section.blocks.flatMap(proseOf),
         ];
         for (const text of prose) {
+            checkLinks(text, `Section "${id}"`, id);
             for (const key of referencedFacts(text)) {
                 if (factKeys.has(key)) continue;
                 findings.push({

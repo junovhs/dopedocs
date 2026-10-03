@@ -1,5 +1,6 @@
 /** dopedocs: authoring, rendering, the in-app panel, the static build, and the Vite plugin. */
 export * from "./facts.js";
+export * from "./links.js";
 export * from "./panel.js";
 export * from "./render.js";
 export * from "./schema.js";

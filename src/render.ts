@@ -11,6 +11,7 @@
 
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
+import { LINK_MARK, linkTarget, stripLinks } from "./links.js";
 import { isGroup, type DocBlock, type DocIdentity, type DocImage, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
 /**
@@ -44,25 +45,70 @@ export const escapeHtml = (raw: string): string =>
  *
  * 1. **Escape.** Authored prose is data. Running this first means no content —
  *    and no fact value — can introduce markup.
- * 2. **Inline marks.** The only two we accept, applied to text that is already
- *    safe, so the tags we emit are the only tags present.
+ * 2. **Inline marks.** The only three we accept — `code`, **strong** and
+ *    `[text](href)` — applied to text that is already safe, so the tags we
+ *    emit are the only tags present. A link inside a code span stays literal:
+ *    code shows syntax, it does not follow it.
  * 3. **Substitute facts.** Last, and each value escaped as it lands, so a fact
  *    holding a backtick or a pair of asterisks stays a literal claim instead of
  *    being re-read as markup. Substituting earlier would let the value's own
  *    characters change the shape of the document that quotes it.
  *
  * A reference inside a mark still works — `**{fact:price}**` marks the
- * placeholder, then fills it.
+ * placeholder, then fills it, and `[mail us](mailto:{fact:email})` links to
+ * the registry's address.
+ *
+ * `sectionHref` decides where a section reference points: the panel's own
+ * anchor by default, the section's page on a static build.
  */
-export function inline(raw: string, facts: FactMap, where: string): string {
+export function inline(
+    raw: string,
+    facts: FactMap,
+    where: string,
+    sectionHref: SectionHref = anchorHref,
+): string {
     const marked = escapeHtml(raw)
         .replace(/`([^`]+)`/g, "<code>$1</code>")
-        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .split(/(<code>[\s\S]*?<\/code>)/)
+        .map((part, i) => (i % 2 ? part : linkMarks(part, sectionHref)))
+        .join("");
 
     return marked.replace(FACT_REFERENCE, (_match, key: string) => {
         const fact = facts[key];
         if (!fact) throw new UnknownFactError(key, where);
         return escapeHtml(fact.value);
+    });
+}
+
+/** Where a section reference points, given the section's id. */
+export type SectionHref = (id: string) => string;
+
+/** The panel's reading: a section is an anchor on the same page. */
+const anchorHref: SectionHref = (id) => `#${id}`;
+
+/**
+ * Turns link marks in already-escaped text into anchors. An href dopedocs does
+ * not accept is left as literal text — validation refuses it before any page
+ * is published, and literal text is the one rendering that cannot be unsafe.
+ */
+function linkMarks(escaped: string, sectionHref: SectionHref): string {
+    return escaped.replace(LINK_MARK, (match, text: string, href: string) => {
+        const target = linkTarget(href);
+        if (!target) return match;
+        if (target.kind === "section") {
+            // `data-dd-link` is the hook the panel scrolls by, the same one
+            // the identity card's maker link uses.
+            return (
+                `<a class="dd-link" href="${escapeHtml(sectionHref(target.id))}"` +
+                ` data-dd-link="${target.id}">${text}</a>`
+            );
+        }
+        return (
+            `<a class="dd-link" href="${target.href}"` +
+            (target.kind === "url" ? ` rel="noopener"` : "") +
+            `>${text}</a>`
+        );
     });
 }
 
@@ -78,9 +124,14 @@ function assertNever(value: never): never {
  * `never`, so a new member of the union is a compile error here rather than a
  * block that silently renders as nothing.
  */
-export function renderBlock(block: DocBlock, facts: FactMap, where: string): string {
+export function renderBlock(
+    block: DocBlock,
+    facts: FactMap,
+    where: string,
+    sectionHref: SectionHref = anchorHref,
+): string {
     /** Renders one authored string of this block, bound to its registry and origin. */
-    const text = (raw: string) => inline(raw, facts, where);
+    const text = (raw: string) => inline(raw, facts, where, sectionHref);
 
     switch (block.kind) {
         case "p":
@@ -123,7 +174,8 @@ export function renderBlock(block: DocBlock, facts: FactMap, where: string): str
             // Closed native details content is not exposed to print by older
             // engines. A plain-text attribute lets the stylesheet provide a
             // print-only fallback without duplicating content on screen.
-            const printable = text(block.text).replace(/<\/?(?:code|strong)>/g, "");
+            // Every tag here is one of ours, so stripping them all is exact.
+            const printable = text(block.text).replace(/<[^>]+>/g, "");
             return (
                 `<details class="dd-details" data-dd-print="${printable}"${block.open ? " open" : ""}>` +
                 `<summary>${text(block.summary)}</summary>` +
@@ -268,6 +320,12 @@ export interface SectionRenderOptions {
      * from people is the drift this project exists to prevent.
      */
     showAnswer?: boolean;
+    /**
+     * Where a section reference in prose points. Defaults to the section's
+     * anchor, `#id`, which is right for the panel; a static build passes each
+     * section's own page.
+     */
+    sectionHref?: SectionHref;
 }
 
 /** Renders one page: its heading, its answer and its blocks. */
@@ -276,16 +334,16 @@ export function renderPage(
     facts: FactMap,
     options: SectionRenderOptions = {},
 ): string {
-    const { headingLevel = 2, showAnswer = true } = options;
+    const { headingLevel = 2, showAnswer = true, sectionHref = anchorHref } = options;
     const where = `section "${page.id}"`;
     const h = `h${headingLevel}`;
 
     const answer = showAnswer
-        ? `<p class="dd-answer">${inline(page.answer, facts, where)}</p>`
+        ? `<p class="dd-answer">${inline(page.answer, facts, where, sectionHref)}</p>`
         : "";
 
     const body = page.blocks
-        .map((block) => renderBlock(block, facts, where))
+        .map((block) => renderBlock(block, facts, where, sectionHref))
         .join("");
 
     return (
@@ -376,7 +434,7 @@ function imageFigure(
         ` decoding="async"`;
     const img = `<img class="dd-media dd-media--${image.position ?? "center"}" src="${escapeHtml(
         image.src,
-    )}" alt="${escapeHtml(image.alt)}"${attrs}>`;
+    )}" alt="${escapeHtml(stripLinks(image.alt))}"${attrs}>`;
     const picture = image.sources?.length
         ? `<picture>${image.sources
               .map(
@@ -430,12 +488,17 @@ export function renderIdentity(identity: DocIdentity): string {
 }
 
 /** Renders the document's identity, title and lead, above the sections. */
-export function renderLead(docs: DocSet): string {
+export function renderLead(docs: DocSet, options: SectionRenderOptions = {}): string {
     return (
         (docs.identity ? renderIdentity(docs.identity) : "") +
         `<header class="dd-header">` +
         `<h1 class="dd-title">${escapeHtml(docs.title)}</h1>` +
-        `<p class="dd-lead">${inline(docs.lead, docs.facts, "the document lead")}</p>` +
+        `<p class="dd-lead">${inline(
+            docs.lead,
+            docs.facts,
+            "the document lead",
+            options.sectionHref,
+        )}</p>` +
         `</header>`
     );
 }

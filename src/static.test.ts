@@ -393,6 +393,62 @@ describe("indexing", () => {
     });
 });
 
+describe("links on static pages", () => {
+    const linked: DocSet = {
+        ...docs,
+        lead: "No Ceremony orders your work; see [What this is](#what-it-is).",
+        sections: docs.sections.map((s) =>
+            s.id === "what-it-is" && !("children" in s)
+                ? {
+                      ...s,
+                      answer: "No Ceremony is a day organiser; see [Export](section:export) and [the site](https://noceremony.app).",
+                      blocks: [
+                          {
+                              kind: "p",
+                              text: "Questions? [Mail us](mailto:hi@noceremony.app) or read [Export](#export).",
+                          },
+                      ],
+                  }
+                : s,
+        ),
+    };
+    const tree = buildStatic(linked, { now });
+    const sectionPage = tree["docs/what-it-is/index.html"]!;
+
+    it("points a section reference at that section's page", () => {
+        expect(sectionPage).toContain(
+            '<a class="dd-link" href="/docs/export/" data-dd-link="export">Export</a>',
+        );
+        expect(tree["docs/index.html"]).toContain(
+            '<a class="dd-link" href="/docs/what-it-is/" data-dd-link="what-it-is">What this is</a>',
+        );
+    });
+
+    it("renders URL and mailto links as anchors", () => {
+        expect(sectionPage).toContain(
+            '<a class="dd-link" href="https://noceremony.app" rel="noopener">the site</a>',
+        );
+        expect(sectionPage).toContain(
+            '<a class="dd-link" href="mailto:hi@noceremony.app">Mail us</a>',
+        );
+    });
+
+    it("reduces links to their text in every plain-text derivation", () => {
+        const plainAnswer = "No Ceremony is a day organiser; see Export and the site.";
+        expect(sectionPage).toContain(`"text": "${plainAnswer}"`);
+        expect(sectionPage).toContain(`<meta name="description" content="${plainAnswer}">`);
+        expect(tree["llms.txt"]).toContain(plainAnswer);
+        expect(tree["llms.txt"]).toContain("> No Ceremony orders your work; see What this is.");
+        expect(tree["llms.txt"]).not.toContain("](");
+        expect(JSON.parse(tree["questions.json"]!).questions[0].answer).toBe(plainAnswer);
+    });
+
+    it("refuses to build a link to a section that does not exist", () => {
+        const broken: DocSet = { ...docs, lead: "Read [Troubleshooting](#troubleshooting)." };
+        expect(() => buildStatic(broken, { now })).toThrow(/unknown-section-link/);
+    });
+});
+
 describe("llms.txt and questions.json", () => {
     it("lists every section with its question, answer and URL", () => {
         const txt = out["llms.txt"]!;

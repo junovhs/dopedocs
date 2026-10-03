@@ -390,9 +390,24 @@ A section is a **page** or a **group**.
 | `gallery` | `{ kind: "gallery", images, columns?: 2 \| 3, label? }` |
 | `video` | `{ kind: "video", src, poster?, caption? }` |
 
-Prose carries two inline marks - `` `code` `` and `**strong**` - plus
-`{fact:key}` references. Anything richer becomes a new block kind, never new
-syntax.
+Prose carries three inline marks - `` `code` ``, `**strong**` and
+`[text](href)` - plus `{fact:key}` references. Anything richer becomes a new
+block kind, never new syntax.
+
+A link's `href` takes one of three forms:
+
+| Form | Example | Renders as |
+| --- | --- | --- |
+| Absolute URL | `[the changelog](https://example.com/changes)` | a link with `rel="noopener"` |
+| `mailto:` | `[write to us](mailto:{fact:email})` | a mail link; facts fill in an href too |
+| Section | `[Troubleshooting](#troubleshooting)` or `(section:troubleshooting)` | the panel's anchor in-app, `/docs/troubleshooting/` on a static page |
+
+A section link to an id that is not a page (a typo, or a group, which has no
+page) refuses the build with `unknown-section-link`; any other href, such as a
+relative path or `javascript:`, refuses it with `unsupported-link`. Plain-text
+outputs - the JSON-LD answer, the meta description, `llms.txt`,
+`questions.json` and image `alt` - keep the link's text and drop the markup.
+Inside a `` `code` `` span, link syntax stays literal.
 
 ## Widgets for manuals and walkthroughs
 

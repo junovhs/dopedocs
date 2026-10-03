@@ -235,6 +235,57 @@ describe("validate", () => {
     });
 });
 
+describe("links", () => {
+    it("accepts a link to a page, a URL and a mailto", () => {
+        const docs = withSections([
+            section({ id: "target" }),
+            section({
+                id: "source",
+                blocks: [
+                    {
+                        kind: "p",
+                        text: "See [it](#target), [this](section:target), [the site](https://example.com) or [mail](mailto:a@b.co).",
+                    },
+                ],
+            }),
+        ]);
+        expect(codesOf(docs)).toEqual([]);
+    });
+
+    it("reports a link to a section that does not exist, naming it", () => {
+        const docs = withSections([
+            section({ blocks: [{ kind: "p", text: "See [Troubleshooting](#troubleshooting)." }] }),
+        ]);
+        const finding = validate(docs, { today: new Date("2026-09-02") }).find(
+            (f) => f.code === "unknown-section-link",
+        );
+        expect(finding?.severity).toBe("fatal");
+        expect(finding?.sectionId).toBe("ok");
+        expect(finding?.message).toContain('"troubleshooting"');
+    });
+
+    it("reports a link to a group, which has no page", () => {
+        const docs = withSections([
+            { id: "chapter", title: "Chapter", children: [section({ id: "inside" })] },
+            section({ answer: "Example links to [the chapter](#chapter).", id: "outside" }),
+        ]);
+        expect(codesOf(docs)).toContain("unknown-section-link");
+    });
+
+    it("reports an href in a form dopedocs does not accept", () => {
+        const docs = withSections([
+            section({ blocks: [{ kind: "p", text: "[x](javascript:void) and [y](docs/page)" }] }),
+        ]);
+        expect(codesOf(docs).filter((c) => c === "unsupported-link")).toHaveLength(2);
+    });
+
+    it("checks the document lead too", () => {
+        expect(codesOf({ ...sample, lead: "Start at [nowhere](#nowhere)." })).toContain(
+            "unknown-section-link",
+        );
+    });
+});
+
 describe("hasFatal", () => {
     it("separates a release-stopping finding from an advisory one", () => {
         expect(hasFatal([{ code: "stale-fact", severity: "warning", message: "" }])).toBe(

@@ -138,7 +138,7 @@ breaking change.
 `dd-identity-meta`, `dd-identity-dot`, `dd-identity-maker`,
 `dd-header`, `dd-title`, `dd-lead`,
 `dd-section`, `dd-section-title`, `dd-answer`,
-`dd-p`, `dd-list`,
+`dd-p`, `dd-list`, `dd-link` (an inline link in prose),
 `dd-callout` with `dd-callout--note` / `dd-callout--warn`,
 `dd-steps`, `dd-step`, `dd-step-body`, `dd-step-title`, `dd-step-text`,
 `dd-checklist`, `dd-check` (with `is-checked`), `dd-check-icon`,
