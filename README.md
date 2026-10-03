@@ -626,6 +626,10 @@ and stops robots.txt advertising the sitemap; see [Options](#options).
 
 An existing `robots.txt` or `sitemap.xml` of your own is merged, not replaced,
 and merging is idempotent — building twice never repeats a rule or an entry.
+When your `robots.txt` already has a `User-agent: *` group, dopedocs keeps
+yours and adds no second one; when it already has a `Sitemap:` line, dopedocs
+adds none (its pages are merged into the sitemap that line names). The named
+search and training groups are always added.
 
 ## Options
 

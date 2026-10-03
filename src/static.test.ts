@@ -804,6 +804,41 @@ describe("mergeCrawlerFile", () => {
         expect(file.match(/User-agent: Ahrefsbot/g)).toHaveLength(1);
     });
 
+    it("does not add a second wildcard group beside the consumer's", () => {
+        const wildcard = "User-agent: *\nAllow: /\n";
+        const once = mergeCrawlerFile("robots.txt", wildcard, out["robots.txt"]!);
+        expect(once.match(/^User-agent: \*$/gm)).toHaveLength(1);
+        // Named search and training groups are still ours to state.
+        expect(once).toContain("User-agent: Googlebot\nAllow: /");
+        expect(once).toContain("User-agent: GPTBot\nDisallow: /");
+        // With no Sitemap line of their own, ours is still advertised.
+        expect(once.match(/^Sitemap:/gm)).toHaveLength(1);
+        expect(mergeCrawlerFile("robots.txt", once, out["robots.txt"]!)).toBe(once);
+    });
+
+    it("recognises a wildcard group however it is spelled", () => {
+        const wildcard = "user-agent:*   # everyone\nDisallow: /private/\n";
+        const once = mergeCrawlerFile("robots.txt", wildcard, out["robots.txt"]!);
+        expect(once.match(/^\s*user-agent\s*:\s*\*/gim)).toHaveLength(1);
+        expect(once).toContain("Disallow: /private/");
+    });
+
+    it("does not add a Sitemap line when the consumer's file names one", () => {
+        const theirs = "User-agent: *\nAllow: /\n\nSitemap: https://noceremony.app/sitemap.xml\n";
+        const once = mergeCrawlerFile("robots.txt", theirs, out["robots.txt"]!);
+        expect(once.match(/^Sitemap:/gm)).toHaveLength(1);
+        expect(once.match(/^User-agent: \*$/gm)).toHaveLength(1);
+        const twice = mergeCrawlerFile("robots.txt", once, out["robots.txt"]!);
+        expect(twice).toBe(once);
+        expect(twice.endsWith("\n")).toBe(true);
+    });
+
+    it("keeps our wildcard group and sitemap beside a file that has neither", () => {
+        const once = mergeCrawlerFile("robots.txt", theirRobots, out["robots.txt"]!);
+        expect(once.match(/^User-agent: \*$/gm)).toHaveLength(1);
+        expect(once.match(/^Sitemap:/gm)).toHaveLength(1);
+    });
+
     it("keeps a consumer's own sitemap entries and adds ours once", () => {
         const once = mergeCrawlerFile("sitemap.xml", theirSitemap, out["sitemap.xml"]!);
         expect(once).toContain("https://noceremony.app/pricing/");

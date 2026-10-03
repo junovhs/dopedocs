@@ -62,6 +62,48 @@ const MERGED = new Set(["robots.txt", "sitemap.xml"]);
 /** Marks where dopedocs' own robots rules begin, so a re-merge replaces them. */
 const ROBOTS_MARKER = "# --- dopedocs ---";
 
+/** A `User-agent: *` line: the consumer already rules every crawler not named. */
+const WILDCARD_AGENT = /^[ \t]*user-agent[ \t]*:[ \t]*\*[ \t]*(#.*)?$/im;
+
+/** A `Sitemap:` line: the consumer already tells crawlers where their sitemap is. */
+const SITEMAP_LINE = /^[ \t]*sitemap[ \t]*:/im;
+
+/**
+ * dopedocs' robots rules, less what the consumer's own file already says.
+ *
+ * The generated file ends with a `User-agent: *` group and a `Sitemap:` line so
+ * it stands alone. Beside a consumer's file that has its own wildcard group,
+ * ours would be a second group for the same crawlers, which robots.txt parsers
+ * resolve inconsistently; and the sitemap dopedocs merges into is the one their
+ * line already names. Named search and training groups are always kept: those
+ * are the policy dopedocs exists to state.
+ */
+function robotsBesides(theirs: string, generated: string): string {
+    const dropWildcard = WILDCARD_AGENT.test(theirs);
+    const dropSitemap = SITEMAP_LINE.test(theirs);
+    if (!dropWildcard && !dropSitemap) return generated;
+
+    const records = generated.trimEnd().split(/\n[ \t]*\n/);
+    const kept = records
+        .map((record) =>
+            dropSitemap
+                ? record
+                      .split("\n")
+                      .filter((line) => !SITEMAP_LINE.test(line))
+                      .join("\n")
+                : record,
+        )
+        .filter((record) => {
+            if (!record.trim()) return false;
+            if (!dropWildcard) return true;
+            const agents = record
+                .split("\n")
+                .filter((line) => /^[ \t]*user-agent[ \t]*:/i.test(line));
+            return !(agents.length && agents.every((line) => WILDCARD_AGENT.test(line)));
+        });
+    return `${kept.join("\n\n")}\n`;
+}
+
 /** One `<url>…</url>` entry, non-greedy, with any whitespace before it. */
 const URL_ENTRY = /\s*<url>[\s\S]*?<\/url>/g;
 
@@ -91,7 +133,11 @@ export function mergeCrawlerFile(name: string, existing: string, generated: stri
         // replaced rather than appended to.
         const at = existing.indexOf(ROBOTS_MARKER);
         const theirs = (at === -1 ? existing : existing.slice(0, at)).trimEnd();
-        return theirs ? `${theirs}\n\n${ROBOTS_MARKER}\n${generated}` : generated;
+        // Only the consumer's part decides what of ours is redundant, so a
+        // re-merge sees the same input and produces the same bytes.
+        return theirs
+            ? `${theirs}\n\n${ROBOTS_MARKER}\n${robotsBesides(theirs, generated)}`
+            : generated;
     }
 
     const entries = generated.slice(
