@@ -45,6 +45,16 @@ export interface BuildStaticOptions {
     basePath?: string;
     /** Schema.org type for the entity. Default `Organization`. */
     entityType?: string;
+    /**
+     * Schema.org type of each section's page. Default `TechArticle`, which
+     * suits software documentation; a business answering its customers'
+     * questions wants `Article` or `WebPage`.
+     */
+    articleType?: string;
+    /** Schema.org type of the index, the whole manual on one page. Default `CollectionPage`. */
+    indexType?: string;
+    /** Schema.org type of the site the docs belong to. Default `WebSite`. */
+    siteType?: string;
     /** Crawler policy; the defaults allow search and refuse training. */
     robots?: RobotsPolicy;
     /**
@@ -276,6 +286,9 @@ export function buildStatic(
 
     const {
         entityType = "Organization",
+        articleType = "TechArticle",
+        indexType = "CollectionPage",
+        siteType = "WebSite",
         now = new Date(),
         robots = {},
     } = options;
@@ -430,14 +443,14 @@ export function buildStatic(
             "@graph": [
                 entityJson,
                 {
-                    "@type": "WebSite",
+                    "@type": siteType,
                     "@id": `${origin}/#website`,
                     url: origin,
                     name: docs.entity.name,
                     publisher: { "@id": entityId },
                 },
                 {
-                    "@type": "CollectionPage",
+                    "@type": indexType,
                     "@id": `${indexUrl}#page`,
                     url: indexUrl,
                     name: docs.title,
@@ -496,7 +509,7 @@ export function buildStatic(
                 "@graph": [
                     entityJson,
                     {
-                        "@type": "TechArticle",
+                        "@type": articleType,
                         "@id": `${url}#article`,
                         url,
                         headline: section.title,

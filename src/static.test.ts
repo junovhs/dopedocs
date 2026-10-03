@@ -146,6 +146,59 @@ describe("the entity graph", () => {
         expect(nodeOf(app["docs/index.html"]!, "SoftwareApplication")).toBeTruthy();
     });
 
+    it("types the pages TechArticle, CollectionPage and WebSite by default", () => {
+        const types = (html: string) => nodesOf(html).map((n) => n["@type"]);
+        expect(types(out["docs/index.html"]!)).toEqual([
+            "Organization",
+            "WebSite",
+            "CollectionPage",
+            "FAQPage",
+        ]);
+        expect(types(out["docs/export/index.html"]!)).toEqual([
+            "Organization",
+            "TechArticle",
+            "FAQPage",
+            "BreadcrumbList",
+        ]);
+    });
+
+    it("takes the article, index and site types as options, changing nothing else", () => {
+        const typed = buildStatic(docs, {
+            now,
+            articleType: "Article",
+            indexType: "WebPage",
+            siteType: "WebSite",
+        });
+        expect(nodeOf(typed["docs/export/index.html"]!, "Article")["headline"]).toBe("Export");
+        expect(nodeOf(typed["docs/index.html"]!, "WebPage")["@id"]).toBe(
+            "https://noceremony.app/docs/#page",
+        );
+        // Only the type strings differ from the default build.
+        for (const [path, html] of Object.entries(typed)) {
+            expect(
+                html
+                    .replace('"@type": "Article"', '"@type": "TechArticle"')
+                    .replace('"@type": "WebPage"', '"@type": "CollectionPage"'),
+            ).toBe(out[path]);
+        }
+    });
+
+    it("describes a service business as one entity every page points at", () => {
+        const agency = buildStatic(docs, { now, entityType: "TravelAgency", articleType: "Article" });
+        const pages = Object.keys(agency).filter((p) => p.endsWith(".html"));
+        const id = "https://noceremony.app/#entity";
+        for (const path of pages) {
+            const nodes = nodesOf(agency[path]!);
+            expect(nodes[0]).toMatchObject({ "@type": "TravelAgency", "@id": id });
+            expect(nodes.some((n) => n["@type"] === "TechArticle")).toBe(false);
+            expect(JSON.stringify(nodes.slice(1))).toContain(`{"@id":"${id}"}`);
+        }
+        expect(nodeOf(agency["docs/data/index.html"]!, "Article")).toMatchObject({
+            about: { "@id": id },
+            publisher: { "@id": id },
+        });
+    });
+
     it("builds the index FAQ from every section's question and answer", () => {
         const faq = nodeOf(out["docs/index.html"]!, "FAQPage") as {
             mainEntity: { name: string; acceptedAnswer: { text: string } }[];
