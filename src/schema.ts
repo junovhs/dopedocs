@@ -193,7 +193,57 @@ export interface SiteEntity {
     /** Authoritative profiles elsewhere, for `sameAs`. */
     sameAs?: string[];
     contactEmail?: string;
+    /**
+     * Extra schema.org properties merged into the entity node as written —
+     * `telephone`, `address`, `areaServed`, `openingHours`, whatever your kind
+     * of entity needs.
+     *
+     * This is the one escape hatch from the typed model, and its cost is
+     * plain: a misspelt property or a wrongly shaped value is not caught here,
+     * because dopedocs does not model or validate schema.org. It guarantees
+     * the fields above; this carries the vocabulary your entity happens to
+     * need. A key dopedocs already owns (see `RESERVED_ENTITY_PROPERTIES`) is
+     * refused at build time rather than silently overriding or being dropped.
+     */
+    schemaProperties?: Record<string, JsonValue>;
 }
+
+/** A value that survives JSON serialisation unchanged. */
+export type JsonValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JsonValue[]
+    | { [key: string]: JsonValue };
+
+/**
+ * Entity properties dopedocs writes itself, mapped to the field that sets
+ * each one. `schemaProperties` may not set them, so the guarantees behind
+ * them — the stable id, the generated disambiguation — cannot be overwritten
+ * by accident. Any `@`-prefixed key is reserved too.
+ */
+export const RESERVED_ENTITY_PROPERTIES: Readonly<Record<string, string>> = {
+    name: "entity.name",
+    url: "entity.url",
+    legalName: "entity.legalName",
+    description: "entity.tagline",
+    logo: "entity.logo",
+    sameAs: "entity.sameAs",
+    email: "entity.contactEmail",
+    disambiguatingDescription: "entity.notToBeConfusedWith",
+    softwareVersion: "identity.version",
+};
+
+/**
+ * The field that owns an entity property, or `undefined` when the property is
+ * free for `schemaProperties`. An own-key lookup, so `constructor` and the
+ * other prototype names are not mistaken for reserved ones.
+ */
+export const reservedEntityProperty = (key: string): string | undefined =>
+    Object.prototype.hasOwnProperty.call(RESERVED_ENTITY_PROPERTIES, key)
+        ? RESERVED_ENTITY_PROPERTIES[key]
+        : undefined;
 
 /**
  * What the documentation is documentation *for*: the product, its version, and
@@ -264,7 +314,8 @@ export type FindingCode =
     | "invalid-review-date"
     | "stale-fact"
     | "empty-image-alt"
-    | "invalid-image-dimensions";
+    | "invalid-image-dimensions"
+    | "reserved-schema-property";
 
 /**
  * One problem found in a document. Findings are returned, never thrown: the
@@ -531,6 +582,19 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
                     message: `Section "${id}" references the fact "${key}", which is not in the registry.`,
                 });
             }
+        }
+    }
+
+    for (const key of Object.keys(docs.entity.schemaProperties ?? {})) {
+        const owner = key.startsWith("@") ? "dopedocs" : reservedEntityProperty(key);
+        if (owner) {
+            findings.push({
+                code: "reserved-schema-property",
+                severity: "fatal",
+                message:
+                    `entity.schemaProperties sets "${key}", which dopedocs writes itself ` +
+                    `(from ${owner}); set it there instead, or remove it.`,
+            });
         }
     }
 

@@ -18,6 +18,8 @@ import {
     type DocSet,
     isGroup,
     pagesOf,
+    reservedEntityProperty,
+    type JsonValue,
     type Finding,
     type SiteEntity,
 } from "./schema.js";
@@ -145,12 +147,24 @@ const plain = (raw: string, facts: FactMap, where: string): string =>
 
 /* ── Structured data ─────────────────────────────────────────────────────── */
 
+/** `schemaProperties` without the keys dopedocs owns. */
+const ownable = (properties: Record<string, JsonValue>) =>
+    Object.fromEntries(
+        Object.entries(properties).filter(
+            ([key]) => !key.startsWith("@") && reservedEntityProperty(key) === undefined,
+        ),
+    );
+
 /**
  * The entity, with one stable `@id` every page points at.
  *
  * `disambiguatingDescription` is generated from the required
  * `notToBeConfusedWith`, because a name collision is the ordinary way an answer
  * engine attributes the wrong product's facts to yours.
+ *
+ * `schemaProperties` pass through as written. A reserved key never gets this
+ * far — validation refuses the build — but it is filtered here as well, so
+ * dopedocs' own fields win even for a caller that skips validation.
  */
 function entityNode(entity: SiteEntity, entityType: string, id: string) {
     const collisions = entity.notToBeConfusedWith;
@@ -164,6 +178,7 @@ function entityNode(entity: SiteEntity, entityType: string, id: string) {
         ...(entity.logo ? { logo: entity.logo } : {}),
         ...(entity.sameAs?.length ? { sameAs: entity.sameAs } : {}),
         ...(entity.contactEmail ? { email: entity.contactEmail } : {}),
+        ...(entity.schemaProperties ? ownable(entity.schemaProperties) : {}),
         ...(collisions.length
             ? {
                   disambiguatingDescription: `${entity.name} is not affiliated with ${collisions.join(

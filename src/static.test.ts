@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { defineFacts } from "./facts.js";
-import { defineDocs, type DocSet } from "./schema.js";
+import { defineDocs, validate, type DocSet } from "./schema.js";
 import {
     DEFAULT_SEARCH_BOTS,
     DEFAULT_TRAINING_BOTS,
@@ -239,6 +239,68 @@ describe("the entity graph", () => {
         expect(html).toContain("\\u003c/script>");
         // And it still parses back to the original string.
         expect(JSON.stringify(graphOf(html))).toContain("</script><img src=x>");
+    });
+});
+
+describe("entity schemaProperties", () => {
+    const agencyEntity = {
+        ...docs.entity,
+        schemaProperties: {
+            telephone: "+1-555-0100",
+            address: {
+                "@type": "PostalAddress",
+                streetAddress: "1 Harbour Road",
+                addressLocality: "Portland",
+                addressCountry: "US",
+            },
+            areaServed: ["Oregon", "Washington"],
+        },
+    };
+
+    it("merges extra properties into the entity node beside dopedocs' own", () => {
+        const agency = buildStatic({ ...docs, entity: agencyEntity }, { now, entityType: "TravelAgency" });
+        const id = "https://noceremony.app/#entity";
+        for (const [path, html] of Object.entries(agency)) {
+            if (!path.endsWith(".html")) continue;
+            const entity = nodeOf(html, "TravelAgency");
+            expect(entity).toMatchObject({
+                "@id": id,
+                name: "No Ceremony",
+                legalName: "Strange Systems",
+                telephone: "+1-555-0100",
+                address: { "@type": "PostalAddress", addressLocality: "Portland" },
+                areaServed: ["Oregon", "Washington"],
+                disambiguatingDescription:
+                    "No Ceremony is not affiliated with No Ceremony (band), Ceremony.",
+            });
+            expect(JSON.stringify(nodesOf(html).slice(1))).toContain(`{"@id":"${id}"}`);
+        }
+    });
+
+    it("refuses a property dopedocs owns, naming the field that sets it", () => {
+        const clash = {
+            ...docs,
+            entity: { ...agencyEntity, schemaProperties: { name: "Someone Else", "@id": "x", telephone: "1" } },
+        };
+        expect(() => buildStatic(clash, { now })).toThrow(InvalidDocumentError);
+        const findings = validate(clash, { today: now }).filter(
+            (f) => f.code === "reserved-schema-property",
+        );
+        expect(findings.map((f) => f.severity)).toEqual(["fatal", "fatal"]);
+        expect(findings[0]!.message).toContain('"name"');
+        expect(findings[0]!.message).toContain("entity.name");
+        expect(findings[1]!.message).toContain('"@id"');
+    });
+
+    it("does not mistake a prototype name for a reserved one", () => {
+        const odd = { ...docs, entity: { ...docs.entity, schemaProperties: { constructor: "ok" } } };
+        expect(validate(odd, { today: now }).some((f) => f.code === "reserved-schema-property")).toBe(false);
+        expect(nodeOf(buildStatic(odd, { now })["docs/index.html"]!, "Organization")["constructor"]).toBe("ok");
+    });
+
+    it("leaves the output unchanged when there are none", () => {
+        const empty = buildStatic({ ...docs, entity: { ...docs.entity, schemaProperties: {} } }, { now });
+        expect(empty).toEqual(out);
     });
 });
 
