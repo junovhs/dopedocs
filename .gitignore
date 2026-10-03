@@ -6,3 +6,4 @@ dist/
 **/.ishoo/*.local.toml
 **/.ishoo/cache/
 **/.ishoo/worktrees/
+SEMMAP.md
