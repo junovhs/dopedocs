@@ -1,7 +1,7 @@
 /** Optional ahead-of-time highlighting. Never imported by the core renderer. */
 import { bundledLanguages, createHighlighter, type BundledLanguage, type ThemeRegistration } from "shiki";
 import type { FactMap } from "./facts.js";
-import { isGroup, type CodeTone, type CodeToken, type DocBlock, type DocPage, type DocSet } from "./schema.js";
+import { isGroup, type CodeTone, type CodeToken, type DocBlock, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
 // Marker colors classify tokens; no Shiki palette or HTML enters the renderer.
 const tones: Record<string, CodeTone> = {
@@ -53,15 +53,13 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
         return { ...item, blocks };
     };
     try {
-        // Sequence pages: language loading shares one highlighter instance.
-        const sections = [];
-        for (const section of docs.sections) {
-            if (isGroup(section)) {
-                const children = [];
-                for (const child of section.children) children.push(await page(child));
-                sections.push({ ...section, children });
-            } else sections.push(await page(section));
-        }
+        const visit = async (items: DocSection[]): Promise<DocSection[]> => {
+            const result: DocSection[] = [];
+            for (const item of items) result.push(isGroup(item)
+                ? { ...item, children: await visit(item.children) } : await page(item));
+            return result;
+        };
+        const sections = await visit(docs.sections);
         return { ...docs, sections };
     } finally { highlighter.dispose(); }
 }

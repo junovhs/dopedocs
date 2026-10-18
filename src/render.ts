@@ -288,7 +288,7 @@ export function renderSection(
     return (
         `<div class="dd-group" data-dd-group-label="${escapeHtml(section.id)}">` +
         `<p class="dd-group-label">${escapeHtml(section.title)}</p>` +
-        section.children.map((page) => renderPage(page, facts, options)).join("") +
+        section.children.map((child) => renderSection(child, facts, options)).join("") +
         `</div>`
     );
 }

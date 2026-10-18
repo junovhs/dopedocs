@@ -163,8 +163,8 @@ export interface DocGroup {
     id: string;
     /** The chapter's label in the rail. */
     title: string;
-    /** One level only: a group holds pages, never other groups. */
-    children: DocPage[];
+    /** Up to three nested groups; canonical URLs still belong only to pages. */
+    children: DocSection[];
 }
 
 /** An entry at the top of the contents: a page, or a group of pages. */
@@ -174,13 +174,18 @@ export type DocSection = DocPage | DocGroup;
 export const isGroup = (section: DocSection): section is DocGroup =>
     Array.isArray((section as DocGroup).children);
 
-/** Every page in reading order, each with the group it sits in, if any. */
-export function pagesOf(sections: DocSection[]): { page: DocPage; group?: DocGroup }[] {
-    return sections.flatMap((section) =>
-        isGroup(section)
-            ? section.children.map((page) => ({ page, group: section }))
-            : [{ page: section }],
-    );
+/** Every page in reading order, with its closest group and full chapter path. */
+export function pagesOf(sections: DocSection[]): { page: DocPage; group?: DocGroup; ancestors: DocGroup[] }[] {
+    const result: { page: DocPage; group?: DocGroup; ancestors: DocGroup[] }[] = [];
+    function visit(items: DocSection[], ancestors: DocGroup[]): void {
+        for (const item of items) {
+            if (isGroup(item)) {
+                if (ancestors.length < 4) visit(item.children, [...ancestors, item]);
+            } else result.push({ page: item, group: ancestors.at(-1), ancestors });
+        }
+    }
+    visit(sections, []);
+    return result;
 }
 
 /* ── The entity ──────────────────────────────────────────────────────────── */
@@ -385,8 +390,8 @@ const DAY_MS = 86_400_000;
 
 /**
  * Walks a section tree in reading order, reporting each entry's depth. Typed
- * loosely on purpose: `validate` must report a malformed document (a group
- * inside a group, a page with children) that the types would reject, because
+ * loosely on purpose: `validate` must report a malformed document (excessive
+ * nesting, a page with children) that the types would reject, because
  * documents also arrive from plain JavaScript.
  */
 function* walk(
@@ -396,7 +401,7 @@ function* walk(
     for (const section of sections as DocSection[]) {
         yield { section, depth };
         const children = (section as { children?: unknown }).children;
-        if (Array.isArray(children)) yield* walk(children, depth + 1);
+        if (Array.isArray(children) && depth < 4) yield* walk(children, depth + 1);
     }
 }
 
@@ -514,12 +519,12 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             });
         }
 
-        if (depth > 1 || (depth === 1 && isGroup(section))) {
+        if (depth > 3 || (depth === 3 && isGroup(section))) {
             findings.push({
                 code: "nesting-too-deep",
                 severity: "fatal",
                 sectionId: id,
-                message: `Section "${id}" is nested too deep; a group holds pages only, and deeper nesting means the docs want splitting.`,
+                message: `Section "${id}" is nested too deep; at most three nested groups are supported.`,
             });
         }
 

@@ -1662,3 +1662,10 @@ a.dd-card:focus-visible,
 /* A preformatted line must not set the grid item's intrinsic minimum width. */
 .dd-main, .dd-page, .dd-code-block { min-width: 0; }
 .dd-page { box-sizing: border-box; width: 100%; }
+
+/* Nested chapters retain native disclosure keyboard behavior. */
+.dd-nav-group .dd-nav-group { margin-inline-start: 8px; }
+.dd-reading-context { font-size: 12px; color: var(--dd-muted, #666); line-height: 1.5; }
+.dd-progress { width: 100%; height: 5px; accent-color: var(--dd-accent, #5252cc); margin-block: 0 16px; }
+
+.dd-panel-pager { display: grid; gap: 8px; margin-block-end: 16px; font-size: 12px; }

@@ -133,11 +133,12 @@ describe("validate", () => {
         expect(codesOf(docs)).toContain("answer-too-long");
     });
 
-    const group = (id: string, children: DocPage[]): DocGroup => ({ id, title: id, children });
+    const group = (id: string, children: DocSection[]): DocGroup => ({ id, title: id, children });
 
-    it("reports a group inside a group", () => {
-        const inner = group("mid", [section({ id: "deep" })]) as unknown as DocPage;
-        expect(codesOf(withSections([group("top", [inner])]))).toContain("nesting-too-deep");
+    it("accepts nested chapters and rejects a fourth nested group", () => {
+        const deep = group("top", [group("middle", [group("inner", [section({ id: "leaf" })])])]);
+        expect(codesOf(withSections([deep]))).toEqual([]);
+        expect(codesOf(withSections([group("extra", [deep])]))).toContain("nesting-too-deep");
     });
 
     it("accepts one level of groups", () => {

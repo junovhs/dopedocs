@@ -120,7 +120,7 @@ export function mountPanel(
     let open = false;
     let activeId: string | null = null;
     /** The group we last auto-expanded, so a manual collapse is not fought. */
-    let expandedFor: string | null = null;
+    const collapsedGroups = new Set<string>();
     /**
      * A section the reader explicitly asked for, held active until they scroll.
      *
@@ -156,7 +156,7 @@ export function mountPanel(
         return (
             `<li><details class="dd-nav-group" data-dd-group="${escapeHtml(s.id)}">` +
             `<summary>${icon("chevron-right")}${escapeHtml(s.title)}</summary>` +
-            `<ul class="dd-nav-list">${s.children.map((page) => `<li>${link(page)}</li>`).join("")}</ul>` +
+            `<ul class="dd-nav-list">${s.children.map(railItem).join("")}</ul>` +
             `</details></li>`
         );
     };
@@ -176,6 +176,8 @@ export function mountPanel(
         `<div class="dd-body">` +
         `<nav class="dd-nav" aria-label="${escapeHtml(navLabel)}">` +
         `<p class="dd-nav-label">${escapeHtml(navLabel)}</p>` +
+        `<p class="dd-reading-context" aria-live="polite"></p><progress class="dd-progress" max="${ordered.length || 1}" value="0" aria-label="Manual reading progress"></progress>` +
+        `<nav class="dd-panel-pager" aria-label="Continue reading"></nav>` +
         `<ul class="dd-nav-list">${docs.sections.map(railItem).join("")}</ul>` +
         `</nav>` +
         `<main class="dd-main">${renderLead(docs)}${renderBody(docs)}</main>` +
@@ -229,12 +231,19 @@ export function mountPanel(
             const holds = [...group.querySelectorAll("[data-dd-link]")].some(
                 (el) => (el as HTMLElement).dataset.ddLink === id,
             );
-            if (holds && !group.open && expandedFor !== group.dataset.ddGroup) {
-                const gid = group.dataset.ddGroup ?? null;
-                group.open = true;
-                expandedFor = gid;
-            }
+            if (holds && !group.open && !collapsedGroups.has(group.dataset.ddGroup!)) group.open = true;
         }
+        const index = ordered.findIndex((page) => page.id === id);
+        const entry = pagesOf(docs.sections)[index];
+        root.querySelector(".dd-reading-context")!.textContent = entry
+            ? [...entry.ancestors.map((group) => group.title), `Page ${index + 1} of ${ordered.length}`].join(" / ") : "";
+        (root.querySelector(".dd-progress") as HTMLProgressElement).value = index + 1;
+        root.querySelector(".dd-panel-pager")!.innerHTML = [
+            { page: ordered[index - 1], label: "Previous" },
+            { page: ordered[index + 1], label: "Next" },
+        ].filter(({ page }) => page).map(({ page, label }) =>
+            `<a href="${escapeHtml(urlFor(page!.id))}" data-dd-link="${escapeHtml(page!.id)}">${label}: ${escapeHtml(page!.title)}</a>`,
+        ).join(" ");
         if (id) replaceUrl(id);
     }
 
@@ -358,7 +367,10 @@ export function mountPanel(
     const onToggleGroup = (event: Event) => {
         const group = event.target as HTMLDetailsElement;
         const id = group.dataset.ddGroup;
-        if (id && !group.open) expandedFor = id;
+        if (id) {
+            if (!group.open) collapsedGroups.add(id);
+            else collapsedGroups.delete(id);
+        }
     };
 
     /** Escape closes the panel. */

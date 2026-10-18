@@ -795,3 +795,7 @@ stays public and readable, and personal and open-source use stays free;
 commercial use will need a licence per site. The licence text for 2.0 has not
 been chosen yet, and when it is, `LICENSE`, `package.json` and this section
 change together in the 2.0 release.
+
+### Multi-chapter manuals
+
+Groups may contain pages or other groups, up to three nested groups. Each group uses a native keyboard-accessible disclosure in both navigation rails. Pages keep their `/docs/<id>/` URLs regardless of chapter placement. The panel expands the active page's ancestors; readers can also fold them manually. Chapter context and page progress appear while reading, and static section pages include previous/next destinations. Group labels have no URL or content of their own.

@@ -386,7 +386,7 @@ export function buildStatic(
             ? `<li><details class="dd-nav-group" open>` +
               `<summary>${icon("chevron-right")}${escapeHtml(s.title)}</summary>` +
               `<ul class="dd-nav-list">` +
-              s.children.map((page) => `<li>${navLink(page, currentId)}</li>`).join("") +
+              s.children.map((child) => railItem(child, currentId)).join("") +
               `</ul></details></li>`
             : `<li>${navLink(s, currentId)}</li>`;
 
@@ -441,20 +441,10 @@ export function buildStatic(
 
     /* --- index --------------------------------------------------------- */
 
-    const contentsLink = (page: DocPage) =>
-        `<li><a href="${escapeHtml(pathFor(page.id))}">${escapeHtml(page.title)}</a></li>`;
-    const contentsList =
-        `<nav class="dd-contents"><h2>Contents</h2><ul class="dd-list">` +
-        docs.sections
-            .map((section) =>
-                isGroup(section)
-                    ? `<li>${escapeHtml(section.title)}<ul class="dd-list">` +
-                      section.children.map(contentsLink).join("") +
-                      `</ul></li>`
-                    : contentsLink(section),
-            )
-            .join("") +
-        `</ul></nav>`;
+    const contentsItem = (section: DocSection): string => isGroup(section)
+        ? `<li>${escapeHtml(section.title)}<ul class="dd-list">${section.children.map(contentsItem).join("")}</ul></li>`
+        : `<li><a href="${escapeHtml(pathFor(section.id))}">${escapeHtml(section.title)}</a></li>`;
+    const contentsList = `<nav class="dd-contents"><h2>Contents</h2><ul class="dd-list">${docs.sections.map(contentsItem).join("")}</ul></nav>`;
 
     out[`${basePath}/index.html`] = page({
         title: docs.title,
@@ -494,6 +484,9 @@ export function buildStatic(
     for (const [index, { section }] of all.entries()) {
         const url = urlFor(section.id);
         const entry = entries[index]!;
+        const chapter = pagesOf(docs.sections)[index]!.ancestors.map((group) => group.title).join(" / ");
+        const context = `<p class="dd-reading-context">${chapter ? `${escapeHtml(chapter)} / ` : ""}Page ${index + 1} of ${all.length}</p>` +
+            `<progress class="dd-progress" value="${index + 1}" max="${all.length}" aria-label="Manual reading progress"></progress>`;
         const prev = all[index - 1]?.section;
         const next = all[index + 1]?.section;
 
@@ -528,7 +521,7 @@ export function buildStatic(
             whole: { url: indexUrl, title: `${docs.title}, complete on one page` },
             // The section is the page, so its title is the page's one h1 — the
             // heading a text extractor takes as the topic.
-            body: sectionNote + renderSection(section, facts, { headingLevel: 1, ...links }) + nav,
+            body: context + sectionNote + renderSection(section, facts, { headingLevel: 1, ...links }) + nav,
             graph: {
                 "@context": "https://schema.org",
                 "@graph": [
