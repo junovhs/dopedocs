@@ -8,6 +8,7 @@
  * produced.
  */
 
+import { icon } from "./icons.js";
 import type { FactMap } from "./facts.js";
 import { escapeHtml, inline, renderBody, renderLead, renderSection } from "./render.js";
 import {
@@ -292,10 +293,7 @@ ${chrome.rail}
 /* ── Chrome (DEC-07) ─────────────────────────────────────────────────────── */
 
 /** The back arrow. Inline and self-contained so it needs no stylesheet. */
-const BACK_ARROW =
-    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ` +
-    `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">` +
-    `<path d="M15 18l-6-6 6-6"/></svg>`;
+const BACK_ARROW = icon("arrow-left");
 
 /* ── The build ───────────────────────────────────────────────────────────── */
 
@@ -396,7 +394,7 @@ export function buildStatic(
     const railItem = (s: DocSection, currentId?: string): string =>
         isGroup(s)
             ? `<li><details class="dd-nav-group" open>` +
-              `<summary>${escapeHtml(s.title)}</summary>` +
+              `<summary>${icon("chevron-right")}${escapeHtml(s.title)}</summary>` +
               `<ul class="dd-nav-list">` +
               s.children.map((page) => `<li>${navLink(page, currentId)}</li>`).join("") +
               `</ul></details></li>`
@@ -514,13 +512,13 @@ export function buildStatic(
             (prev
                 ? `<a rel="prev" href="${escapeHtml(pathFor(prev.id))}">${escapeHtml(
                       prev.title,
-                  )}</a>`
+                  )}${icon("arrow-left")}</a>`
                 : "") +
             `<a href="${escapeHtml(indexPath)}">Complete manual (one page)</a>` +
             (next
                 ? `<a rel="next" href="${escapeHtml(pathFor(next.id))}">${escapeHtml(
                       next.title,
-                  )}</a>`
+                  )}${icon("arrow-right")}</a>`
                 : "") +
             `</nav>`;
 

@@ -645,7 +645,7 @@ describe("static page chrome", () => {
         }
         // The group is a native, open <details> whose summary is a label, not a link.
         expect(section).toMatch(
-            /<details class="dd-nav-group" open><summary>Your data<\/summary><ul class="dd-nav-list"><li><a[^>]*\/docs\/data\/"/,
+            /<details class="dd-nav-group" open><summary>[\s\S]*?Your data<\/summary><ul class="dd-nav-list"><li><a[^>]*\/docs\/data\/"/,
         );
         expect(section).not.toContain("/docs/your-data/");
     });

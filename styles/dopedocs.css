@@ -308,17 +308,12 @@
     background: var(--dd-panel-muted);
 }
 
-.dd-nav-group > summary::before {
-    content: "";
-    width: 0;
-    height: 0;
-    border-top: 4px solid transparent;
-    border-bottom: 4px solid transparent;
-    border-left: 5px solid var(--dd-edge);
+.dd-nav-group > summary > .dd-icon {
+    color: var(--dd-muted);
     transition: transform 0.18s var(--dd-ease);
 }
 
-.dd-nav-group[open] > summary::before {
+.dd-nav-group[open] > summary > .dd-icon {
     transform: rotate(90deg);
 }
 
@@ -1052,8 +1047,8 @@ a.dd-card:focus-visible,
 
     .dd-back svg,
     .dd-back:hover svg,
-    .dd-nav-group > summary::before,
-    .dd-nav-group[open] > summary::before,
+    .dd-nav-group > summary > .dd-icon,
+    .dd-nav-group[open] > summary > .dd-icon,
     .dd-nav-group::details-content {
         transition: none;
     }
@@ -1619,3 +1614,10 @@ a.dd-card:focus-visible,
         object-fit: contain;
     }
 }
+
+/* Selected SVGs are markup in both surfaces, never initialized by a script. */
+.dd-icon { width: 16px; height: 16px; flex: 0 0 auto; vertical-align: -0.15em; }
+.dd-callout { display: flex; align-items: flex-start; gap: 10px; }
+.dd-callout > .dd-icon { margin-top: 4px; color: var(--dd-on-ink); }
+.dd-check-icon .dd-icon { width: 13px; height: 13px; }
+.dd-pager .dd-icon { margin-left: 8px; }

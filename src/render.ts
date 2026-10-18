@@ -9,6 +9,7 @@
  * overrides any rule with ordinary CSS, so renaming one is a breaking change.
  */
 
+import { icon } from "./icons.js";
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
 import { LINK_MARK, linkTarget, stripLinks } from "./links.js";
@@ -144,7 +145,7 @@ export function renderBlock(
         }
 
         case "callout":
-            return `<div class="dd-callout dd-callout--${block.tone ?? "note"}"><p>${text(
+            return `<div class="dd-callout dd-callout--${block.tone ?? "note"}">${icon(block.tone === "warn" ? "triangle-alert" : "info")}<p>${text(
                 block.text,
             )}</p></div>`;
 
@@ -164,7 +165,7 @@ export function renderBlock(
                     const state = checked ? "Complete" : "Not complete";
                     return (
                         `<li class="dd-check${checked ? " is-checked" : ""}">` +
-                        `<span class="dd-check-icon" aria-hidden="true">${checked ? "&#10003;" : ""}</span>` +
+                        `<span class="dd-check-icon" aria-hidden="true">${checked ? icon("check") : ""}</span>` +
                         `<span><span class="dd-visually-hidden">${state}: </span>${text(item)}</span></li>`
                     );
                 })

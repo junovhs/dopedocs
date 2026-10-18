@@ -18,6 +18,7 @@
  *   indexed.
  */
 
+import { icon } from "./icons.js";
 import { escapeHtml, renderBody, renderLead } from "./render.js";
 import { isGroup, pagesOf, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
@@ -153,7 +154,7 @@ export function mountPanel(
         if (!isGroup(s)) return `<li>${link(s)}</li>`;
         return (
             `<li><details class="dd-nav-group" data-dd-group="${escapeHtml(s.id)}">` +
-            `<summary>${escapeHtml(s.title)}</summary>` +
+            `<summary>${icon("chevron-right")}${escapeHtml(s.title)}</summary>` +
             `<ul class="dd-nav-list">${s.children.map((page) => `<li>${link(page)}</li>`).join("")}</ul>` +
             `</details></li>`
         );
@@ -167,7 +168,7 @@ export function mountPanel(
     root.innerHTML =
         `<div class="dd-shell">` +
         `<div class="dd-bar">` +
-        `<button type="button" class="dd-back" data-dd-close>${escapeHtml(backLabel)}</button>` +
+        `<button type="button" class="dd-back" data-dd-close>${icon("arrow-left")}${escapeHtml(backLabel)}</button>` +
         `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>` +
         `<span class="dd-esc">Esc</span>` +
         `</div>` +
