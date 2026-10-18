@@ -10,6 +10,7 @@
  * easiest to skip.
  */
 
+import { plainText } from "./inline.js";
 import type { FactMap } from "./facts.js";
 import { referencedFacts } from "./facts.js";
 import { linkTarget, referencedLinks } from "./links.js";
@@ -583,7 +584,13 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             });
         }
 
-        const opener = firstWord(section.answer);
+        // Wait for valid references rather than throwing while collecting
+        // findings. The renderer and machine-readable answers use this same
+        // plain-text derivation, including mark stripping and fact resolution.
+        const answerText = referencedFacts(section.answer).every((key) => factKeys.has(key))
+            ? plainText(section.answer, docs.facts, `section "${id}"`)
+            : undefined;
+        const opener = firstWord(answerText ?? "");
         if (OUTWARD_OPENERS.has(opener)) {
             findings.push({
                 code: "answer-opens-with-pronoun",
@@ -593,12 +600,12 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             });
         }
 
-        if (section.answer.length > MAX_ANSWER_LENGTH) {
+        if (answerText !== undefined && answerText.length > MAX_ANSWER_LENGTH) {
             findings.push({
                 code: "answer-too-long",
                 severity: "fatal",
                 sectionId: id,
-                message: `The answer for "${id}" is ${section.answer.length} characters; over ${MAX_ANSWER_LENGTH} it stops being a quotable snippet. Move the detail into blocks.`,
+                message: `The answer for "${id}" is ${answerText.length} characters; over ${MAX_ANSWER_LENGTH} it stops being a quotable snippet. Move the detail into blocks.`,
             });
         }
 

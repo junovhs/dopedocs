@@ -9,8 +9,8 @@
  */
 
 import { icon } from "./icons.js";
-import type { FactMap } from "./facts.js";
-import { escapeHtml, inline, renderBody, renderLead, renderSection } from "./render.js";
+import { plainText as plain } from "./inline.js";
+import { escapeHtml, renderBody, renderLead, renderSection } from "./render.js";
 import {
     hasFatal,
     validate,
@@ -154,16 +154,6 @@ const jsonLd = (value: unknown): string =>
 function flatten(sections: DocSection[]): { section: DocPage }[] {
     return pagesOf(sections).map(({ page }) => ({ section: page }));
 }
-
-/** Strips marks and fills facts, for values that must be plain text. */
-const plain = (raw: string, facts: FactMap, where: string): string =>
-    inline(raw, facts, where)
-        .replace(/<[^>]+>/g, "")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, '"')
-        .replace(/&amp;/g, "&")
-        .trim();
 
 /* ── Structured data ─────────────────────────────────────────────────────── */
 

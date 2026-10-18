@@ -928,3 +928,26 @@ describe("actual fact review dates", () => {
         }
     });
 });
+
+describe("resolved answer conventions", () => {
+    const answerDocs = (answer: string, value: string): DocSet => ({
+        ...docs, facts: { ...docs.facts, snippet: { value, reviewed: "2026-10-18" } },
+        sections: [{ id: "snippet", title: "Snippet", question: "What is the answer?", answer, blocks: [] }],
+    });
+    it("rejects an outward opener introduced by a fact or inline mark", () => {
+        expect(() => buildStatic(answerDocs("{fact:snippet}", "It works."), { now })).toThrow(/answer-opens-with-pronoun/);
+        expect(() => buildStatic(answerDocs("**It** works.", "unused"), { now })).toThrow(/answer-opens-with-pronoun/);
+    });
+    it("rejects an overlong fact-resolved answer", () => {
+        expect(() => buildStatic(answerDocs("{fact:snippet}", "Example " + "x".repeat(400)), { now })).toThrow(/answer-too-long/);
+    });
+    it("measures visible words rather than link markup", () => {
+        const tree = buildStatic(answerDocs("Example links to [a guide](https://example.test/" + "x".repeat(400) + ").", "unused"), { now });
+        expect(JSON.parse(tree["questions.json"]!).questions[0].answer).toBe("Example links to a guide.");
+        expect(tree["docs/snippet/index.html"]).toContain('>a guide</a>');
+    });
+    it("reports missing facts through findings rather than throwing from validate", () => {
+        const findings = validate(answerDocs("Example uses {fact:missing}.", "unused"));
+        expect(findings.some(f => f.code === "unknown-fact-reference")).toBe(true);
+    });
+});
