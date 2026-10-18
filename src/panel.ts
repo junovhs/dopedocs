@@ -216,6 +216,10 @@ export function mountPanel(
         activeId = id;
         for (const el of navLinks) {
             el.classList.toggle("is-active", el.dataset.ddLink === id);
+            if (el.classList.contains("dd-nav-link")) {
+                if (el.dataset.ddLink === id) el.setAttribute("aria-current", "location");
+                else el.removeAttribute("aria-current");
+            }
         }
         // Expand the folder containing the newly active section. Keyed on the
         // group rather than fired every tick, so a reader who collapses a group
