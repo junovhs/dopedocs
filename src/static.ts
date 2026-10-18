@@ -507,19 +507,16 @@ export function buildStatic(
         const prev = all[index - 1]?.section;
         const next = all[index + 1]?.section;
 
+        const destination = (direction: "prev" | "next", page: DocPage) =>
+            `<a rel="${direction}" href="${escapeHtml(pathFor(page.id))}">` +
+            `<span class="dd-pager-label">${icon(direction === "prev" ? "arrow-left" : "arrow-right")}` +
+            `${direction === "prev" ? "Previous" : "Next"}</span>` +
+            `<span class="dd-pager-title">${escapeHtml(page.title)}</span></a>`;
         const nav =
-            `<nav class="dd-pager">` +
-            (prev
-                ? `<a rel="prev" href="${escapeHtml(pathFor(prev.id))}">${escapeHtml(
-                      prev.title,
-                  )}${icon("arrow-left")}</a>`
-                : "") +
-            `<a href="${escapeHtml(indexPath)}">Complete manual (one page)</a>` +
-            (next
-                ? `<a rel="next" href="${escapeHtml(pathFor(next.id))}">${escapeHtml(
-                      next.title,
-                  )}${icon("arrow-right")}</a>`
-                : "") +
+            `<nav class="dd-pager" aria-label="Continue reading">` +
+            (prev ? destination("prev", prev) : "") +
+            `<a class="dd-pager-all" href="${escapeHtml(indexPath)}">Complete manual (one page)</a>` +
+            (next ? destination("next", next) : "") +
             `</nav>`;
 
         // A group has no URL, so it is not a crumb: a breadcrumb step must

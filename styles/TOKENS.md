@@ -160,5 +160,5 @@ breaking change.
 `dd-nav-link` (with `is-active`), `dd-nav-group`, `dd-main`.
 
 **Static page** - `dd-page`, which replaces the overlay chrome entirely,
-plus `dd-contents` (the index's list of sections) and `dd-pager` (the
+plus `dd-contents` (the index's list of sections) and `dd-pager`, `dd-pager-label`, `dd-pager-title`, `dd-pager-all` (the
 previous / all / next row at the foot of each section page).

@@ -1268,26 +1268,41 @@ a.dd-card:focus-visible,
 }
 
 .dd-pager {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 24px;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
     max-width: var(--dd-measure);
-    margin-top: 46px;
-    padding-top: 18px;
+    margin-top: 44px;
+    padding-top: 24px;
     border-top: 1px solid var(--dd-line);
 }
-
 .dd-pager a {
-    color: var(--dd-text-soft);
-    font-size: 13px;
-    text-decoration-color: var(--dd-edge);
-    text-underline-offset: 3px;
+    min-width: 0;
+    color: var(--dd-text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
 }
-
-.dd-pager a:hover {
-    color: var(--dd-accent);
-    text-decoration-color: var(--dd-accent);
+.dd-pager a[rel] {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 18px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel);
+}
+.dd-pager a[rel]:hover { border-color: var(--dd-accent); background: var(--dd-panel-muted); }
+.dd-pager a[rel="prev"] { grid-column: 1; grid-row: 1; }
+.dd-pager a[rel="next"] { grid-column: 2; grid-row: 1; }
+.dd-pager:not(:has([rel="prev"])) a[rel="next"],
+.dd-pager:not(:has([rel="next"])) a[rel="prev"] { grid-column: 1 / -1; }
+.dd-pager-label { display: flex; align-items: center; gap: 7px; color: var(--dd-muted); font: 600 12px/1.4 var(--dd-sans); }
+.dd-pager-title { font-size: 14px; font-weight: 600; line-height: 1.5; }
+.dd-pager .dd-pager-all { grid-column: 1 / -1; grid-row: 2; justify-self: center; padding: 8px; color: var(--dd-text-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 620px) {
+    .dd-pager { grid-template-columns: minmax(0, 1fr); }
+    .dd-pager a[rel="prev"], .dd-pager a[rel="next"], .dd-pager .dd-pager-all { grid-column: 1; grid-row: auto; }
+    .dd-pager .dd-pager-all { order: 1; }
 }
 
 /* The full-manual note: one quiet line saying the whole document is one page.
@@ -1331,10 +1346,7 @@ a.dd-card:focus-visible,
 
 /* The middle link is the way back to the whole document, so it reads as the
    anchor of the row rather than as one more sibling. */
-.dd-pager a[rel="next"] {
-    margin-left: auto;
-    text-align: right;
-}
+
 
 /* ==========================================================================
    Release identity
@@ -1615,4 +1627,4 @@ a.dd-card:focus-visible,
 .dd-callout { display: flex; align-items: flex-start; gap: 10px; }
 .dd-callout > .dd-icon { margin-top: 2px; color: var(--dd-accent); }
 .dd-check-icon .dd-icon { width: 13px; height: 13px; }
-.dd-pager .dd-icon { margin-left: 8px; }
+.dd-pager .dd-icon { margin: 0; }
