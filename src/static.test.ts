@@ -917,3 +917,14 @@ describe("mergeCrawlerFile", () => {
         expect(file.match(/<loc>https:\/\/noceremony\.app\/pricing\/<\/loc>/g)).toHaveLength(1);
     });
 });
+
+describe("actual fact review dates", () => {
+    it.each(["2026-02-29", "2026-02-30", "2026-99-99", "2026-00-01", "2026-10-00"])("refuses impossible date %s before publishing", (reviewed) => {
+        expect(() => buildStatic({ ...docs, facts: { price: { value: "free", reviewed } } }, { now })).toThrow(/invalid-review-date/);
+    });
+    it("accepts a real leap day and future valid dates", () => {
+        for (const reviewed of ["2024-02-29", "2028-02-29"]) {
+            expect(() => buildStatic({ ...docs, facts: { price: { value: "free", reviewed } } }, { now })).not.toThrow();
+        }
+    });
+});

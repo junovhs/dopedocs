@@ -636,17 +636,19 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     }
 
     for (const [key, fact] of Object.entries(docs.facts)) {
-        if (!ISO_DATE.test(fact.reviewed)) {
+        const reviewedTime = Date.parse(`${fact.reviewed}T00:00:00Z`);
+        if (!ISO_DATE.test(fact.reviewed) || !Number.isFinite(reviewedTime) ||
+            new Date(reviewedTime).toISOString().slice(0, 10) !== fact.reviewed) {
             findings.push({
                 code: "invalid-review-date",
                 severity: "fatal",
                 factKey: key,
-                message: `Fact "${key}" has reviewed date "${fact.reviewed}"; it must be an ISO YYYY-MM-DD date.`,
+                message: `Fact "${key}" has reviewed date "${fact.reviewed}"; it must be a real ISO YYYY-MM-DD calendar date.`,
             });
             continue;
         }
         const age =
-            (today.getTime() - Date.parse(`${fact.reviewed}T00:00:00Z`)) / DAY_MS;
+            (today.getTime() - reviewedTime) / DAY_MS;
         if (age > staleAfterDays) {
             findings.push({
                 code: "stale-fact",
