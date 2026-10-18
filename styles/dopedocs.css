@@ -397,7 +397,7 @@
 
 .dd-title {
     margin: 0 0 12px;
-    color: var(--dd-ink);
+    color: var(--dd-text);
     font: 800 clamp(28px, 3.6vw, 38px)/1.08 var(--dd-sans);
     letter-spacing: -0.03em;
     text-transform: uppercase;
@@ -424,7 +424,7 @@
     margin: 0 0 15px;
     padding-bottom: 9px;
     border-bottom: 1px solid var(--dd-line);
-    color: var(--dd-ink);
+    color: var(--dd-text);
     font: 700 clamp(19px, 2.4vw, 23px)/1.18 var(--dd-sans);
     letter-spacing: -0.025em;
 }
