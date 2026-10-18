@@ -11,7 +11,8 @@
         "THIRD_PARTY_NOTICES.md",
         "examples/*.ts",
         "examples/manual-assets",
-        "examples/README.md"
+        "examples/README.md",
+        "docs"
     ],
     "exports": {
         ".": {
@@ -56,7 +57,8 @@
         "test": "vitest run",
         "prepare": "npm run build",
         "prepublishOnly": "npm run check && npm test && npm run build",
-        "check:examples": "npm run build && node scripts/check-examples.mjs"
+        "check:examples": "npm run build && node scripts/check-examples.mjs",
+        "check:readme": "npm run build && node scripts/check-readme.mjs"
     },
     "devDependencies": {
         "@types/node": "^22.20.1",
