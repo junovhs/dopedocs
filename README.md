@@ -809,3 +809,7 @@ Opted-in static output includes a small `search.js` enhancement. Without JavaScr
 ### Copyable manuals and walkthroughs
 
 Start with the [complete product manual](./examples/user-manual.ts) or [first-use walkthrough](./examples/onboarding-walkthrough.ts). Both use a fictional lamp and plain-language instructions; together they exercise every stable block, responsive images, art direction, a gallery and a silent video. The examples and their small local media files ship in the npm package. See [copy and build instructions](./examples/README.md).
+
+### Industry starter
+
+The [plumbing starter](./examples/plumbing-starter.ts) ships 30 customer questions with placeholder facts and business entity fields. Copy it from the installed package, obtain approved answers, and build with `entityType: "Plumber"` and `articleType: "Article"`. [Instructions](./examples/README.md#plumbing-starter) explain fact keys, review dates and business-name disambiguation. No real customer's answers are included.

@@ -26,10 +26,16 @@ try {
   const { pagesOf, validate } = await import(pathToFileURL(join(app, 'node_modules/dopedocs/dist/schema.js')));
   const kinds = new Set();
   for (const source of sources) {
-    const { docs } = await import(pathToFileURL(join(app, 'build', source.replace(/\.ts$/, '.js'))));
+    const { docs, buildOptions = {} } = await import(pathToFileURL(join(app, 'build', source.replace(/\.ts$/, '.js'))));
     assert.deepEqual(validate(docs), [], `${source} has validation findings`);
-    const tree = buildStatic(docs, { search: true });
+    const tree = buildStatic(docs, { search: true, ...buildOptions });
     assert(tree['docs/index.html'].includes('<h1'));
+    if (source === 'plumbing-starter.ts') {
+      assert.equal(pagesOf(docs.sections).length, 30);
+      assert(tree['docs/index.html'].includes('"@type": "Plumber"'));
+      assert(Object.values(docs.facts).every(fact => fact.value.startsWith('REPLACE:')));
+      assert(docs.entity.url.endsWith('.example'));
+    }
     for (const { page } of pagesOf(docs.sections)) {
       assert(tree[`docs/${page.id}/index.html`]);
       for (const block of page.blocks) {

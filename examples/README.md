@@ -5,6 +5,7 @@ all names, URLs, facts, review dates and media before publishing.
 
 - `user-manual.ts`: a product manual using every stable block kind.
 - `onboarding-walkthrough.ts`: a complete three-stage first-use flow.
+- `plumbing-starter.ts`: 30 customer questions, placeholder fact keys and business entity fields.
 - `manual-assets/`: local SVG illustrations and a silent WebM brightness demo.
 
 After `npm i dopedocs`, copy one content file and its media into your project:
@@ -48,3 +49,23 @@ For maintainers, `npm run check:examples` packs the project, installs that
 archive into a throwaway app, compiles all root example modules against the
 installed package and builds their complete static trees. It checks block
 coverage and that every root-relative example media reference exists.
+
+## Plumbing starter
+
+Copy `node_modules/dopedocs/examples/plumbing-starter.ts` to `src/docs.ts`.
+Pass `{ entityType: "Plumber", articleType: "Article" }` with `docs` to your
+plugin or `buildStatic`. Each fact key names one decision your business needs
+to approve. Questions cover booking, diagnostic and call-out fees, licensing,
+insurance, service area, emergency hours, financing and separate parts/labour
+warranties. These placeholders are examples of the form, never real answers.
+
+Replace every `REPLACE` string, `plumbing.example` URL and sample review date.
+Write an answer that names the business and stands alone; do not publish the
+prompts as facts. Keep a fee or policy in its fact key and reference it wherever
+needed. Verify your own schema.org properties; dopedocs does not validate them.
+A trading name may match a business in another region: list those collisions
+in `notToBeConfusedWith`, use your real locality, and add authoritative `sameAs`
+profiles rather than assuming a unique name.
+
+For a blank vertical starter, adapt this one document before inventing a
+generator. Run the same installed-package example check after edits.
