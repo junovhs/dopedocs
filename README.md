@@ -805,3 +805,7 @@ Groups may contain pages or other groups, up to three nested groups. Each group 
 The panel includes local full-text search; enable it on static pages with `buildStatic(docs, { search: true })`. Search runs over section titles, questions, answers, keywords and rendered block text, including steps, tables and code. Search matches every word in any order, ignoring case and accents. Results use canonical section URLs; press Down from the search field to focus the first result, Tab through links, and Escape to clear. No service, network search request or analytics is involved. Results are capped at 50 for small-site use.
 
 Opted-in static output includes a small `search.js` enhancement. Without JavaScript the contents, native chapter disclosures, previous/next links and complete manual remain readable; use the browser's Find command on the complete manual. Set `search: false` in `mountPanel` options to omit search. Static builds keep their script-free default unless you set `search: true`. Strict Content Security Policies can allow the self-hosted script with `script-src 'self'`.
+
+### Copyable manuals and walkthroughs
+
+Start with the [complete product manual](./examples/user-manual.ts) or [first-use walkthrough](./examples/onboarding-walkthrough.ts). Both use a fictional lamp and plain-language instructions; together they exercise every stable block, responsive images, art direction, a gallery and a silent video. The examples and their small local media files ship in the npm package. See [copy and build instructions](./examples/README.md).

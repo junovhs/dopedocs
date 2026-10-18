@@ -8,7 +8,10 @@
     "files": [
         "dist",
         "styles",
-        "THIRD_PARTY_NOTICES.md"
+        "THIRD_PARTY_NOTICES.md",
+        "examples/*.ts",
+        "examples/manual-assets",
+        "examples/README.md"
     ],
     "exports": {
         ".": {
@@ -52,7 +55,8 @@
         "check": "tsc --noEmit",
         "test": "vitest run",
         "prepare": "npm run build",
-        "prepublishOnly": "npm run check && npm test && npm run build"
+        "prepublishOnly": "npm run check && npm test && npm run build",
+        "check:examples": "npm run build && node scripts/check-examples.mjs"
     },
     "devDependencies": {
         "@types/node": "^22.20.1",
