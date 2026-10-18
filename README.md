@@ -252,7 +252,7 @@ one level deep.
 
 ### Rules the build enforces
 
-A section fails the build if its `id` is not a URL-safe slug, its `question` is
+A section fails the build if its `id` is not a URL-safe slug, its `question` or resolved `answer` is
 empty, its `answer` opens with an outward-referring pronoun ("It stores…" rather
 than "Your App stores…") or runs past 320 characters, it nests more than one
 level deep, or it references a fact that is not in the registry. A group fails

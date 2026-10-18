@@ -314,6 +314,7 @@ export type FindingCode =
     | "duplicate-section-id"
     | "invalid-section-id"
     | "empty-question"
+    | "empty-answer"
     | "answer-opens-with-pronoun"
     | "answer-too-long"
     | "nesting-too-deep"
@@ -590,6 +591,12 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         const answerText = referencedFacts(section.answer).every((key) => factKeys.has(key))
             ? plainText(section.answer, docs.facts, `section "${id}"`)
             : undefined;
+        if (answerText !== undefined && !answerText) {
+            findings.push({
+                code: "empty-answer", severity: "fatal", sectionId: id,
+                message: `Section "${id}" has an empty resolved answer; write an answer before publishing this page.`,
+            });
+        }
         const opener = firstWord(answerText ?? "");
         if (OUTWARD_OPENERS.has(opener)) {
             findings.push({

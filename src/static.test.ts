@@ -951,3 +951,11 @@ describe("resolved answer conventions", () => {
         expect(findings.some(f => f.code === "unknown-fact-reference")).toBe(true);
     });
 });
+
+describe("nonblank published answers", () => {
+    it.each(["", " \n\t", "** **", "{fact:blank}"])("refuses blank answer %j", (answer) => {
+        const blank: DocSet = { ...docs, facts: { ...docs.facts, blank: { value: " \n", reviewed: "2026-10-18" } }, sections: [{ id: "blank", title: "Blank", question: "Where is the answer?", answer, blocks: [] }] };
+        expect(validate(blank, { today: now })).toEqual(expect.arrayContaining([expect.objectContaining({ code: "empty-answer", severity: "fatal", sectionId: "blank" })]));
+        expect(() => buildStatic(blank, { now })).toThrow(/empty-answer/);
+    });
+});
