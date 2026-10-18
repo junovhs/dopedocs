@@ -1,0 +1,14 @@
+/* Optional PhotoSwipe portal: import alongside photoswipe/style.css. */
+.dd-zoom-dialog {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    overflow: hidden;
+    background: transparent;
+}
+.dd-zoom-dialog::backdrop { background: transparent; }
+@media print { .dd-zoom-dialog { display: none !important; } }

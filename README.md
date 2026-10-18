@@ -527,6 +527,33 @@ or script.
 A gallery is an accessible group of ordinary figures. Each image keeps its own
 alt text and caption, and the grid collapses to one column below 620px.
 
+### Optional image zoom
+
+Install `photoswipe` only if your site needs full-resolution image browsing:
+
+```ts
+import "photoswipe/style.css";
+import "dopedocs/zoom.css";
+import { mountImageZoom } from "dopedocs/zoom";
+
+const zoom = mountImageZoom(document.querySelector(".dd-main")!);
+// Before removing this panel:
+zoom.destroy();
+```
+
+Give an image `href` to make it a full-size link. When `href` and `src` name the
+same file, the adapter uses its declared dimensions (including `shotImage`'s
+manifest dimensions), or its natural dimensions after loading. For a different
+original, provide `dimensions: (link, image) => ({ width, height })` using its
+real metadata. Unknown sizes keep ordinary link behavior. All eligible images
+inside the target form one gallery; target an individual `.dd-gallery` to keep
+galleries separate. Call after mounting the panel, and destroy before its target
+is removed. Recreate the adapter if the image set changes.
+
+A static-page consumer can explicitly initialize the same adapter on `.dd-page`.
+By default, generated pages include no zoom scripts or PhotoSwipe downloads;
+with JavaScript disabled the full-size links remain ordinary links.
+
 ### Accessible manuals and printing
 
 The bundled stylesheet treats manuals as documents, not only screens. Keyboard
