@@ -91,3 +91,17 @@ describe("Vite indexing pass-through", () => {
         expect(await readFile(join(root, "dist/robots.txt"), "utf8")).not.toContain("Sitemap:");
     });
 });
+
+describe("Vite stylesheet basePath", () => {
+    it("emits and links the bundled stylesheet under the effective override", async () => {
+        const root = await temporaryDirectory("dopedocs-base-");
+        const plugin = dopedocs({ docs: { ...docs, basePath: "docs" }, basePath: "/help/", stylesheet: [true, "/theme.css"] });
+        plugin.configResolved({ root, command: "build", build: { outDir: "dist" } });
+        await plugin.closeBundle();
+        const html = await readFile(join(root, "dist/help/index.html"), "utf8");
+        expect(html).toContain('href="/help/dopedocs.css"');
+        expect(html.indexOf('/help/dopedocs.css')).toBeLessThan(html.indexOf('/theme.css'));
+        expect(await readFile(join(root, "dist/help/dopedocs.css"), "utf8")).toContain('--dd-bg');
+        await expect(access(join(root, "dist/docs/dopedocs.css"))).rejects.toThrow();
+    });
+});

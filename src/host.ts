@@ -165,7 +165,7 @@ const OWN_SHEET_URL = new URL("../styles/dopedocs.css", import.meta.url);
  */
 export function createHost(options: DopedocsHostOptions) {
     const { docs, stylesheet, ...rest } = options;
-    const basePath = (docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
+    const basePath = (options.basePath ?? docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the host emits it. */
     const ownSheetPath = `${basePath}/dopedocs.css`;
     const sheets = stylesheet === undefined ? [] : [stylesheet].flat();

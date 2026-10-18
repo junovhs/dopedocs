@@ -135,3 +135,13 @@ describe("Astro integration", () => {
         expect(passed).toBe(true);
     });
 });
+
+describe("Astro stylesheet basePath", () => {
+    it("uses the host override for both docs and the bundled sheet", async () => {
+        const { dist, pub } = await project();
+        await build(dopedocs({ docs: { ...docs, basePath: "docs" }, basePath: "/help/", stylesheet: true }), dist, pub);
+        expect(await readFile(join(dist, "help/index.html"), "utf8")).toContain('href="/help/dopedocs.css"');
+        expect(await readFile(join(dist, "help/dopedocs.css"), "utf8")).toContain('--dd-bg');
+        await expect(readFile(join(dist, "docs/dopedocs.css"), "utf8")).rejects.toThrow();
+    });
+});
