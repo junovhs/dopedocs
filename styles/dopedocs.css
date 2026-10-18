@@ -478,34 +478,26 @@ h3.dd-section-title,
 /* --- callout -------------------------------------------------------------- */
 
 .dd-callout {
-    margin: 20px 0;
-    padding: 15px 19px;
-    border: 0;
-    border-left: 8px solid var(--dd-accent);
-    border-radius: var(--dd-radius-sm);
-    background: var(--dd-ink);
+    margin: 22px 0;
+    padding: 16px 18px;
+    border: 1px solid color-mix(in srgb, var(--dd-accent) 20%, var(--dd-line));
+    border-left: 2px solid var(--dd-accent);
+    border-radius: var(--dd-radius);
+    background: color-mix(in srgb, var(--dd-accent) 5%, var(--dd-bg));
 }
 
-.dd-callout p {
-    margin: 0;
-    color: var(--dd-on-ink);
-    font-size: 14.5px;
-    line-height: 1.68;
+.dd-callout p { margin: 0; color: var(--dd-text-soft); font-size: 14.5px; line-height: 1.65; }
+.dd-callout-label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--dd-text);
+    font: 650 12px/1.4 var(--dd-sans);
 }
-
-.dd-callout strong {
-    color: var(--dd-on-ink-strong);
-}
-
-.dd-callout code {
-    border-color: color-mix(in srgb, var(--dd-on-ink) 22%, transparent);
-    background: color-mix(in srgb, var(--dd-on-ink) 10%, transparent);
-    color: var(--dd-on-ink);
-}
-
+.dd-callout strong { color: var(--dd-text); }
+.dd-callout code { border-color: var(--dd-line); background: var(--dd-panel-muted); color: var(--dd-text); }
 .dd-callout--warn {
-    border-left-color: var(--dd-accent);
-    background: var(--dd-ink);
+    border-left-width: 4px;
+    background: color-mix(in srgb, var(--dd-accent) 9%, var(--dd-bg));
 }
 
 /* --- instructional widgets ---------------------------------------------- */
@@ -1617,6 +1609,6 @@ a.dd-card:focus-visible,
 /* Selected SVGs are markup in both surfaces, never initialized by a script. */
 .dd-icon { width: 16px; height: 16px; flex: 0 0 auto; vertical-align: -0.15em; }
 .dd-callout { display: flex; align-items: flex-start; gap: 10px; }
-.dd-callout > .dd-icon { margin-top: 4px; color: var(--dd-on-ink); }
+.dd-callout > .dd-icon { margin-top: 2px; color: var(--dd-accent); }
 .dd-check-icon .dd-icon { width: 13px; height: 13px; }
 .dd-pager .dd-icon { margin-left: 8px; }

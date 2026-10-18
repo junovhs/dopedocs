@@ -145,7 +145,7 @@ export function renderBlock(
         }
 
         case "callout":
-            return `<div class="dd-callout dd-callout--${block.tone ?? "note"}">${icon(block.tone === "warn" ? "triangle-alert" : "info")}<p>${text(
+            return `<div class="dd-callout dd-callout--${block.tone ?? "note"}">${icon(block.tone === "warn" ? "triangle-alert" : "info")}<p><span class="dd-callout-label">${block.tone === "warn" ? "Warning" : "Note"}</span>${text(
                 block.text,
             )}</p></div>`;
 
