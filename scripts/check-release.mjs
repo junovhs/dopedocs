@@ -1,9 +1,10 @@
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 const root = resolve(import.meta.dirname, '..');
+const version = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')).version;
 const scratch = await mkdtemp(join(tmpdir(), 'dopedocs-release-'));
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: 'utf8' });
@@ -30,8 +31,8 @@ try {
     results[name] = JSON.parse(run(process.execPath,['--input-type=module','-e',probe],app));
     console.log(`${name}: ${JSON.stringify(results[name])}`);
   }
-  assert.equal(results.candidate.version,'0.5.0');
+  assert.equal(results.candidate.version,version);
   for (const key of ['astro','links','facts','packagedDocs']) assert.equal(results.candidate[key],true,`Missing candidate ${key}`);
   assert.equal(results.baseline.astro,false); assert.equal(results.baseline.links,false);
-  console.log('PASS 0.4.0 regression reproduced; 0.5.0 installed tarball fixes Astro resolution/links and ships facts, reference, examples and media');
+  console.log(`PASS 0.4.0 regression reproduced; ${version} installed tarball fixes Astro resolution/links and ships facts, reference, examples and media`);
 } finally { await rm(scratch,{recursive:true,force:true}); }

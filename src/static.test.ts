@@ -93,6 +93,19 @@ describe("the written tree", () => {
     });
 });
 
+describe("complete manual navigation", () => {
+    it("uses the sidebar as its only contents list and keeps the complete content", () => {
+        const html = out["docs/index.html"]!;
+        expect(html.match(/<nav class="dd-nav" aria-label="Contents">/g)).toHaveLength(1);
+        expect(html).not.toContain('class="dd-contents"');
+        expect(html).not.toContain('<h2>Contents</h2>');
+        for (const id of ["what-it-is", "data", "export"]) {
+            expect(html).toContain(`id="${id}"`);
+            expect(html).toContain(`href="/docs/${id}/"`);
+        }
+    });
+});
+
 describe("a section page", () => {
     const html = out["docs/what-it-is/index.html"]!;
 

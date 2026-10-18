@@ -446,11 +446,6 @@ export function buildStatic(
 
     /* --- index --------------------------------------------------------- */
 
-    const contentsItem = (section: DocSection): string => isGroup(section)
-        ? `<li>${escapeHtml(section.title)}<ul class="dd-list">${section.children.map(contentsItem).join("")}</ul></li>`
-        : `<li><a href="${escapeHtml(pathFor(section.id))}">${escapeHtml(section.title)}</a></li>`;
-    const contentsList = `<nav class="dd-contents"><h2>Contents</h2><ul class="dd-list">${docs.sections.map(contentsItem).join("")}</ul></nav>`;
-
     out[`${basePath}/index.html`] = page({
         title: docs.title,
         description: plain(docs.lead, facts, "the document lead"),
@@ -459,7 +454,7 @@ export function buildStatic(
         stylesheet: options.stylesheet,
         indexing,
         chrome: { bar, rail: railFor() },
-        body: renderLead(docs, links) + indexNote + contentsList + renderBody(docs, links),
+        body: renderLead(docs, links) + indexNote + renderBody(docs, links),
         graph: {
             "@context": "https://schema.org",
             "@graph": [

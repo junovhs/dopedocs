@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1 - Unreleased
+
+- Remove the duplicate inline table of contents on the complete-manual page;
+  the sidebar remains the sole contents navigation.
+
 ## 0.5.0 - 2026-10-18
 
 Adds the documented integrations and manual toolkit to the npm package.
