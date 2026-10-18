@@ -206,6 +206,8 @@ The [full reference](./docs/reference.md) covers all blocks, responsive media,
 optional Shiki highlighting and PhotoSwipe zoom, screenshots, direct static
 builds, crawler policy and configuration. No telemetry or hosted service is required.
 
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contributions and public-store rules.
+
 ## Licence
 
 dopedocs 1.x is MIT; see [LICENSE](./LICENSE). Every version published under MIT

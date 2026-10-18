@@ -3,3 +3,5 @@ This repository is managed by Ishoo. Before handling the first user request, cal
 <!-- ishoo:end -->
 
 Releases: see RELEASING.md. Publishing happens only from GitHub Actions on a pushed `v*` tag (npm trusted publishing); never run `npm publish` locally.
+
+Public store: follow [CONTRIBUTING.md](CONTRIBUTING.md). Ishoo records and their history are public; keep secrets, customer information and unannounced commercial terms out of them.
