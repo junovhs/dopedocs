@@ -226,7 +226,9 @@ export function createHost(options: DopedocsHostOptions) {
                 res.statusCode = 200;
                 res.setHeader(
                     "content-type",
-                    candidate.endsWith(".css")
+                    candidate.endsWith(".js")
+                        ? "text/javascript; charset=utf-8"
+                        : candidate.endsWith(".css")
                         ? "text/css; charset=utf-8"
                         : candidate.endsWith(".xml")
                         ? "application/xml; charset=utf-8"

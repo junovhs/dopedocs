@@ -1669,3 +1669,11 @@ a.dd-card:focus-visible,
 .dd-progress { width: 100%; height: 5px; accent-color: var(--dd-accent, #5252cc); margin-block: 0 16px; }
 
 .dd-panel-pager { display: grid; gap: 8px; margin-block-end: 16px; font-size: 12px; }
+
+.dd-search { margin-block-end: 20px; font-size: 12px; }
+.dd-search label { display: grid; gap: 6px; color: var(--dd-muted, #8b8b93); }
+.dd-search-input { width: 100%; box-sizing: border-box; padding: 8px; font: inherit; color: var(--dd-text, #18181b); background: var(--dd-bg, #fff); border: 1px solid var(--dd-border, #ddd); border-radius: var(--dd-radius, 6px); }
+.dd-search-input:focus-visible { outline: 2px solid var(--dd-accent, #18181b); outline-offset: 2px; }
+.dd-search-results { padding-inline-start: 16px; max-height: 35vh; overflow: auto; }
+.dd-search-results li { margin-block: 8px; }
+.dd-search-status:empty { display: none; }

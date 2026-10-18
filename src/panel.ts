@@ -1,3 +1,4 @@
+import { createSearchIndex, renderSearch, mountSearch } from "./search.js";
 /**
  * The in-app documentation panel.
  *
@@ -29,6 +30,8 @@ export interface PanelOptions {
     syncUrl?: boolean;
     /** Heading above the rail. Default "Contents". */
     navLabel?: string;
+    /** Enable local full-text manual search. Default true. */
+    search?: boolean;
     /** Label on the close control. Default "Back". */
     backLabel?: string;
     /** Called after the panel opens or closes. */
@@ -176,6 +179,7 @@ export function mountPanel(
         `<div class="dd-body">` +
         `<nav class="dd-nav" aria-label="${escapeHtml(navLabel)}">` +
         `<p class="dd-nav-label">${escapeHtml(navLabel)}</p>` +
+        (options.search === false ? "" : renderSearch(createSearchIndex(docs, (id) => `${basePath}/${id}/`))) +
         `<p class="dd-reading-context" aria-live="polite"></p><progress class="dd-progress" max="${ordered.length || 1}" value="0" aria-label="Manual reading progress"></progress>` +
         `<nav class="dd-panel-pager" aria-label="Continue reading"></nav>` +
         `<ul class="dd-nav-list">${docs.sections.map(railItem).join("")}</ul>` +
@@ -183,6 +187,7 @@ export function mountPanel(
         `<main class="dd-main">${renderLead(docs)}${renderBody(docs)}</main>` +
         `</div></div>`;
     target.appendChild(root);
+    const destroySearch = mountSearch(root);
 
     const body = root.querySelector<HTMLElement>(".dd-body")!;
     const back = root.querySelector<HTMLButtonElement>(".dd-back")!;
@@ -453,6 +458,7 @@ export function mountPanel(
             document.removeEventListener("keydown", onKeydown);
             window.removeEventListener("popstate", onPopState);
             for (const group of groups) group.removeEventListener("toggle", onToggleGroup);
+            destroySearch();
             root.remove();
         },
         get isOpen() {

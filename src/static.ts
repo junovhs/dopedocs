@@ -1,3 +1,4 @@
+import { createSearchIndex, renderSearch, searchScript } from "./search.js";
 /**
  * The static build: what search engines and answer engines actually read.
  *
@@ -53,6 +54,8 @@ const ROBOTS_META: Record<Indexing, string> = {
 };
 
 export interface BuildStaticOptions {
+    /** Enable local search enhancement; true adds a self-hosted search script. Default false. */
+    search?: boolean;
     /** Where the docs are served. Defaults to the document's own, else `/docs`. */
     basePath?: string;
     /** Schema.org type for the entity. Default `Organization`. */
@@ -394,11 +397,13 @@ export function buildStatic(
     const railFor = (currentId?: string): string =>
         `<nav class="dd-nav" aria-label="Contents">` +
         `<p class="dd-nav-label">Contents</p>` +
+        (options.search !== true ? "" : renderSearch(createSearchIndex(docs, pathFor)) + `<script src="${escapeHtml(indexPath)}search.js" defer></script>`) +
         `<ul class="dd-nav-list">` +
         docs.sections.map((s) => railItem(s, currentId)).join("") +
         `</ul></nav>`;
 
     const out: Record<string, string> = {};
+    if (options.search === true) out[`${basePath}/search.js`] = searchScript();
     const entityJson = {
         ...entityNode(docs.entity, entityType, entityId),
         // A version is only meaningful on a software entity; on an Organization

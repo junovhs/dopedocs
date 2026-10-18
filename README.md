@@ -799,3 +799,9 @@ change together in the 2.0 release.
 ### Multi-chapter manuals
 
 Groups may contain pages or other groups, up to three nested groups. Each group uses a native keyboard-accessible disclosure in both navigation rails. Pages keep their `/docs/<id>/` URLs regardless of chapter placement. The panel expands the active page's ancestors; readers can also fold them manually. Chapter context and page progress appear while reading, and static section pages include previous/next destinations. Group labels have no URL or content of their own.
+
+### Search within a manual
+
+The panel includes local full-text search; enable it on static pages with `buildStatic(docs, { search: true })`. Search runs over section titles, questions, answers, keywords and rendered block text, including steps, tables and code. Search matches every word in any order, ignoring case and accents. Results use canonical section URLs; press Down from the search field to focus the first result, Tab through links, and Escape to clear. No service, network search request or analytics is involved. Results are capped at 50 for small-site use.
+
+Opted-in static output includes a small `search.js` enhancement. Without JavaScript the contents, native chapter disclosures, previous/next links and complete manual remain readable; use the browser's Find command on the complete manual. Set `search: false` in `mountPanel` options to omit search. Static builds keep their script-free default unless you set `search: true`. Strict Content Security Policies can allow the self-hosted script with `script-src 'self'`.

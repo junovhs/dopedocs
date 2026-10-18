@@ -6,3 +6,4 @@ export * from "./render.js";
 export * from "./schema.js";
 export * from "./static.js";
 export * from "./shot-image.js";
+export { createSearchIndex, type SearchEntry } from "./search.js";
