@@ -393,9 +393,8 @@
 .dd-title {
     margin: 0 0 12px;
     color: var(--dd-text);
-    font: 800 clamp(28px, 3.6vw, 38px)/1.08 var(--dd-sans);
-    letter-spacing: -0.03em;
-    text-transform: uppercase;
+    font: 700 clamp(28px, 3.4vw, 38px)/1.16 var(--dd-sans);
+    letter-spacing: -0.025em;
 }
 
 .dd-lead {
@@ -407,7 +406,7 @@
 
 .dd-section {
     max-width: var(--dd-measure);
-    margin: 0 0 46px;
+    margin: 0 0 56px;
     scroll-margin-top: 20px;
 }
 
@@ -416,11 +415,11 @@
 }
 
 .dd-section-title {
-    margin: 0 0 15px;
-    padding-bottom: 9px;
+    margin: 0 0 18px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--dd-line);
     color: var(--dd-text);
-    font: 700 clamp(19px, 2.4vw, 23px)/1.18 var(--dd-sans);
+    font: 650 clamp(20px, 2.4vw, 24px)/1.3 var(--dd-sans);
     letter-spacing: -0.025em;
 }
 
@@ -432,7 +431,7 @@ h3.dd-section-title,
 /* The answer is the sentence a machine quotes. Setting it slightly ahead of the
    body reflects that it is also the sentence a person in a hurry reads. */
 .dd-answer {
-    margin: 0 0 15px;
+    margin: 0 0 18px;
     color: var(--dd-text);
     font-size: 15.5px;
     font-weight: 500;
@@ -440,10 +439,10 @@ h3.dd-section-title,
 }
 
 .dd-p {
-    margin: 0 0 13px;
+    margin: 0 0 16px;
     color: var(--dd-text-soft);
-    font-size: 15px;
-    line-height: 1.74;
+    font-size: 15.5px;
+    line-height: 1.75;
 }
 
 .dd-p:last-child {
@@ -451,15 +450,15 @@ h3.dd-section-title,
 }
 
 .dd-list {
-    margin: 0 0 13px;
+    margin: 0 0 16px;
     padding-left: 19px;
 }
 
 .dd-list li {
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: var(--dd-text-soft);
-    font-size: 15px;
-    line-height: 1.74;
+    font-size: 15.5px;
+    line-height: 1.75;
 }
 
 .dd-section strong {
