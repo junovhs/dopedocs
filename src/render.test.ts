@@ -365,6 +365,7 @@ describe("document", () => {
    here as well as in the switch, which has no `default` arm. */
 
 export const everyBlockKindIsRendered: Record<DocBlock["kind"], true> = {
+    code: true,
     p: true,
     list: true,
     callout: true,

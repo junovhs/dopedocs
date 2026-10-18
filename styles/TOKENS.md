@@ -166,3 +166,22 @@ breaking change.
 **Static page** - `dd-page`, which replaces the overlay chrome entirely,
 plus `dd-contents` (the index's list of sections) and `dd-pager`, `dd-pager-label`, `dd-pager-title`, `dd-pager-all` (the
 previous / all / next row at the foot of each section page).
+
+## Optional code highlighting
+
+`code` blocks always work as plain escaped `pre`/`code`. Build-time Shiki
+preparation adds semantic classes without inline colours. Override any of:
+
+| Token | Fallback |
+| --- | --- |
+| `--dd-code-keyword` | `--dd-accent` |
+| `--dd-code-string` | `--dd-text-soft` |
+| `--dd-code-number` | `--dd-accent` |
+| `--dd-code-comment` | `--dd-muted` |
+| `--dd-code-function` | `--dd-accent` |
+| `--dd-code-type` | `--dd-text` |
+| `--dd-code-punctuation` | `--dd-text-soft` |
+
+Classes: `dd-code-block`, `dd-code-language`, `dd-code`, and
+`dd-code-token--keyword` / `--string` / `--number` / `--comment` / `--function` /
+`--type` / `--punctuation`. The host's dark palette controls these as usual.

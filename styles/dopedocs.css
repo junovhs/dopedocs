@@ -1640,3 +1640,25 @@ a.dd-card:focus-visible,
 .dd-callout > .dd-icon { margin-top: 2px; color: var(--dd-accent); }
 .dd-check-icon .dd-icon { width: 13px; height: 13px; }
 .dd-pager .dd-icon { margin: 0; }
+
+/* Literal code, with optional precomputed semantic token classes. */
+.dd-code-block { max-width: var(--dd-measure); margin: 20px 0; }
+.dd-code-language { padding: 10px 16px; border: 1px solid var(--dd-line); border-bottom: 0; border-radius: var(--dd-radius) var(--dd-radius) 0 0; background: var(--dd-panel-muted); color: var(--dd-muted); font: 600 11px/1.4 var(--dd-mono); overflow-wrap: anywhere; }
+.dd-code { box-sizing: border-box; max-width: 100%; margin: 0; padding: 18px; overflow-x: auto; border: 1px solid var(--dd-line); border-radius: 0 0 var(--dd-radius) var(--dd-radius); background: var(--dd-panel-muted); color: var(--dd-text); font: 400 13px/1.75 var(--dd-mono); tab-size: 4; }
+.dd-section .dd-code > code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; white-space: pre; }
+.dd-code:focus-visible { outline: 2px solid var(--dd-accent); outline-offset: 3px; }
+.dd-code-token--keyword { color: var(--dd-code-keyword, var(--dd-accent)); font-weight: 650; }
+.dd-code-token--string { color: var(--dd-code-string, var(--dd-text-soft)); }
+.dd-code-token--number { color: var(--dd-code-number, var(--dd-accent)); }
+.dd-code-token--comment { color: var(--dd-code-comment, var(--dd-muted)); font-style: italic; }
+.dd-code-token--function { color: var(--dd-code-function, var(--dd-accent)); }
+.dd-code-token--type { color: var(--dd-code-type, var(--dd-text)); font-weight: 600; }
+.dd-code-token--punctuation { color: var(--dd-code-punctuation, var(--dd-text-soft)); }
+@media print {
+    .dd-code-block { break-inside: avoid; }
+    .dd-code { overflow: visible; }
+    .dd-section .dd-code > code { white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+/* A preformatted line must not set the grid item's intrinsic minimum width. */
+.dd-main, .dd-page, .dd-code-block { min-width: 0; }
+.dd-page { box-sizing: border-box; width: 100%; }

@@ -13,7 +13,7 @@ import { icon } from "./icons.js";
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
 import { LINK_MARK, linkTarget, stripLinks } from "./links.js";
-import { isGroup, type DocBlock, type DocIdentity, type DocImage, type DocPage, type DocSection, type DocSet } from "./schema.js";
+import { CODE_TONES, isGroup, type DocBlock, type DocIdentity, type DocImage, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
 /**
  * Thrown when prose references a fact the registry does not hold. Shipping a
@@ -135,6 +135,21 @@ export function renderBlock(
     const text = (raw: string) => inline(raw, facts, where, sectionHref);
 
     switch (block.kind) {
+        case "code": {
+            // Prepared metadata may be stale; it must never replace the source.
+            const valid = block.tokens?.map((token) => token.text).join("") === block.code;
+            const code = valid ? block.tokens!.map((token) => {
+                const escaped = escapeHtml(token.text);
+                return token.tone && CODE_TONES.includes(token.tone)
+                    ? `<span class="dd-code-token--${token.tone}">${escaped}</span>`
+                    : escaped;
+            }).join("") : escapeHtml(block.code);
+            return figure(
+                `<div class="dd-code-language">${escapeHtml(block.language ?? "Code")}</div>` +
+                `<pre class="dd-code" tabindex="0"><code>${code}</code></pre>`,
+                block.caption, text, "dd-code-block",
+            );
+        }
         case "p":
             return `<p class="dd-p">${text(block.text)}</p>`;
 

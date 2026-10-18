@@ -47,7 +47,13 @@ export interface DocImage {
     href?: string;
 }
 
+/** Semantic highlighting data produced by the optional build-time adapter. */
+export const CODE_TONES = ["keyword", "string", "number", "comment", "function", "type", "punctuation"] as const;
+export type CodeTone = (typeof CODE_TONES)[number];
+export interface CodeToken { text: string; tone?: CodeTone; }
+
 export type DocBlock =
+    | { kind: "code"; code: string; language?: string; caption?: string; tokens?: CodeToken[] }
     | { kind: "p"; text: string }
     | { kind: "list"; items: string[]; ordered?: boolean }
     | { kind: "callout"; text: string; tone?: "note" | "warn" }
@@ -436,6 +442,7 @@ function proseOf(block: DocBlock): string[] {
             return [...(block.title ? [block.title] : []), ...block.rows.flat()];
         // `alt` is deliberately absent: it renders into an attribute, where a
         // <code> element from an inline mark would be markup in a text slot.
+        case "code":
         case "image":
             return block.caption ? [block.caption] : [];
         case "gallery":

@@ -398,6 +398,7 @@ A section is a **page** or a **group**.
 | Kind | Shape |
 | --- | --- |
 | `p` | `{ kind: "p", text }` |
+| `code` | `{ kind: "code", code, language?, caption? }` — literal multiline source. |
 | `list` | `{ kind: "list", items, ordered? }` |
 | `callout` | `{ kind: "callout", text, tone?: "note" \| "warn" }` |
 | `steps` | `{ kind: "steps", items: { title, text }[] }` |
@@ -432,6 +433,43 @@ relative path or `javascript:`, refuses it with `unsupported-link`. Plain-text
 outputs - the JSON-LD answer, the meta description, `llms.txt`,
 `questions.json` and image `alt` - keep the link's text and drop the markup.
 Inside a `` `code` `` span, link syntax stays literal.
+
+## Code samples
+
+```ts
+{ kind: "code", language: "typescript", code: 'const name = "Example";\n',
+  caption: "A small **literal** example." }
+```
+
+Source is escaped and preserved exactly: inline marks and `{fact:key}` syntax
+inside code stay literal. Long lines scroll within the block, including by
+keyboard; print output wraps. Captions are ordinary prose.
+
+Highlighting is optional. Install `shiki@^3` as a development dependency and run
+`prepareCode` from `dopedocs/highlight` in your content preparation step. It
+returns a new document with serializable semantic tokens. Both the panel and
+static build must receive that same prepared document. Unsupported languages
+fall back to plain code; stale tokens cannot replace the literal source.
+
+For example, with `tsx` installed as a development dependency:
+
+```ts
+// scripts/prepare-docs.ts — run with: tsx scripts/prepare-docs.ts
+import { writeFile } from "node:fs/promises";
+import { prepareCode } from "dopedocs/highlight";
+import { docs } from "../src/docs.source.ts";
+
+const prepared = await prepareCode(docs);
+await writeFile("src/docs.generated.ts",
+  'import type { DocSet } from "dopedocs";\nexport const docs = ' +
+  JSON.stringify(prepared, null, 2) + ' satisfies DocSet;\n');
+```
+
+Run this before starting Vite or building, and import `docs.generated.ts` from
+both your Vite configuration and browser code. Rerun preparation after source
+changes. Keep `prepareCode` and the source document out of the browser's import
+graph: the generated data needs no Shiki engine, language loaders or inline
+styles. Token colours use the [CSS contract](./styles/TOKENS.md#optional-code-highlighting).
 
 ## Widgets for manuals and walkthroughs
 
