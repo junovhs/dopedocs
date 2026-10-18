@@ -959,3 +959,18 @@ describe("nonblank published answers", () => {
         expect(() => buildStatic(blank, { now })).toThrow(/empty-answer/);
     });
 });
+
+describe("literal link examples in inline code", () => {
+    const example = (text: string): DocSet => ({ ...docs, sections: [{ id: "examples", title: "Examples", question: "How are links written?", answer: "Example shows literal link syntax.", blocks: [{ kind: "p", text }] }] });
+    it("publishes nonexistent-section and unsupported-scheme syntax as literal code", () => {
+        const input = example('Write `[example](#missing)` or `[x](javascript:bad)` literally.');
+        expect(validate(input, { today: now })).toEqual([]);
+        const html = buildStatic(input, { now })["docs/examples/index.html"]!;
+        expect(html).toContain('<code>[example](#missing)</code>');
+        expect(html).toContain('<code>[x](javascript:bad)</code>');
+        expect(html).not.toContain('data-dd-link="missing"');
+    });
+    it.each(['[example](#missing)', '[x](javascript:bad)', '`unclosed [example](#missing)'])("still refuses a real link in %s", (text) => {
+        expect(() => buildStatic(example(text), { now })).toThrow(/unknown-section-link|unsupported-link/);
+    });
+});

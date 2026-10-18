@@ -37,9 +37,11 @@ export function linkTarget(href: string): LinkTarget | undefined {
     return undefined;
 }
 
-/** Every link mark in a string, in order of appearance. */
+/** Every live link mark, excluding paired inline code spans just as rendering does. */
 export function referencedLinks(text: string): { text: string; href: string }[] {
-    return [...text.matchAll(LINK_MARK)].map((m) => ({ text: m[1]!, href: m[2]! }));
+    return text.split(/(`[^`]+`)/g).flatMap((part, index) =>
+        index % 2 ? [] : [...part.matchAll(LINK_MARK)].map((m) => ({ text: m[1]!, href: m[2]! })),
+    );
 }
 
 /** A string with each link mark reduced to its text, for plain-text slots. */
