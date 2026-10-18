@@ -135,6 +135,7 @@ export function mountPanel(
     let opener: HTMLElement | null = null;
     /** The URL the reader was on before the panel opened. */
     let entryUrl = "";
+    let previousOverflow = "";
     let ticking = false;
 
     /* --- markup ---------------------------------------------------------- */
@@ -160,7 +161,7 @@ export function mountPanel(
         );
     };
 
-    const root = document.createElement("div");
+    const root = document.createElement("dialog");
     root.className = "dd-overlay";
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-modal", "true");
@@ -282,6 +283,8 @@ export function mountPanel(
         opener = document.activeElement as HTMLElement | null;
         entryUrl = location.pathname + location.search + location.hash;
         root.classList.add("is-open");
+        root.showModal();
+        previousOverflow = document.body.style.overflow;
         document.body.style.overflow = "hidden";
 
         if (syncUrl && push) {
@@ -318,7 +321,8 @@ export function mountPanel(
         open = false;
         activeId = null;
         root.classList.remove("is-open");
-        document.body.style.overflow = "";
+        root.close();
+        document.body.style.overflow = previousOverflow;
         // Focus returns to whatever opened the panel, so a keyboard reader lands
         // where they were rather than at the top of the document.
         opener?.focus?.();
@@ -365,6 +369,33 @@ export function mountPanel(
         }
     };
 
+    /** Native modal inertness blocks background focus; wrap Tab at the edges
+     * rather than allowing the browser's chrome to become the next stop. */
+    const onTab = (event: KeyboardEvent) => {
+        if (!open || event.key !== "Tab") return;
+        const candidates = [...root.querySelectorAll<HTMLElement>(
+            'a[href], button, input, select, textarea, summary, [tabindex]',
+        )].filter((el) => el.tabIndex >= 0 && !el.matches(":disabled") &&
+            !el.closest("[inert]") && el.getClientRects().length > 0 &&
+            getComputedStyle(el).visibility !== "hidden");
+        const first = candidates[0];
+        const last = candidates[candidates.length - 1];
+        if (!first || !last) return;
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === root)) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === root)) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+
+    /** Keep native cancellation in the same close/history lifecycle. */
+    const onCancel = (event: Event) => {
+        event.preventDefault();
+        doClose();
+    };
+
     /** Follows browser history into, within, and out of the documentation. */
     const onPopState = () => {
         if (!syncUrl) return;
@@ -375,6 +406,8 @@ export function mountPanel(
     };
 
     root.addEventListener("click", onClick);
+    root.addEventListener("cancel", onCancel);
+    root.addEventListener("keydown", onTab);
     body.addEventListener("scroll", onScroll, { passive: true });
     body.addEventListener("wheel", onUserScroll, { passive: true });
     body.addEventListener("pointerdown", onUserScroll, { passive: true });
@@ -398,6 +431,8 @@ export function mountPanel(
         destroy() {
             doClose(false);
             root.removeEventListener("click", onClick);
+            root.removeEventListener("cancel", onCancel);
+            root.removeEventListener("keydown", onTab);
             body.removeEventListener("scroll", onScroll);
             body.removeEventListener("wheel", onUserScroll);
             body.removeEventListener("pointerdown", onUserScroll);
