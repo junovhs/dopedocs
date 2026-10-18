@@ -1,6 +1,6 @@
 {
     "name": "dopedocs",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "private": false,
     "type": "module",
     "description": "A typed documentation engine: one source renders to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
@@ -12,7 +12,8 @@
         "examples/*.ts",
         "examples/manual-assets",
         "examples/README.md",
-        "docs"
+        "docs",
+        "CHANGELOG.md"
     ],
     "exports": {
         ".": {
@@ -58,7 +59,8 @@
         "prepare": "npm run build",
         "prepublishOnly": "npm run check && npm test && npm run build",
         "check:examples": "npm run build && node scripts/check-examples.mjs",
-        "check:readme": "npm run build && node scripts/check-readme.mjs"
+        "check:readme": "npm run build && node scripts/check-readme.mjs",
+        "check:release": "npm run build && node scripts/check-release.mjs"
     },
     "devDependencies": {
         "@types/node": "^22.20.1",
