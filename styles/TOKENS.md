@@ -39,6 +39,10 @@ hosting it, so the defaults are unopinionated rather than some other product's
 palette leaking into yours. If your docs still look monochrome, `--dd-accent`
 is the token you have not set yet.
 
+For a complete self-hosted font and palette example, see
+[`examples/theme`](../examples/theme/README.md). Its font-face CSS is linked by
+both the app and static pages; importing a font only into the app is not enough.
+
 ## Dark mode
 
 dopedocs defines no dark-mode block, deliberately. Alias tokens that already

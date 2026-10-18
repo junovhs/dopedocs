@@ -170,6 +170,8 @@ than like dopedocs. Alias what you have; every token has a working fallback.
 The unthemed defaults are deliberately plain greyscale on the system font stack.
 If your docs still look monochrome, `--dd-accent` is the token you have not set.
 Full list in [`styles/TOKENS.md`](./styles/TOKENS.md).
+A [copyable theme example](./examples/theme/README.md) demonstrates self-hosted
+Fontsource typography and the same aliases on the panel and static pages.
 
 These same aliases style the static pages' bar and rail, so the chrome matches
 your product without a second stylesheet.

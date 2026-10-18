@@ -1,0 +1,47 @@
+/* Consumer-owned typography and palette. Both reading surfaces link this file. */
+@font-face {
+    font-family: "Inter Variable";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("/fonts/inter-latin-wght-normal.woff2") format("woff2");
+}
+:root {
+    color-scheme: light;
+    --dd-sans: "Inter Variable", system-ui, sans-serif;
+    --dd-bg: #faf9f6;
+    --dd-panel: #ffffff;
+    --dd-panel-muted: #efeee8;
+    --dd-ink: #182a25;
+    --dd-text: #1e3029;
+    --dd-text-soft: #4a5952;
+    --dd-muted: #69766f;
+    --dd-line: #d5dcd4;
+    --dd-line-soft: #e5e8e1;
+    --dd-edge: #84988a;
+    --dd-accent: #31684d;
+    --dd-on-ink: #eef4ef;
+    --dd-on-ink-strong: #ffffff;
+    --dd-on-accent: #ffffff;
+    --dd-radius: 10px;
+    --dd-radius-sm: 5px;
+    --dd-radius-xs: 5px;
+}
+/* This is the example site's theme, not a dark-mode policy in the engine. */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+        --dd-bg: #141d19;
+        --dd-panel: #1a2720;
+        --dd-panel-muted: #23352b;
+        --dd-ink: #0c1510;
+        --dd-text: #eaf1e9;
+        --dd-text-soft: #c1cfc2;
+        --dd-muted: #a1b5a5;
+        --dd-line: #3c5144;
+        --dd-line-soft: #2b3d32;
+        --dd-edge: #789480;
+        --dd-accent: #a4d0ae;
+        --dd-on-accent: #14241a;
+    }
+}
