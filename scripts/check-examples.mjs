@@ -2,12 +2,12 @@ import { mkdtemp, readFile, readdir, copyFile, mkdir, rm } from 'node:fs/promise
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawnCommand } from './run-command.mjs';
 import assert from 'node:assert/strict';
 const root = resolve(import.meta.dirname, '..');
 const scratch = await mkdtemp(join(tmpdir(), 'dopedocs-examples-'));
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8' });
+  const result = spawnCommand(command, args, { cwd, encoding: 'utf8' });
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed (${result.status}):\n${result.stdout}\n${result.stderr}`);
   return result.stdout;
 }

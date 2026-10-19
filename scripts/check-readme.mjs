@@ -2,12 +2,12 @@ import { mkdtemp, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawnCommand } from './run-command.mjs';
 import assert from 'node:assert/strict';
 const root = resolve(import.meta.dirname, '..');
 const scratch = await mkdtemp(join(tmpdir(), 'dopedocs-readme-'));
 function run(command, args, cwd, noWarnings = false) {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8', env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' } });
+  const result = spawnCommand(command, args, { cwd, encoding: 'utf8', env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' } });
   const output = result.stdout + result.stderr;
   if (result.status !== 0 || (noWarnings && /\bwarn(?:ing)?\b/i.test(output))) throw new Error(`${command} ${args.join(' ')} failed (${result.status}):\n${output}`);
   return result.stdout;

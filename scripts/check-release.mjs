@@ -1,13 +1,13 @@
 import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnCommand } from './run-command.mjs';
 import assert from 'node:assert/strict';
 const root = resolve(import.meta.dirname, '..');
 const version = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')).version;
 const scratch = await mkdtemp(join(tmpdir(), 'dopedocs-release-'));
 function run(command, args, cwd) {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8' });
+  const result = spawnCommand(command, args, { cwd, encoding: 'utf8' });
   if (result.status !== 0) throw new Error(`${command} failed (${result.status}): ${result.stdout}\n${result.stderr}`);
   return result.stdout;
 }
