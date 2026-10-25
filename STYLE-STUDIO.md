@@ -2,8 +2,7 @@
 
 **Status:** owner-approved direction, 2026-10-25. Proof of concept in
 [`prototypes/style-studio/`](prototypes/style-studio/). Nothing here is built
-into the engine yet. This document is the brief the next agent should file
-issues from.
+into the engine yet. The work is filed in Ishoo; see "Filed work" at the end.
 
 ## The idea in one paragraph
 
@@ -69,18 +68,26 @@ These accepted decisions govern the work. Read them in full with
 `ishoo_decision op:show` before filing.
 
 - **DEC-05: theming is a `--dd-*` CSS custom property contract, and there is no
-  theme object.** The studio's real output must be a block of `--dd-*` values
-  (plus ordinary CSS), which a consumer can also write by hand. The prototype's
-  Export tab shows a JSON "theme file". That is a sketch. A JSON or CLI
-  front-end that *compiles to* the token block may be fine, but it needs a new
-  decision that amends or supersedes DEC-05 before it ships. File that decision
-  first.
+  theme object.** The studio's output is a block of `--dd-*` values that a
+  developer could also write by hand.
+- **DEC-12 (accepted 2026-10-25): the studio saves the look as one hand-editable
+  CSS file.** The studio reads and writes one host-owned file, `docs-theme.css`,
+  of ordinary `--dd-*` declarations. Opening the studio parses the file, so hand
+  edits show up in the panel. Structural choices are documented keyword tokens
+  in the same file, such as `--dd-sidebar-side: right`. The Vite and Astro
+  integrations read them at build time and turn them into stable classes on the
+  panel and the static pages. Terminal commands edit the same file. The JSON
+  "theme file" in the prototype's Export tab is not the plan.
 - **DEC-11: keep the shared renderer and token CSS. Fonts stay host-controlled
   by default, there are no default font downloads, and static pages stay
-  complete without JavaScript.** The prototype breaks this on purpose: it pulls
-  14 Google families. Production fonts must be self-hosted or chosen by the
-  host. Every behavior the studio adds (island, minimap, palette) is an
-  enhancement on top of readable no-script HTML.
+  complete without JavaScript.** Every behavior the studio adds (island,
+  minimap, palette) is an enhancement on top of readable no-script HTML.
+- **DEC-13 (accepted 2026-10-25): any Google font or local font, self-hosted.**
+  A developer can search and pick any Google font, or drop in their own files.
+  dopedocs downloads only the chosen weights once, at development time, into
+  the host's site, and writes `@font-face` and the font tokens into
+  `docs-theme.css`. Readers never load fonts from Google or any other third
+  party. The prototype's `fonts.css` links Google directly; that is demo-only.
 - **DEC-09: dopedocs adds docs to an existing website, themed by your own
   tokens.** The studio must be able to start from the host's tokens, not
   replace them. A skin is a starting point the host can alias over.
@@ -90,13 +97,6 @@ These accepted decisions govern the work. Read them in full with
 - **The studio is a development tool.** It never ships to readers. The prototype
   shows it beside the preview. In production, think `dopedocs studio`, or a
   dev-server overlay that writes the theme file.
-
-**Open question for that decision:** how structural choices travel. The
-prototype uses `data-side`, `data-toc`, `data-header`, `data-active`,
-`data-card` and `data-texture` attributes on `<html>`, plus tokens like
-`--dd-measure` and `--dd-side-w`. Options include token-driven
-`grid-template-areas`, a small set of documented layout classes, or build-time
-options. Choose one and record it.
 
 ## Typography: the most important part
 
@@ -302,36 +302,58 @@ the prototype; make sure the real build avoids them.
 - Reference with the sidebar on the right *and* the outline on the left puts the code panel left of the prose. It works, but it isn't a good combination. Consider forbidding it.
 - In Reader, "Sidebar side" moves the margin notes. That's a stretch of meaning; name it per layout.
 - The Handbook outline folds into a dropdown below 1180px. With Remix open, that happens on most screens.
-- `fonts.css` downloads 14 font families at once. That's fine for the demo, wrong for production (DEC-11).
-- The config and theme code in Export is a proposed API only. The theme JSON conflicts with DEC-05 as written.
+- `fonts.css` downloads 14 font families from Google at once. That's fine for the demo, wrong for production (DEC-11, DEC-13).
+- The config and theme code in Export is a proposed API only. The real output is `docs-theme.css` (DEC-12), not a JSON file.
 - The content model in `content.js` is a simplified mirror of `defineDocs`, plus an API description that the real schema doesn't have yet.
 - The code highlighter is regex-based and breaks on strings that contain `&`.
 - The share link stores settings in the URL hash as base64 JSON, with no versioning.
 
-## Suggested issues, in order
+## Filed work
 
-File these through Ishoo. Group them in one plan, for example
-`style-studio`.
+Filed in Ishoo on 2026-10-25 across three plans. Read each issue with
+`ishoo_show` before starting; the order comes from each issue's dependencies.
 
-1. **Decision: the theme's source of truth.** Settle the DEC-05 question. Does the studio write a `--dd-*` CSS block directly, or a data file that compiles to it? How do structural options travel? This blocks most of what follows.
-2. **Typography token contract.** Extend `styles/TOKENS.md` and `styles/dopedocs.css` with the role, scale, leading, tracking, measure and feature tokens above. Basic set first, advanced next. This is the highest-value item.
-3. **Self-hosted custom fonts.** Let the host bring files or existing `@font-face`. Generate subsets and metric-matched fallbacks. Download nothing by default (DEC-11).
-4. **OpenType feature detection.** Read the chosen font and expose only the features it has.
-5. **Structural layout options in the real renderer.** Sidebar side, outline position or off, content and sidebar width, header style, current-page marker. Same result in panel and static pages (DEC-07).
-6. **The studio as a dev tool.** A `dopedocs studio` command or dev-server overlay with the Remix UX, writing the theme file. Undo, presets, share link, type specimen.
-7. **Terminal parity.** Every studio control settable from the command line, writing the same file, so an AI and a person can collaborate.
-8. **Skins and presets as token files.** Ship the 12 skins and the type presets as plain CSS or token files a host can import and alias over.
-9. **Navigation components:**
-   - Mega menu and drill-in sidebar.
-   - Sidebar filter with key hint, and indent guides.
-   - Outline indicator styles.
-   - Meta row actions, split button, badges, and tabs.
-10. **Reference (API) layout.** Extend the content schema with endpoints, parameters and responses. Render two-pane prose and code with language tabs, keeping a no-script fallback.
-11. **Help Center and Reader layouts** in the real renderer.
-12. **Motion tokens** with a reduced-motion guarantee.
-13. **Host page chrome.** Keep the host's header and footer around the docs.
-14. **Accessibility guardrails.** Contrast and size checks inside the studio.
-15. **Acceptance test.** Rebuild the Cloudflare-style and Vercel-style looks using only studio options. List every gap as a follow-up.
+**Plan `style-studio`**: the studio and the theme file.
 
-**Where to start:** item 1 (the decision), then item 2 (typography tokens), then
-item 6 (the studio writing them). Typography is what readers see most.
+| Issue | What |
+| --- | --- |
+| STU-01 | Theme file module and `dopedocs theme get/set/list` (terminal parity) |
+| LAY-01 | Spacing scale token and line length in characters |
+| LAY-03 | Structural keyword tokens: sidebar side, outline, header, current-page marker, card |
+| MOT-01 | Motion presets (calm, snappy, none) with reduced motion |
+| SKIN-01 | The 12 skins and type presets as importable CSS files |
+| STU-02 | `dopedocs studio`: the Remix panel over real docs |
+| STU-03 | Presets, undo and redo, share link, type specimen |
+| STU-04 | Readability guardrails |
+| STU-05 | Acceptance: rebuild the Cloudflare-style and Vercel-style looks with options only |
+
+**Plan `typography-and-fonts`**
+
+| Issue | What |
+| --- | --- |
+| TYPO-01 | Basic type tokens: roles, scale, leading, tracking, weight |
+| TYPO-02 | Advanced type tokens: OpenType features, hyphenation, justification, links, lists, drop caps, numbering |
+| FONT-01 | `dopedocs fonts add`: self-host any Google font or local file |
+| FONT-02 | Metric-matched fallbacks (no layout jump) |
+| FONT-03 | Studio font picker: search and preview every Google font |
+| TYPO-03 | Show only the OpenType features the chosen font has |
+
+**Plan `docs-layouts`**
+
+| Issue | What |
+| --- | --- |
+| LAY-02 | Docs inside the host site's own header and footer |
+| NAV-04 | Sidebar filter with key hint |
+| NAV-05 | Page meta row and split Copy button (works with COPY-01) |
+| NAV-06 | Outline depth, indent and indicator styles |
+| NAV-07 | Sidebar drill-in, indent guides, badges |
+| NAV-08 | Top-bar mega menu |
+| BLK-01 | Tabs and disclosure blocks |
+| API-01 | Schema for API endpoints |
+| API-02 | Reference layout: two-pane API pages |
+| LAY-04 | Help Center layout |
+| LAY-05 | Reader layout on the complete manual page |
+
+**Where to start:** STU-01 (the theme file) and TYPO-01 (basic type tokens) have
+no blockers. Do those first, then LAY-03, then STU-02 (the studio).
+Typography is what readers see most.
