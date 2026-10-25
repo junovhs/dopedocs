@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reader · Halcyon Duo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="kit.css">
+<style>
+  html { scroll-behavior: smooth; }
+  .bar { position: fixed; top: 0; left: 0; height: 2px; z-index: 70; background: var(--dd-accent); width: 0; box-shadow: var(--dd-glow); }
+
+  /* Island: the one floating control that knows where you are */
+  .island-wrap { position: fixed; z-index: 60; top: 14px; left: 50%; transform: translateX(-50%); transition: transform .45s var(--dd-ease), opacity .3s; }
+  .island-wrap.hide { transform: translate(-50%, -90px); opacity: 0; }
+  .island { width: 380px; max-width: calc(100vw - 32px); border-radius: 26px; background: color-mix(in oklab, var(--dd-ink) 94%, transparent); color: var(--dd-on-ink); backdrop-filter: blur(16px) saturate(1.4); box-shadow: var(--dd-shadow-lg), var(--dd-glow); overflow: hidden; transition: width .5s var(--dd-spring), border-radius .5s var(--dd-ease); }
+  [data-mode="dark"] .island { background: color-mix(in oklab, var(--dd-panel-muted) 92%, transparent); color: var(--dd-text); border: 1px solid var(--dd-line); }
+  .island.open { width: 660px; border-radius: calc(var(--dd-radius) + 14px); }
+  .pillrow { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 8px 0 10px; cursor: pointer; }
+  .pillrow svg.r { width: 32px; height: 32px; transform: rotate(-90deg); flex: none; }
+  .pillrow circle { fill: none; stroke-width: 3; } .pillrow .bg { stroke: color-mix(in oklab, currentColor 18%, transparent); } .pillrow .fg { stroke: var(--dd-accent); stroke-linecap: round; }
+  .where { flex: 1; min-width: 0; line-height: 1.2; }
+  .where small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 600 10px var(--dd-sans); letter-spacing: .08em; text-transform: uppercase; opacity: .55; }
+  .where b { display: block; font: 550 14px var(--dd-sans); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .2s; }
+  .ibtn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; opacity: .75; transition: all .15s; flex: none; }
+  .ibtn:hover { opacity: 1; background: color-mix(in oklab, currentColor 12%, transparent); }
+  .ibtn.on { background: var(--dd-accent); color: var(--dd-on-accent); opacity: 1; }
+  .ibtn .chevd { transition: transform .4s var(--dd-ease); } .island.open .ibtn .chevd { transform: rotate(180deg); }
+  .sheet { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s var(--dd-ease); }
+  .island.open .sheet { grid-template-rows: 1fr; } .sheet > div { overflow: hidden; }
+  .chgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 4px 12px 16px; max-height: 60dvh; overflow-y: auto; }
+  .ch { padding: 12px 10px; border-radius: 14px; }
+  .ch .num { font: 700 22px/1 var(--dd-display); letter-spacing: -0.04em; color: var(--dd-accent); }
+  .ch h6 { margin: 6px 0 8px; font: 600 12.5px var(--dd-sans); }
+  .ch a { display: block; padding: 4px 0; font-size: 12px; line-height: 1.3; text-decoration: none; opacity: .65; transition: opacity .15s; }
+  .ch a:hover, .ch a.on { opacity: 1; } .ch a.on { color: var(--dd-accent); font-weight: 600; }
+  .ch.on { background: color-mix(in oklab, currentColor 7%, transparent); }
+
+  /* Minimap rail */
+  .mini { position: fixed; z-index: 40; right: 0; top: 0; bottom: 0; width: 40px; cursor: pointer; touch-action: none; }
+  .mini .track { position: absolute; right: 14px; top: 80px; bottom: 80px; width: 12px; }
+  .mini .seg { position: absolute; right: 0; width: 3px; border-radius: 3px; background: var(--dd-line); transition: background .2s, width .2s; }
+  .mini .seg.read { background: var(--dd-accent-line); } .mini .seg.on { background: var(--dd-accent); width: 5px; }
+  .mini .chl { position: absolute; right: 9px; transform: translateY(-50%); font: 600 9.5px var(--dd-mono); color: var(--dd-muted); }
+  .mini .thumb { position: absolute; right: -4px; width: 11px; border-radius: 6px; border: 1.5px solid var(--dd-accent); background: var(--dd-accent-soft); transition: opacity .2s; }
+  .mini .lab { position: absolute; right: 34px; transform: translateY(-50%); white-space: nowrap; padding: 6px 10px; border-radius: 8px; background: var(--dd-ink); color: var(--dd-on-ink); font: 500 12px var(--dd-sans); opacity: 0; pointer-events: none; transition: opacity .15s; box-shadow: var(--dd-shadow); }
+  [data-mode="dark"] .mini .lab { background: var(--dd-panel-muted); color: var(--dd-text); border: 1px solid var(--dd-line); }
+  .mini:hover .lab { opacity: 1; }
+  .mini:hover .seg { width: 5px; }
+  [data-toc="left"] .mini { right: auto; left: 0; } [data-toc="left"] .mini .track { right: auto; left: 14px; } [data-toc="left"] .mini .seg { right: auto; left: 0; }
+  [data-toc="left"] .mini .chl { right: auto; left: 9px; } [data-toc="left"] .mini .thumb { right: auto; left: -4px; } [data-toc="left"] .mini .lab { right: auto; left: 34px; }
+  [data-toc="left"] .hint { left: auto; right: 80px; bottom: 32px; } [data-toc="left"] .totop { right: 20px; }
+  [data-toc="off"] .mini { display: none; }
+
+  /* Page */
+  .page { max-width: calc(var(--dd-measure) + 64px); margin: 0 auto; padding: 0 32px; }
+  .cover { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; padding: 120px 0 80px; }
+  .cover .eyebrow { margin-bottom: 20px; }
+  .cover h1 { font-size: calc(clamp(48px, 9vw, 104px) * var(--dd-head-scale)); line-height: .92; margin: 0 0 26px; }
+  .cover h1 em { font-style: normal; color: var(--dd-accent); }
+  .cover .lead { font: 400 clamp(18px, 2.2vw, 22px)/1.5 var(--dd-body); color: var(--dd-text-soft); max-width: 560px; margin: 0 0 44px; text-wrap: pretty; }
+  .contents { border-top: 1px solid var(--dd-text); }
+  .contents a { display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--dd-line); text-decoration: none; transition: padding .3s var(--dd-ease), color .2s; }
+  .contents a:hover { padding-left: 10px; color: var(--dd-accent); }
+  .contents .n { font: 500 13px var(--dd-mono); color: var(--dd-muted); }
+  .contents .t { font: var(--dd-display-weight) 21px/1.2 var(--dd-display); letter-spacing: var(--dd-display-track); color: var(--dd-text); }
+  .contents a:hover .t { color: var(--dd-accent); }
+  .contents .m { font-size: 13px; color: var(--dd-muted); }
+  .scrollcue { margin-top: 44px; display: inline-flex; gap: 10px; align-items: center; font: 500 13px var(--dd-sans); color: var(--dd-muted); text-decoration: none; }
+  .scrollcue .ico { animation: bob 2s ease-in-out infinite; transform: rotate(180deg); } @keyframes bob { 50% { translate: 0 4px; } }
+
+  .opener { min-height: 70dvh; display: flex; flex-direction: column; justify-content: flex-end; padding: 120px 0 56px; border-bottom: 1px solid var(--dd-line); margin-bottom: 20px; position: relative; }
+  .opener .big { font: 800 clamp(120px, 22vw, 240px)/.8 var(--dd-display); letter-spacing: -0.07em; color: transparent; -webkit-text-stroke: 1.5px var(--dd-accent-line); margin-bottom: 24px; user-select: none; }
+  .opener h2 { font-size: calc(clamp(40px, 6vw, 64px) * var(--dd-head-scale)); line-height: 1; margin: 0 0 14px; }
+  .opener p { margin: 0; font: 19px/1.5 var(--dd-body); color: var(--dd-text-soft); }
+  .opener .incl { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 26px; font-size: 13px; color: var(--dd-muted); }
+  .opener .incl a { text-decoration: none; } .opener .incl a:hover { color: var(--dd-accent); }
+
+  .sec { padding: 64px 0 24px; scroll-margin-top: 40px; }
+  .sec h3.st { font-size: calc(clamp(28px, 3.6vw, 36px) * var(--dd-head-scale)); line-height: 1.1; margin: 8px 0 18px; scroll-margin-top: 90px; }
+  .sec .kick { display: flex; gap: 10px; align-items: center; }
+  .sec .kick .meta { font-size: 12px; }
+  .sec .answer { margin: 26px 0 32px; }
+  .sec .prose { position: relative; }
+  @media (min-width: 1340px) {
+    [data-side="right"] .sec .prose .note { float: left; clear: left; margin: 0 0 18px -300px; border-left: 0; border-right: 2px solid color-mix(in oklab, var(--tone) 55%, transparent); padding: 2px 14px 2px 0; text-align: right; }
+    .sec .prose .note { float: right; clear: right; width: 250px; margin: 0 -300px 18px 0; font-size: 13px; background: none; border: 0; border-left: 2px solid color-mix(in oklab, var(--tone) 55%, transparent); border-radius: 0; padding: 2px 0 2px 14px; }
+    .sec .prose .note .ico { width: 15px; height: 15px; }
+    .sec .prose > * + .note { margin-top: 4px; }
+  }
+  .endnote { text-align: center; padding: 120px 0 160px; color: var(--dd-muted); }
+  .endnote .display { font-size: 32px; margin: 12px 0 8px; }
+
+  /* Focus mode */
+  html.focus .sec .prose > *, html.focus .sec .answer, html.focus .sec h3.st, html.focus .opener, html.focus .sec .kick { opacity: .14; transition: opacity .35s var(--dd-ease), filter .35s; filter: blur(.4px); }
+  html.focus .lit { opacity: 1 !important; filter: none !important; }
+  html.focus .mini { opacity: .35; }
+  .totop { position: fixed; z-index: 45; right: 56px; bottom: 24px; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--dd-panel); border: 1px solid var(--dd-line); box-shadow: var(--dd-shadow); color: var(--dd-text-soft); opacity: 0; transform: translateY(10px); pointer-events: none; transition: all .3s var(--dd-ease); }
+  .totop.show { opacity: 1; transform: none; pointer-events: auto; }
+  .totop:hover { color: var(--dd-accent); }
+  .hint { position: fixed; left: 20px; bottom: 20px; z-index: 45; font-size: 12px; color: var(--dd-muted); display: flex; gap: 6px; align-items: center; }
+
+  @media (max-width: 760px) {
+    .page { padding: 0 18px; } .mini { display: none; } .hint { display: none; } .totop { right: 16px; bottom: 16px; }
+    .island { width: calc(100vw - 24px); } .island.open { width: calc(100vw - 24px); }
+    .chgrid { grid-template-columns: 1fr 1fr; } .island-wrap { top: 10px; }
+    .contents a { grid-template-columns: 36px 1fr; } .contents .m { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="bar" data-w="progress" id="bar"></div>
+<div class="island-wrap" id="iw"><div class="island" id="island">
+  <div class="pillrow" id="pill">
+    <svg class="r" viewBox="0 0 36 36" data-w="progress"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" id="ring" cx="18" cy="18" r="14" stroke-dasharray="88" stroke-dashoffset="88"/></svg>
+    <div class="where"><small id="wc">Halcyon Duo Manual</small><b id="ws">Contents</b></div>
+    <button class="ibtn" data-w="search" id="isrch" aria-label="Search"></button>
+    <button class="ibtn" id="ifocus" aria-label="Focus mode" title="Focus mode (F)"></button>
+    <button class="ibtn" id="imode" aria-label="Toggle dark mode"></button>
+    <button class="ibtn" id="iexp" aria-label="Show contents"></button>
+  </div>
+  <div class="sheet"><div><div class="chgrid" id="chgrid"></div></div></div>
+</div></div>
+<div class="mini" data-w="minimap" id="mini"><div class="track" id="track"><div class="thumb" id="thumb"></div><div class="lab" id="lab"></div></div></div>
+<main class="page" id="page"></main>
+<button class="totop" id="totop" aria-label="Back to top"></button>
+<div class="hint"><kbd>F</kbd> focus <kbd>/</kbd> search <kbd>T</kbd> contents</div>
+<script src="content.js"></script>
+<script src="skins.js"></script>
+<script src="kit.js"></script>
+<script>
+const K = DDKit, { D, flat, byId, icon, inline, esc, $, $$ } = K;
+const pad = n => String(n).padStart(2, "0");
+$("#isrch").innerHTML = icon("search"); $("#ifocus").innerHTML = icon("focus"); $("#iexp").innerHTML = icon("chevd", "chevd"); $("#totop").innerHTML = icon("up");
+const mi = () => $("#imode").innerHTML = icon(document.documentElement.dataset.mode === "dark" ? "sun" : "moon"); K.onSettings(mi); mi();
+$("#imode").onclick = e => { e.stopPropagation(); K.toggleMode(); };
+$("#isrch").onclick = e => { e.stopPropagation(); K.openPalette(); };
+$("#ifocus").onclick = e => { e.stopPropagation(); focusMode(); };
+$("#pill").onclick = () => $("#island").classList.toggle("open");
+document.addEventListener("click", e => { if (!e.target.closest("#island")) $("#island").classList.remove("open"); });
+
+const total = flat.reduce((a, s) => a + s.min, 0);
+$("#page").innerHTML = `<section class="cover enter" id="top">
+    <div class="eyebrow">${esc(D.entity.kind)} · Manual ${esc(D.entity.version)}</div>
+    <h1 class="display">The Halcyon <em>Duo</em>, explained.</h1>
+    <p class="lead">${esc(D.lead)}</p>
+    <nav class="contents">${D.chapters.map((c, i) => `<a href="#ch-${c.id}"><span class="n">${pad(i + 1)}</span><span class="t">${esc(c.title)}</span><span class="m">${c.sections.length} parts · ${c.sections.reduce((a, s) => a + s.min, 0)} min</span></a>`).join("")}</nav>
+    <a class="scrollcue" href="#ch-start">${icon("up")} Start reading — ${total} minutes cover to cover</a>
+  </section>` + D.chapters.map((c, ci) => `
+  <section class="opener" id="ch-${c.id}" data-ch="${ci}"><div class="big">${pad(ci + 1)}</div><div class="eyebrow">Chapter ${ci + 1}</div><h2 class="display">${esc(c.title)}</h2><p>${esc(c.blurb)}</p>
+    <div class="incl">${c.sections.map(s => `<a href="#${s.id}">${esc(s.title)}</a>`).join("")}</div></section>
+  ${c.sections.map(s => `<article class="sec" id="${s.id}" data-sec="${s.i}">
+    <div class="kick"><span class="eyebrow">${pad(ci + 1)}.${s.si + 1}</span><span class="meta"><span>${icon("clock")} ${s.min} min</span></span></div>
+    <h3 class="display st">${esc(s.title)}</h3>${K.answer(s)}<div class="prose">${K.render(s)}</div></article>`).join("")}`).join("") +
+  `<div class="endnote"><div class="eyebrow">The end</div><div class="display">Go make something delicious.</div><p>${flat.length} sections · ${Object.keys(D.facts).length} facts · one source</p></div>`;
+
+$("#chgrid").innerHTML = D.chapters.map((c, i) => `<div class="ch" data-c="${i}"><div class="num">${pad(i + 1)}</div><h6>${esc(c.title)}</h6>${c.sections.map(s => `<a href="#${s.id}" data-s="${s.id}">${esc(s.title)}</a>`).join("")}</div>`).join("");
+$$("#chgrid a").forEach(a => a.onclick = () => $("#island").classList.remove("open"));
+
+// Minimap
+const secs = $$(".sec"), track = $("#track");
+function layoutMini() {
+  const H = document.documentElement.scrollHeight;
+  track.querySelectorAll(".seg,.chl").forEach(e => e.remove());
+  secs.forEach(el => { const d = document.createElement("i"); d.className = "seg"; d.dataset.s = el.id; d.style.top = el.offsetTop / H * 100 + "%"; d.style.height = Math.max(.6, el.offsetHeight / H * 100 - .5) + "%"; track.append(d); });
+  $$(".opener").forEach((el, i) => { const l = document.createElement("span"); l.className = "chl"; l.textContent = pad(i + 1); l.style.top = el.offsetTop / H * 100 + "%"; track.append(l); });
+  tick();
+}
+function yFor(clientY) { const r = track.getBoundingClientRect(); return Math.min(1, Math.max(0, (clientY - r.top) / r.height)); }
+let drag = false;
+$("#mini").addEventListener("pointerdown", e => { drag = true; $("#mini").setPointerCapture(e.pointerId); scrub(e); });
+$("#mini").addEventListener("pointermove", e => {
+  const p = yFor(e.clientY), y = p * document.documentElement.scrollHeight;
+  const s = secs.filter(el => el.offsetTop <= y + 1).pop(); const lab = $("#lab");
+  lab.style.top = p * 100 + "%"; lab.textContent = s ? flat[+s.dataset.sec].chapter.title + " · " + flat[+s.dataset.sec].title : "Contents";
+  if (drag) scrub(e);
+});
+addEventListener("pointerup", () => drag = false);
+function scrub(e) { document.documentElement.style.scrollBehavior = "auto"; scrollTo(0, yFor(e.clientY) * document.documentElement.scrollHeight - innerHeight * .3); document.documentElement.style.scrollBehavior = ""; }
+
+// Where am I?
+let lastY = 0, curSec = null;
+function tick() {
+  const h = document.documentElement, H = h.scrollHeight, y = h.scrollTop, p = Math.min(1, y / Math.max(1, H - h.clientHeight));
+  $("#bar").style.width = p * 100 + "%";
+  $("#ring").style.strokeDashoffset = 88 * (1 - p);
+  const th = $("#thumb"); th.style.top = y / H * 100 + "%"; th.style.height = h.clientHeight / H * 100 + "%";
+  const s = secs.filter(el => el.getBoundingClientRect().top < innerHeight * .35).pop();
+  const opener = $$(".opener").filter(el => el.getBoundingClientRect().top < innerHeight * .35).pop();
+  let label = ["Halcyon Duo Manual", "Contents"];
+  if (opener && (!s || opener.offsetTop > s.offsetTop)) { const c = D.chapters[+opener.dataset.ch]; label = ["Chapter " + (+opener.dataset.ch + 1), c.title]; curSec = null; }
+  else if (s) { const x = flat[+s.dataset.sec]; label = [x.chapter.title, x.title]; curSec = x; }
+  if ($("#ws").textContent !== label[1]) { $("#ws").style.opacity = 0; setTimeout(() => { $("#wc").textContent = label[0]; $("#ws").textContent = label[1]; $("#ws").style.opacity = 1; }, 120); }
+  $$("#track .seg").forEach(d => { d.classList.toggle("on", curSec && d.dataset.s === curSec.id); d.classList.toggle("read", byId[d.dataset.s].i < (curSec ? curSec.i : -1)); });
+  $$("#chgrid a").forEach(a => a.classList.toggle("on", curSec && a.dataset.s === curSec.id));
+  $$("#chgrid .ch").forEach(c => c.classList.toggle("on", curSec && +c.dataset.c === curSec.ci));
+  $("#totop").classList.toggle("show", y > innerHeight);
+  const iw = $("#iw"); if (!$("#island").classList.contains("open")) iw.classList.toggle("hide", y > lastY + 4 && y > 300); if (y < lastY - 4) iw.classList.remove("hide");
+  lastY = y;
+  if (document.documentElement.classList.contains("focus")) light();
+}
+function light() {
+  const mid = innerHeight * .45; let best, bd = 1e9;
+  $$(".sec .prose > *, .sec .answer, .sec h3.st").forEach(el => { const r = el.getBoundingClientRect(), d = Math.abs((r.top + r.bottom) / 2 - mid); if (d < bd) { bd = d; best = el; } });
+  $$(".lit").forEach(e => e !== best && e.classList.remove("lit")); best && best.classList.add("lit");
+}
+function focusMode() { const on = document.documentElement.classList.toggle("focus"); $("#ifocus").classList.toggle("on", on); on && light(); K.toast(on ? "Focus mode on — press F to leave" : "Focus mode off", "focus"); }
+let raf; addEventListener("scroll", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); }, { passive: true });
+addEventListener("resize", layoutMini);
+addEventListener("keydown", e => {
+  if (/INPUT|TEXTAREA/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey) return;
+  if (e.key === "f" || e.key === "F") focusMode();
+  if (e.key === "t" || e.key === "T") $("#island").classList.toggle("open");
+  if (e.key === "Escape") $("#island").classList.remove("open");
+});
+$("#totop").onclick = () => scrollTo({ top: 0 });
+K.go = (id, sub) => { const el = document.getElementById(sub || id); el && el.scrollIntoView({ block: "start" }); };
+document.addEventListener("click", e => { const a = e.target.closest('a[href^="#"]:not([data-peek])'); if (a && a.getAttribute("href").length > 1) { e.preventDefault(); const el = document.getElementById(a.getAttribute("href").slice(1)); el && el.scrollIntoView({ block: "start" }); } });
+layoutMini();
+document.fonts && document.fonts.ready.then(layoutMini);
+setTimeout(layoutMini, 600);
+if (byId[location.hash.slice(1)]) setTimeout(() => K.go(location.hash.slice(1)), 50);
+</script>
+</body>
+</html>

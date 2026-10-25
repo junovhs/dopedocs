@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Handbook · Halcyon Duo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="kit.css">
+<style>
+  :root { --top: 60px; --tocw: 232px; }
+  .top { position: sticky; top: 0; z-index: 50; height: var(--top); display: flex; align-items: center; gap: 20px; padding: 0 20px; }
+  .top .brand { display: flex; align-items: center; gap: 10px; min-width: calc(var(--dd-side-w) - 40px); }
+  .top .brand .sep { color: var(--dd-line); font-weight: 300; font-size: 20px; }
+  .top .brand .docs { color: var(--dd-muted); font: 500 14px var(--dd-sans); }
+  .ver { position: relative; }
+  .ver > button { display: inline-flex; gap: 4px; align-items: center; height: 24px; padding: 0 6px 0 8px; border-radius: 999px; font: 500 11.5px var(--dd-mono); color: var(--dd-text-soft); background: var(--dd-panel-muted); border: 1px solid var(--dd-line); }
+  .ver > button .ico { width: 12px; height: 12px; }
+  .ver .menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 170px; padding: 5px; border-radius: var(--dd-radius); background: var(--dd-panel); border: 1px solid var(--dd-line); box-shadow: var(--dd-shadow-lg); opacity: 0; transform: translateY(-4px); pointer-events: none; transition: all .18s var(--dd-ease); }
+  .ver.open .menu { opacity: 1; transform: none; pointer-events: auto; }
+  .ver .menu button { display: flex; width: 100%; justify-content: space-between; padding: 7px 9px; border-radius: 6px; font-size: 13px; color: var(--dd-text-soft); }
+  .ver .menu button:hover { background: var(--dd-panel-muted); color: var(--dd-text); }
+  .ver .menu small { color: var(--dd-muted); font-size: 11px; }
+  .tabs { position: relative; display: flex; gap: 2px; height: 100%; align-items: stretch; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+  .tabs button { position: relative; padding: 0 12px; font: 500 13.5px var(--dd-sans); color: var(--dd-muted); white-space: nowrap; transition: color .15s; display: flex; align-items: center; gap: 7px; }
+  .tabs button .ico { width: 15px; height: 15px; opacity: .8; }
+  .tabs button:hover { color: var(--dd-text); }
+  .tabs button[aria-current="true"] { color: var(--dd-text); }
+  .tabs .ind { position: absolute; bottom: -1px; height: 2px; background: var(--dd-accent); border-radius: 2px; transition: left .35s var(--dd-ease), width .35s var(--dd-ease); box-shadow: var(--dd-glow); }
+  .top .right { display: flex; gap: 6px; align-items: center; }
+  .burger { display: none; }
+  .bar { position: fixed; top: var(--top); left: 0; height: 2px; z-index: 51; background: var(--dd-accent); width: 0; transition: width .1s linear; box-shadow: var(--dd-glow); }
+
+  .shell { display: grid; grid-template-columns: var(--dd-side-w) minmax(0, 1fr) var(--tocw); grid-template-areas: "side main toc"; max-width: 1480px; margin: 0 auto; }
+  [data-side="right"] .shell { grid-template-columns: minmax(0, 1fr) var(--tocw) var(--dd-side-w); grid-template-areas: "main toc side"; }
+  [data-toc="left"] .shell { grid-template-columns: var(--dd-side-w) var(--tocw) minmax(0, 1fr); grid-template-areas: "side toc main"; }
+  [data-side="right"][data-toc="left"] .shell { grid-template-columns: var(--tocw) minmax(0, 1fr) var(--dd-side-w); grid-template-areas: "toc main side"; }
+  [data-toc="off"] .shell { grid-template-columns: var(--dd-side-w) minmax(0, 1fr); grid-template-areas: "side main"; }
+  [data-side="right"][data-toc="off"] .shell { grid-template-columns: minmax(0, 1fr) var(--dd-side-w); grid-template-areas: "main side"; }
+  [data-toc="off"] .toc, [data-toc="off"] .mtoc { display: none !important; }
+  [data-side="right"] .side { border-right: 0; border-left: 1px solid var(--dd-line-soft); }
+  [data-toc="left"] .toc { padding: calc(var(--u) * 10) 8px 24px 20px; }
+  .side { grid-area: side; position: sticky; top: var(--top); height: calc(100dvh - var(--top)); overflow-y: auto; padding: calc(var(--u) * 6) 14px 24px 20px; border-right: 1px solid var(--dd-line-soft); display: flex; flex-direction: column; }
+  .tree { position: relative; flex: 1; }
+  .grp + .grp { margin-top: calc(var(--u) * 3); }
+  .grp > button { width: 100%; display: flex; align-items: center; gap: 9px; padding: calc(var(--u) * 1.75) 8px; border-radius: 7px; font: 600 13px var(--dd-sans); color: var(--dd-text); text-align: left; }
+  .grp > button .ico { color: var(--dd-muted); width: 15px; height: 15px; }
+  .grp > button .chev { margin-left: auto; transition: transform .25s var(--dd-ease); width: 14px; height: 14px; }
+  .grp.open > button .chev { transform: rotate(90deg); }
+  .grp > button:hover { background: var(--dd-panel-muted); }
+  .grp .kids { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s var(--dd-ease); }
+  .grp.open .kids { grid-template-rows: 1fr; }
+  .grp .kids > div { overflow: hidden; }
+  .grp .kids ul { list-style: none; margin: 2px 0 4px 15.5px; padding: 0 0 0 10px; border-left: 1px solid var(--dd-line); }
+  .grp .kids a { position: relative; z-index: 1; display: block; padding: calc(var(--u) * 1.5) 10px; margin-left: -1px; text-decoration: none; font-size: 13.5px; color: var(--dd-text-soft); transition: color .15s; }
+  .grp .kids a:hover { color: var(--dd-text); }
+  html:not([data-active]) body .grp .kids a[aria-current="page"] { background: none; }
+  [data-active] .pill { display: none; }
+  .pill { position: absolute; z-index: 0; left: 0; right: 0; border-radius: 7px; background: var(--dd-accent-soft); transition: top .35s var(--dd-ease), height .35s var(--dd-ease), opacity .2s; pointer-events: none; }
+  .pill::before { content: ""; position: absolute; left: -10.5px; top: 6px; bottom: 6px; width: 2px; border-radius: 2px; background: var(--dd-accent); }
+  .side-foot { margin-top: 24px; padding: 14px; border-radius: var(--dd-radius); background: var(--dd-panel-muted); font-size: 12.5px; color: var(--dd-text-soft); line-height: 1.5; }
+  .side-foot b { display: block; color: var(--dd-text); font-weight: 600; margin-bottom: 3px; }
+  .side-foot a { color: var(--dd-accent); text-decoration: none; font-weight: 550; }
+
+  main { grid-area: main; min-width: 0; padding: calc(var(--u) * 10) clamp(20px, 5vw, 64px) 100px; }
+  article { max-width: var(--dd-measure); margin: 0 auto; }
+  .crumbs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--dd-muted); margin-bottom: 22px; }
+  .crumbs a { text-decoration: none; transition: color .15s; } .crumbs a:hover { color: var(--dd-text); }
+  .crumbs .ico { width: 13px; height: 13px; opacity: .5; }
+  .crumbs b { color: var(--dd-text-soft); font-weight: 500; }
+  h1.display { font-size: calc(clamp(30px, 4vw, 42px) * var(--dd-head-scale)); line-height: 1.1; margin: 10px 0 14px; }
+  .head-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: calc(var(--u) * 7); }
+  .page-actions { display: flex; gap: 6px; }
+  .page-actions .btn { height: 30px; font-size: 12.5px; }
+  .body { margin-top: calc(var(--u) * 8); }
+  .after { margin-top: calc(var(--u) * 14); padding-top: 28px; border-top: 1px solid var(--dd-line); display: grid; gap: 28px; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pager a { display: block; padding: 16px 18px; border-radius: var(--dd-radius); border: 1px solid var(--dd-line); background: var(--dd-panel); text-decoration: none; transition: all .2s var(--dd-ease); }
+  .pager a:hover { border-color: var(--dd-accent-line); box-shadow: var(--dd-shadow); transform: translateY(-1px); }
+  .pager a small { display: flex; gap: 6px; align-items: center; color: var(--dd-muted); font-size: 12px; }
+  .pager a b { display: block; color: var(--dd-text); font: 600 15px var(--dd-sans); margin-top: 4px; }
+  .pager a.next { text-align: right; } .pager a.next small { justify-content: flex-end; }
+  .pager a:only-child.next { grid-column: 2; }
+  .keys { color: var(--dd-muted); font-size: 12px; display: flex; gap: 6px; align-items: center; justify-content: center; }
+
+  .toc { grid-area: toc; position: sticky; top: var(--top); height: calc(100dvh - var(--top)); padding: calc(var(--u) * 10) 20px 24px 8px; overflow-y: auto; font-size: 13px; }
+  .toc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font: 600 12px var(--dd-sans); color: var(--dd-text); }
+  .toc ol { list-style: none; margin: 0; padding: 0; position: relative; border-left: 1px solid var(--dd-line); }
+  .toc li a { display: block; padding: 5px 0 5px 14px; text-decoration: none; color: var(--dd-muted); line-height: 1.4; transition: color .2s; }
+  .toc li.sub a { padding-left: 26px; font-size: 12.5px; }
+  .toc li a:hover { color: var(--dd-text); }
+  .toc li a.on { color: var(--dd-text); font-weight: 500; }
+  .toc .thumb { position: absolute; left: -1px; width: 2px; background: var(--dd-accent); border-radius: 2px; transition: top .3s var(--dd-ease), height .3s var(--dd-ease); }
+  .ring { display: flex; align-items: center; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--dd-line-soft); color: var(--dd-muted); font-size: 12px; }
+  .ring svg { width: 28px; height: 28px; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 3; }
+  .ring .bg { stroke: var(--dd-line); } .ring .fg { stroke: var(--dd-accent); stroke-linecap: round; transition: stroke-dashoffset .15s; }
+  .toc-links { margin-top: 16px; display: grid; gap: 2px; }
+  .toc-links a { display: flex; gap: 8px; align-items: center; padding: 5px 0; color: var(--dd-muted); text-decoration: none; font-size: 12.5px; }
+  .toc-links a:hover { color: var(--dd-text); }
+  .mtoc { display: none; }
+
+  .scrim { display: none; }
+  @media (max-width: 1180px) { .shell, [data-toc="left"] .shell { grid-template-columns: var(--dd-side-w) minmax(0, 1fr); grid-template-areas: "side main"; } [data-side="right"] .shell, [data-side="right"][data-toc="left"] .shell { grid-template-columns: minmax(0, 1fr) var(--dd-side-w); grid-template-areas: "main side"; } .toc { display: none; }
+    .mtoc { display: block; margin: -8px 0 24px; border: 1px solid var(--dd-line); border-radius: var(--dd-radius); background: var(--dd-panel); }
+    .mtoc summary { list-style: none; cursor: pointer; display: flex; gap: 8px; align-items: center; padding: 10px 14px; font: 500 13px var(--dd-sans); color: var(--dd-text); }
+    .mtoc summary::-webkit-details-marker { display: none; }
+    .mtoc summary .chevd { margin-left: auto; transition: transform .2s; } .mtoc[open] summary .chevd { transform: rotate(180deg); }
+    .mtoc ol { list-style: none; margin: 0; padding: 4px 14px 12px; display: grid; gap: 2px; } .mtoc a { color: var(--dd-text-soft); text-decoration: none; font-size: 13.5px; display: block; padding: 4px 0; }
+  }
+  @media (max-width: 860px) {
+    .shell, [data-side="right"] .shell, [data-toc] .shell { grid-template-columns: 1fr !important; grid-template-areas: "main" !important; }
+    [data-side="right"] .side { left: auto; right: 0; transform: translateX(100%); }
+    .burger { display: grid; }
+    .top { gap: 10px; padding: 0 12px; } .top .brand { min-width: 0; } .top .brand .docs, .top .brand .sep { display: none; }
+    .tabs { display: none; }
+    .search-trigger { min-width: 0; width: 36px; padding: 0; justify-content: center; } .search-trigger span, .search-trigger kbd { display: none; }
+    .side { position: fixed; z-index: 60; top: 0; left: 0; height: 100dvh; width: min(320px, 86vw); background: var(--dd-panel); transform: translateX(-100%); transition: transform .35s var(--dd-ease); box-shadow: var(--dd-shadow-lg); padding-top: 20px; }
+    body.drawer .side { transform: none; }
+    .scrim { display: block; position: fixed; inset: 0; z-index: 55; background: rgb(0 0 0 / .35); opacity: 0; pointer-events: none; transition: opacity .3s; }
+    body.drawer .scrim { opacity: 1; pointer-events: auto; }
+    main { padding: 28px 16px 80px; }
+    .pager { grid-template-columns: 1fr; } .pager a:only-child.next { grid-column: 1; }
+    .keys { display: none; }
+  }
+</style>
+</head>
+<body>
+<header class="top dd-header">
+  <button class="icon-btn burger" id="burger" aria-label="Open navigation"></button>
+  <div class="brand">
+    <a class="logo" href="#unbox"><span class="logo-mark"></span>Halcyon</a><span class="sep">/</span><span class="docs">Docs</span>
+    <div class="ver" id="ver"><button aria-haspopup="true">v2.4 <span data-i="chevd"></span></button>
+      <div class="menu"><button>v2.4 <small>current</small></button><button>v2.3 <small>Mar 2026</small></button><button>v1.x <small>legacy</small></button></div></div>
+  </div>
+  <nav class="tabs" id="tabs" aria-label="Chapters"></nav>
+  <div class="right">
+    <button class="search-trigger" data-w="search" id="st"><span data-i="search"></span><span>Search docs…</span><kbd>Ctrl K</kbd></button>
+    <button class="icon-btn" id="mode" aria-label="Toggle dark mode"></button>
+  </div>
+</header>
+<div class="bar" data-w="progress" id="bar"></div>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="side" id="side" aria-label="Manual">
+    <div class="tree" id="tree"><div class="pill" id="pill"></div></div>
+    <div class="side-foot"><b>Need a hand?</b>Our support team answers in under a day. <a href="#codes">Start with error codes →</a></div>
+  </aside>
+  <main><article id="art"></article></main>
+  <aside class="toc" data-w="toc" id="toc"></aside>
+</div>
+<script src="content.js"></script>
+<script src="skins.js"></script>
+<script src="kit.js"></script>
+<script>
+const K = DDKit, { D, flat, byId, icon, inline, esc, $, $$ } = K;
+$$("[data-i]").forEach(el => el.outerHTML = icon(el.dataset.i));
+$(".logo-mark").innerHTML = icon("cup"); $("#burger").innerHTML = icon("menu");
+const modeBtn = $("#mode");
+const setModeIcon = () => modeBtn.innerHTML = icon(document.documentElement.dataset.mode === "dark" ? "sun" : "moon");
+K.onSettings(setModeIcon); setModeIcon();
+modeBtn.onclick = K.toggleMode;
+$("#st").onclick = () => K.openPalette();
+$("#ver > button").onclick = e => { e.stopPropagation(); $("#ver").classList.toggle("open"); };
+document.addEventListener("click", () => $("#ver").classList.remove("open"));
+$("#burger").onclick = () => document.body.classList.add("drawer");
+$("#scrim").onclick = () => document.body.classList.remove("drawer");
+
+// Top tabs
+const tabs = $("#tabs");
+tabs.innerHTML = D.chapters.map(c => `<button data-c="${c.id}">${icon(c.icon)}${esc(c.title)}</button>`).join("") + `<span class="ind" id="ind"></span>`;
+$$("button", tabs).forEach(b => b.onclick = () => go(D.chapters.find(c => c.id === b.dataset.c).sections[0].id));
+
+// Sidebar tree
+const tree = $("#tree");
+tree.insertAdjacentHTML("beforeend", D.chapters.map(c => `<div class="grp" data-g="${c.id}"><button aria-expanded="false">${icon(c.icon)}${esc(c.title)}${icon("chev", "chev")}</button><div class="kids"><div><ul>${c.sections.map(s => `<li><a class="dd-item" href="#${s.id}" data-s="${s.id}">${esc(s.title)}</a></li>`).join("")}</ul></div></div></div>`).join(""));
+$$(".grp > button", tree).forEach(b => b.onclick = () => { const g = b.parentElement; g.classList.toggle("open"); b.setAttribute("aria-expanded", g.classList.contains("open")); setTimeout(placePill, 320); placePill(); });
+$$("a[data-s]", tree).forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.s); document.body.classList.remove("drawer"); });
+
+function placePill() {
+  const a = $("a[aria-current=page]", tree), pill = $("#pill");
+  if (!a || !a.offsetParent || a.closest(".grp:not(.open)")) { pill.style.opacity = 0; return; }
+  const tr = tree.getBoundingClientRect(), r = a.getBoundingClientRect(), ul = a.closest("ul").getBoundingClientRect();
+  Object.assign(pill.style, { opacity: 1, top: r.top - tr.top + "px", height: r.height + "px", left: ul.left - tr.left + 10 + "px" });
+}
+function placeInd() {
+  const b = $("button[aria-current=true]", tabs), ind = $("#ind");
+  if (!b) return; ind.style.left = b.offsetLeft + 10 + "px"; ind.style.width = b.offsetWidth - 20 + "px";
+}
+
+let page, spy;
+function go(id, sub, first) {
+  const s = byId[id] || flat[0];
+  if (page !== s) {
+    page = s;
+    const prev = flat[s.i - 1], next = flat[s.i + 1];
+    $("#art").innerHTML = `<div class="enter">
+      <nav class="crumbs" data-w="breadcrumbs" aria-label="Breadcrumb"><a href="#unbox" data-peek="unbox">Docs</a>${icon("chev")}<a href="#${s.chapter.sections[0].id}">${esc(s.chapter.title)}</a>${icon("chev")}<b>${esc(s.title)}</b></nav>
+      <div class="eyebrow">${esc(s.chapter.title)}</div>
+      <h1 class="display">${esc(s.title)}</h1>
+      <div class="head-row"><div class="meta"><span>${icon("clock")} ${s.min} min read</span><span>Updated 18 Oct 2026</span></div>
+        <div class="page-actions"><button class="btn" id="cp">${icon("copy")} Copy page</button></div></div>
+      <details class="mtoc" data-w="toc"><summary>${icon("menu")} On this page ${icon("chevd", "chevd")}</summary><ol id="mtoc"></ol></details>
+      <div id="overview">${K.answer(s)}</div>
+      <div class="prose body">${K.render(s)}</div>
+      <div class="after">${K.feedback()}
+        <nav class="pager" data-w="pager">${prev ? `<a href="#${prev.id}" data-go="${prev.id}"><small>${icon("left")} Previous</small><b>${esc(prev.title)}</b></a>` : ""}${next ? `<a class="next" href="#${next.id}" data-go="${next.id}"><small>Next ${icon("right")}</small><b>${esc(next.title)}</b></a>` : ""}</nav>
+        <div class="keys" data-w="pager"><kbd>←</kbd><kbd>→</kbd> to move between pages · <kbd>/</kbd> to search</div></div></div>`;
+    $$(".prose [data-note]").forEach((n, i) => n.id = s.id + "-note-" + i);
+    $$("[data-go]").forEach(a => a.onclick = e => { e.preventDefault(); go(a.dataset.go); });
+    $("#cp").onclick = () => { navigator.clipboard && navigator.clipboard.writeText(s.title + "\n\n" + K.plain(s.answer)).catch(() => {}); K.toast("Page copied as Markdown"); };
+    buildToc(s);
+    $$("a[data-s]", tree).forEach(a => a.setAttribute("aria-current", a.dataset.s === s.id ? "page" : "false"));
+    $$(".grp", tree).forEach(g => { if (g.dataset.g === s.chapter.id) { g.classList.add("open"); } });
+    $$("button", tabs).forEach(b => b.setAttribute("aria-current", b.dataset.c === s.chapter.id));
+    placeInd(); placePill(); setTimeout(placePill, 330);
+    if (!first) history.replaceState(null, "", "#" + s.id);
+    document.title = s.title + " · Halcyon Docs";
+  }
+  const target = sub && document.getElementById(sub);
+  if (target) target.scrollIntoView({ behavior: "smooth", block: "start" }); else scrollTo({ top: 0, behavior: first ? "auto" : "instant" });
+  spy && spy.reset();
+}
+function buildToc(s) {
+  const items = [{ id: "overview", t: "Overview" }];
+  $$(".prose.body > h3, .prose.body > [data-note]").forEach(el => items.push({ id: el.id, t: el.tagName === "H3" ? el.textContent.replace(/^#/, "") : el.querySelector("b").textContent, sub: el.tagName !== "H3" }));
+  const li = items.map(i => `<li class="${i.sub ? "sub" : ""}"><a href="#${i.id}" data-t="${i.id}">${esc(i.t)}</a></li>`).join("");
+  $("#toc").innerHTML = `<h4>${icon("menu")} On this page</h4><ol>${li}<span class="thumb" id="thumb"></span></ol>
+    <div class="ring" data-w="progress"><svg viewBox="0 0 32 32"><circle class="bg" cx="16" cy="16" r="13"/><circle class="fg" id="rfg" cx="16" cy="16" r="13" stroke-dasharray="81.7" stroke-dashoffset="81.7"/></svg><span id="rtxt">0% read</span></div>
+    <div class="toc-links"><a href="#codes" data-peek="codes">${icon("wrench")} Troubleshooting</a><a href="#" onclick="DDKit.toast('Opens the editor in your repo');return false">${icon("doc")} Edit this page</a><a href="#" onclick="scrollTo({top:0,behavior:'smooth'});return false">${icon("up")} Back to top</a></div>`;
+  $("#mtoc").innerHTML = li;
+  $$("a[data-t]").forEach(a => a.onclick = e => { e.preventDefault(); document.getElementById(a.dataset.t).scrollIntoView({ behavior: "smooth", block: "start" }); $(".mtoc") && $(".mtoc").removeAttribute("open"); });
+}
+spy = K.spy(window, () => $$("#overview, .prose.body > h3, .prose.body > [data-note]"), el => {
+  $$("#toc a[data-t]").forEach(a => a.classList.toggle("on", a.dataset.t === el.id));
+  const a = $(`#toc a[data-t="${el.id}"]`), th = $("#thumb");
+  if (a && th) { th.style.top = a.parentElement.offsetTop + "px"; th.style.height = a.parentElement.offsetHeight + "px"; }
+}, 140);
+addEventListener("scroll", () => {
+  const h = document.documentElement, p = Math.min(1, h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight));
+  $("#bar").style.width = p * 100 + "%";
+  const f = $("#rfg"); if (f) { f.style.strokeDashoffset = 81.7 * (1 - p); $("#rtxt").textContent = Math.round(p * 100) + "% read"; }
+}, { passive: true });
+addEventListener("keydown", e => {
+  if (/INPUT|TEXTAREA/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "ArrowRight" && flat[page.i + 1]) go(flat[page.i + 1].id);
+  if (e.key === "ArrowLeft" && flat[page.i - 1]) go(flat[page.i - 1].id);
+});
+addEventListener("resize", () => { placeInd(); placePill(); });
+K.go = (id, sub) => go(id, sub);
+go(location.hash.slice(1), null, true);
+document.fonts && document.fonts.ready.then(() => { placeInd(); placePill(); });
+</script>
+</body>
+</html>

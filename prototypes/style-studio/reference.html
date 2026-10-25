@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reference · Halcyon Duo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="kit.css">
+<style>
+  :root { --top: 60px; }
+  .top { position: sticky; top: 0; z-index: 50; height: var(--top); display: flex; align-items: center; gap: 18px; padding: 0 20px; }
+  .top .brand { display: flex; align-items: center; gap: 10px; }
+  .top .brand small { font: 500 12px var(--dd-mono); color: var(--dd-muted); padding: 2px 7px; border-radius: 6px; background: var(--dd-panel-muted); border: 1px solid var(--dd-line-soft); }
+  .modes { display: flex; gap: 2px; padding: 3px; border-radius: calc(var(--dd-radius) - 1px); background: var(--dd-panel-muted); }
+  .modes button { height: 30px; padding: 0 14px; border-radius: calc(var(--dd-radius) - 3px); font: 500 13px var(--dd-sans); color: var(--dd-muted); transition: all .2s var(--dd-ease); display: inline-flex; align-items: center; gap: 7px; }
+  .modes button .ico { width: 14px; height: 14px; }
+  .modes button[aria-pressed="true"] { background: var(--dd-panel); color: var(--dd-text); box-shadow: var(--dd-shadow); }
+  .top .right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .burger { display: none; }
+
+  .shell { display: grid; grid-template-columns: var(--dd-side-w) minmax(0, 1fr); grid-template-areas: "side main"; }
+  [data-side="right"] .shell { grid-template-columns: minmax(0, 1fr) var(--dd-side-w); grid-template-areas: "main side"; }
+  .side { grid-area: side; position: sticky; top: var(--top); height: calc(100dvh - var(--top)); overflow-y: auto; padding: 16px 12px 40px; border-right: 1px solid var(--dd-line-soft); }
+  [data-side="right"] .side { border-right: 0; border-left: 1px solid var(--dd-line-soft); }
+  .filter { position: sticky; top: -16px; z-index: 2; padding: 0 0 12px; background: var(--dd-bg); }
+  .filter label { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border-radius: calc(var(--dd-radius) - 2px); border: 1px solid var(--dd-line); background: var(--dd-panel); color: var(--dd-muted); }
+  .filter input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font: 13px var(--dd-sans); color: var(--dd-text); }
+  .filter label:focus-within { border-color: var(--dd-accent-line); box-shadow: 0 0 0 3px var(--dd-accent-soft); }
+  .sgroup { margin-top: 14px; }
+  .sgroup h6 { margin: 0 0 4px; padding: 0 10px; font: 600 11px var(--dd-sans); letter-spacing: .07em; text-transform: uppercase; color: var(--dd-muted); }
+  .side a { display: flex; align-items: center; gap: 9px; padding: calc(var(--u) * 1.6) 10px; font: 13.5px/1.35 var(--dd-sans); color: var(--dd-text-soft); text-decoration: none; }
+  .side a:hover { color: var(--dd-text); }
+  .side a .lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .side .none { padding: 12px 10px; color: var(--dd-muted); font-size: 13px; }
+  .m { --mc: var(--dd-accent); flex: none; min-width: 42px; height: 18px; padding: 0 5px; border-radius: 5px; display: inline-grid; place-items: center; font: 650 9.5px/1 var(--dd-mono); letter-spacing: .03em; color: var(--mc); background: color-mix(in oklab, var(--mc) 13%, transparent); }
+  .m.GET { --mc: #16a34a; } .m.POST { --mc: #2f6fdb; } .m.PATCH { --mc: #c27a00; } .m.DELETE { --mc: #dc3c3c; }
+  [data-mode="dark"] .m.GET { --mc: #4ade80; } [data-mode="dark"] .m.POST { --mc: #7aa7ff; } [data-mode="dark"] .m.PATCH { --mc: #fbbf24; } [data-mode="dark"] .m.DELETE { --mc: #f87171; }
+
+  main { grid-area: main; min-width: 0; }
+  /* API: one long page, prose beside sticky code */
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "doc code"; gap: clamp(24px, 4vw, 56px); max-width: 1280px; margin: 0 auto; padding: 56px clamp(20px, 4vw, 48px); border-bottom: 1px solid var(--dd-line-soft); scroll-margin-top: var(--top); }
+  [data-toc="left"] .row { grid-template-areas: "code doc"; }
+  [data-toc="off"] .row { grid-template-columns: minmax(0, 1fr); grid-template-areas: "doc" "code"; max-width: calc(var(--dd-measure) + 96px); }
+  .doc { grid-area: doc; min-width: 0; max-width: var(--dd-measure); }
+  .codecol { grid-area: code; min-width: 0; }
+  .codecol .stick { position: sticky; top: calc(var(--top) + 24px); display: grid; gap: 14px; }
+  .doc h2 { margin: 0 0 12px; font-size: calc(30px * var(--dd-head-scale)); line-height: 1.15; }
+  .doc h1 { margin: 6px 0 14px; font-size: calc(clamp(32px, 4vw, 44px) * var(--dd-head-scale)); line-height: 1.08; }
+  .ep { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font: 500 13.5px var(--dd-mono); color: var(--dd-text); }
+  .ep .m { height: 22px; font-size: 11px; }
+  .ep .path { color: var(--dd-muted); } .ep .path b { color: var(--dd-text); font-weight: 500; }
+  .doc .lead { font: var(--dd-text-size)/1.7 var(--dd-body); color: var(--dd-text-soft); margin: 0 0 28px; text-wrap: pretty; }
+  .doc .lead code, .pdesc code, .errs code { font: .86em var(--dd-mono); background: var(--dd-panel-muted); padding: .1em .35em; border-radius: 5px; color: var(--dd-text); }
+  .doc h4 { margin: 28px 0 0; padding-bottom: 10px; border-bottom: 1px solid var(--dd-line); font: 600 12px var(--dd-sans); letter-spacing: .06em; text-transform: uppercase; color: var(--dd-muted); display: flex; justify-content: space-between; }
+  .params { list-style: none; margin: 0; padding: 0; }
+  .params li { padding: 14px 0; border-bottom: 1px solid var(--dd-line-soft); }
+  .pname { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font: 13.5px var(--dd-mono); }
+  .pname b { color: var(--dd-text); font-weight: 600; }
+  .pname .type { color: var(--dd-muted); font-size: 12px; }
+  .pname .req { font: 600 10px var(--dd-sans); letter-spacing: .05em; text-transform: uppercase; color: #e5850b; }
+  .pname .in { font: 500 10.5px var(--dd-sans); padding: 1px 6px; border-radius: 4px; background: var(--dd-panel-muted); color: var(--dd-muted); }
+  .pdesc { margin-top: 4px; font: 14px/1.55 var(--dd-sans); color: var(--dd-text-soft); }
+  .noparams { padding: 14px 0; color: var(--dd-muted); font-size: 14px; }
+  .guide-link { margin-top: 22px; display: inline-flex; gap: 8px; align-items: center; font: 500 13px var(--dd-sans); color: var(--dd-accent); text-decoration: none; }
+  .guide-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  .card { border-radius: var(--dd-radius); overflow: hidden; background: var(--dd-ink); color: var(--dd-on-ink); box-shadow: var(--dd-shadow-lg), var(--dd-glow); border: 1px solid color-mix(in oklab, var(--dd-ink) 80%, #fff 6%); }
+  [data-mode="dark"] .card { background: var(--dd-panel-muted); color: var(--dd-text); border-color: var(--dd-line); }
+  .card header { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 8px 0 14px; border-bottom: 1px solid rgb(255 255 255 / .08); font: 500 12px var(--dd-mono); }
+  .card header .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .85; }
+  .card header .m { --mc: #9ad1ff; background: rgb(255 255 255 / .08); }
+  .langs { display: flex; gap: 2px; }
+  .langs button { height: 26px; padding: 0 9px; border-radius: 6px; font: 500 11.5px var(--dd-sans); opacity: .55; transition: all .15s; }
+  .langs button:hover { opacity: .9; } .langs button[aria-pressed="true"] { opacity: 1; background: rgb(255 255 255 / .1); }
+  .cbtn { height: 26px; padding: 0 8px; border-radius: 6px; display: inline-flex; gap: 6px; align-items: center; font: 500 11.5px var(--dd-sans); opacity: .7; transition: all .15s; }
+  .cbtn:hover { opacity: 1; background: rgb(255 255 255 / .1); }
+  .cbtn.run { opacity: 1; background: var(--dd-accent); color: var(--dd-on-accent); padding: 0 10px; }
+  .cbtn.run:hover { filter: brightness(1.08); background: var(--dd-accent); }
+  .card pre { margin: 0; padding: 16px; overflow-x: auto; font: 12.5px/1.75 var(--dd-mono); }
+  .card pre code { display: block; animation: fadein .25s var(--dd-ease); }
+  @keyframes fadein { from { opacity: 0; transform: translateY(2px); } }
+  .card .s { color: color-mix(in oklab, var(--dd-accent) 55%, #fff); } .card .k { color: #f0a7ff; } .card .p { color: #9ad1ff; } .card .n { color: #ffcf7a; } .card .c { opacity: .5; }
+  [data-mode="dark"] .card .s { color: color-mix(in oklab, var(--dd-accent) 75%, #fff); }
+  .status { display: inline-flex; gap: 6px; align-items: center; font: 600 11px var(--dd-mono); color: #4ade80; }
+  .status i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+  .status.err { color: #fb7185; }
+  .card .ms { opacity: .5; font-size: 11px; }
+  .shimmer { padding: 16px; display: grid; gap: 9px; }
+  .shimmer i { height: 10px; border-radius: 5px; background: linear-gradient(90deg, rgb(255 255 255 / .06), rgb(255 255 255 / .16), rgb(255 255 255 / .06)); background-size: 200% 100%; animation: sh 1s linear infinite; }
+  @keyframes sh { to { background-position: -200% 0; } }
+
+  .errs { width: 100%; border-collapse: collapse; font: 14px/1.5 var(--dd-sans); margin-top: 6px; }
+  .errs td { padding: 12px 10px 12px 0; border-bottom: 1px solid var(--dd-line-soft); vertical-align: top; color: var(--dd-text-soft); }
+  .errs td:first-child { font: 600 13px var(--dd-mono); color: var(--dd-text); width: 56px; }
+  .errs td:nth-child(2) { font: 13px var(--dd-mono); color: var(--dd-text); white-space: nowrap; }
+  .baseurl { display: flex; align-items: center; gap: 10px; margin: 6px 0 0; padding: 12px 14px; border-radius: var(--dd-radius); background: var(--dd-panel); border: 1px solid var(--dd-line); font: 13.5px var(--dd-mono); color: var(--dd-text); }
+  .baseurl span { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Guides: a page with an outline */
+  .gpage { display: grid; grid-template-columns: minmax(0, 1fr) 220px; grid-template-areas: "art aside"; gap: 48px; max-width: calc(var(--dd-measure) + 320px); margin: 0 auto; padding: 48px clamp(20px, 4vw, 48px) 100px; }
+  [data-toc="left"] .gpage { grid-template-columns: 220px minmax(0, 1fr); grid-template-areas: "aside art"; }
+  [data-toc="off"] .gpage { grid-template-columns: minmax(0, 1fr); grid-template-areas: "art"; max-width: calc(var(--dd-measure) + 96px); }
+  [data-toc="off"] .gaside { display: none; }
+  .gart { grid-area: art; min-width: 0; max-width: var(--dd-measure); }
+  .gart .answer { margin: 24px 0 32px; }
+  .gaside { grid-area: aside; position: sticky; top: calc(var(--top) + 32px); align-self: start; display: grid; gap: 24px; font-size: 13px; }
+  .gaside h5 { margin: 0 0 10px; font: 600 12px var(--dd-sans); color: var(--dd-text); }
+  .gaside a.t { display: block; padding: 4px 0 4px 12px; border-left: 1px solid var(--dd-line); color: var(--dd-muted); text-decoration: none; }
+  .gaside a.t.on { color: var(--dd-accent); border-left-color: var(--dd-accent); }
+  .relapi { padding: 14px; border-radius: var(--dd-radius); background: var(--dd-panel-muted); }
+  .relapi a { display: flex; gap: 8px; align-items: center; padding: 5px 0; color: var(--dd-text-soft); text-decoration: none; font: 12.5px var(--dd-mono); }
+  .relapi a:hover { color: var(--dd-accent); }
+  .crumbs { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--dd-muted); margin-bottom: 18px; }
+  .crumbs .ico { width: 13px; height: 13px; opacity: .5; }
+  .gpager { display: flex; justify-content: space-between; gap: 12px; margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--dd-line); }
+
+  .scrim { display: none; }
+  main { container-type: inline-size; }
+  @container (max-width: 980px) { .row { gap: 28px; padding: 44px 28px; } }
+  @container (max-width: 700px) { .row, [data-toc="left"] .row { grid-template-columns: minmax(0, 1fr); grid-template-areas: "doc" "code"; } }
+  @container (max-width: 760px) { .gpage, [data-toc="left"] .gpage { grid-template-columns: minmax(0, 1fr); grid-template-areas: "art"; } .gaside { display: none; } }
+  @media (max-width: 820px) {
+    .shell, [data-side="right"] .shell { grid-template-columns: 1fr; grid-template-areas: "main"; }
+    .burger { display: grid; }
+    .side { position: fixed; z-index: 60; top: 0; left: 0; height: 100dvh; width: min(320px, 86vw); background: var(--dd-panel); transform: translateX(-100%); transition: transform .35s var(--dd-ease); box-shadow: var(--dd-shadow-lg); }
+    [data-side="right"] .side { left: auto; right: 0; transform: translateX(100%); }
+    body.drawer .side { transform: none; }
+    .filter { background: var(--dd-panel); }
+    .scrim { display: block; position: fixed; inset: 0; z-index: 55; background: rgb(0 0 0 / .35); opacity: 0; pointer-events: none; transition: opacity .3s; } body.drawer .scrim { opacity: 1; pointer-events: auto; }
+    .top { padding: 0 12px; gap: 10px; } .top .brand small, .search-trigger span, .search-trigger kbd { display: none; } .search-trigger { min-width: 0; width: 36px; padding: 0; justify-content: center; }
+    .modes button { padding: 0 10px; } .modes button .ico { display: none; }
+    .row { padding: 36px 16px; } .gpage { padding: 28px 16px 80px; }
+  }
+</style>
+</head>
+<body>
+<header class="top dd-header">
+  <button class="icon-btn burger" id="burger" aria-label="Open navigation"></button>
+  <div class="brand"><a class="logo" href="#api"><span class="logo-mark" id="lm"></span>Halcyon</a><small>v1</small></div>
+  <div class="modes" id="modes"><button data-m="guides" aria-pressed="false"></button><button data-m="api" aria-pressed="true"></button></div>
+  <div class="right">
+    <button class="search-trigger" data-w="search" id="st"></button>
+    <button class="icon-btn" id="mode" aria-label="Toggle dark mode"></button>
+  </div>
+</header>
+<div class="scrim" id="scrim"></div>
+<div class="shell">
+  <aside class="side" id="side"><div class="filter"><label id="fl"><input id="filter" placeholder="Filter" aria-label="Filter navigation"><kbd>F</kbd></label></div><div id="nav"></div></aside>
+  <main id="main"></main>
+</div>
+<script src="content.js"></script>
+<script src="skins.js"></script>
+<script src="kit.js"></script>
+<script>
+const K = DDKit, { D, flat, byId, icon, inline, esc, $, $$ } = K, A = D.api;
+$("#lm").innerHTML = icon("cup"); $("#burger").innerHTML = icon("menu");
+$("#fl").insertAdjacentHTML("afterbegin", icon("search"));
+$("#st").innerHTML = `${icon("search")}<span>Search…</span><kbd>Ctrl K</kbd>`;
+$("[data-m=guides]").innerHTML = icon("book") + "Guides"; $("[data-m=api]").innerHTML = icon("bolt") + "API reference";
+const mi = () => $("#mode").innerHTML = icon(document.documentElement.dataset.mode === "dark" ? "sun" : "moon"); K.onSettings(mi); mi();
+$("#mode").onclick = K.toggleMode; $("#st").onclick = () => K.openPalette();
+$("#burger").onclick = () => document.body.classList.add("drawer"); $("#scrim").onclick = () => document.body.classList.remove("drawer");
+$$("#modes button").forEach(b => b.onclick = () => b.dataset.m === "api" ? goApi("intro") : goGuide(flat[0].id));
+
+const EPS = A.groups.flatMap(g => g.endpoints.map(e => Object.assign(e, { group: g })));
+const EX = { recipe: "flat-white", state: "on", since: "2026-10-01T00:00:00Z", id: "shot_8f2a", dose: 18, yield: 36, temperature: 93, preinfusion: 4, limit: 20, brewTemp: 93.5, waterHardness: 3, autoOff: 60 };
+let lang = "curl"; try { lang = localStorage.getItem("dd-lang") || "curl"; } catch (e) {}
+
+// ---------- Code generation from the endpoint description ----------
+function sample(e, l) {
+  const url = A.base + e.path.replace("{id}", EX.id);
+  const ps = e.params.filter(p => p.in !== "path").filter((p, i) => p.req || i < 2);
+  const lit = v => typeof v === "string" ? `"${v}"` : v;
+  if (l === "curl") {
+    const lines = [`curl ${e.method === "GET" ? (ps.length ? "-G " : "") : "-X " + e.method + " "}${url}`, `  -H "Authorization: Bearer $HALCYON_TOKEN"`, ...ps.map(p => `  -d ${p.name}=${EX[p.name]}`)];
+    return lines.join(" \\\n");
+  }
+  if (l === "js") {
+    const body = ps.length ? `{ ${ps.map(p => `${p.name}: ${lit(EX[p.name])}`).join(", ")} }` : "";
+    const q = e.method === "GET" && ps.length ? "?" + ps.map(p => `${p.name}=${encodeURIComponent(EX[p.name])}`).join("&") : "";
+    return `const res = await fetch("${url}${q}", {\n${e.method !== "GET" ? `  method: "${e.method}",\n` : ""}  headers: { Authorization: \`Bearer \${token}\` },${body && e.method !== "GET" ? `\n  body: JSON.stringify(${body}),` : ""}\n});\nconst data = await res.json();`;
+  }
+  const kw = e.method === "GET" ? "params" : "json";
+  return `import requests\n\nr = requests.${e.method.toLowerCase()}(\n    "${url}",\n    headers={"Authorization": f"Bearer {token}"},${ps.length ? `\n    ${kw}={${ps.map(p => `"${p.name}": ${lit(EX[p.name])}`).join(", ")}},` : ""}\n)\nprint(r.json())`;
+}
+function hcode(t) {
+  return esc(t)
+    .replace(/(&quot;[^&]*?&quot;|`[^`]*`|"[^"]*")/g, '<span class="s">$1</span>')
+    .replace(/(^|\s)(-[XHdG])\b/g, '$1<span class="p">$2</span>')
+    .replace(/\b(curl|const|await|import|print|requests)\b/g, '<span class="k">$1</span>');
+}
+function hjson(o) {
+  return JSON.stringify(o, null, 2).replace(/("(?:\\.|[^"\\])*")(\s*:)?|(-?\b\d+(?:\.\d+)?\b|\btrue\b|\bfalse\b|\bnull\b)/g,
+    (m, str, colon, lit) => str ? (colon ? `<span class="p">${esc(str)}</span>${colon}` : `<span class="s">${esc(str)}</span>`) : `<span class="n">${lit}</span>`);
+}
+const LANGS = [["curl", "cURL"], ["js", "JavaScript"], ["py", "Python"]];
+const langTabs = () => `<div class="langs">${LANGS.map(([k, n]) => `<button data-lang="${k}" aria-pressed="${k === lang}">${n}</button>`).join("")}</div>`;
+function codeCards(e) {
+  return `<div class="card"><header><span class="m ${e.method}">${e.method}</span><span class="t">${esc(e.path)}</span>${langTabs()}<button class="cbtn" data-copyreq="${e.id}" aria-label="Copy">${icon("copy")}</button></header><pre><code data-req="${e.id}">${hcode(sample(e, lang))}</code></pre></div>
+    <div class="card" data-w="answer"><header><span class="t">Response</span><span class="status" data-st="${e.id}"><i></i>200 OK</span><button class="cbtn run" data-run="${e.id}">${icon("play")} Try it</button></header><pre><code data-res="${e.id}">${hjson(e.response)}</code></pre></div>`;
+}
+
+// ---------- Sidebar ----------
+let mode = "api", cur = null;
+function nav() {
+  const f = $("#filter").value.toLowerCase().trim(), hit = t => !f || t.toLowerCase().includes(f);
+  let h = "";
+  if (mode === "api") {
+    const intro = [["intro", "Introduction"], ["auth", "Authentication"], ["errors", "Errors"]].filter(x => hit(x[1]));
+    if (intro.length) h += `<div class="sgroup"><h6>Overview</h6>${intro.map(([id, t]) => `<a class="dd-item" href="#api/${id}" data-id="${id}"><span class="lbl">${t}</span></a>`).join("")}</div>`;
+    A.groups.forEach(g => { const es = g.endpoints.filter(e => hit(e.title + " " + e.path + " " + e.method + " " + g.title)); if (es.length) h += `<div class="sgroup"><h6>${esc(g.title)}</h6>${es.map(e => `<a class="dd-item" href="#api/${e.id}" data-id="${e.id}"><span class="m ${e.method}">${e.method}</span><span class="lbl">${esc(e.title)}</span></a>`).join("")}</div>`; });
+  } else {
+    D.chapters.forEach(c => { const ss = c.sections.filter(s => hit(s.title + " " + s.question + " " + c.title)); if (ss.length) h += `<div class="sgroup"><h6>${esc(c.title)}</h6>${ss.map(s => `<a class="dd-item" href="#${s.id}" data-id="${s.id}"><span class="lbl">${esc(s.title)}</span></a>`).join("")}</div>`; });
+  }
+  $("#nav").innerHTML = h || `<div class="none">Nothing matches “${esc(f)}”.</div>`;
+  $$("#nav a").forEach(a => a.onclick = e => { e.preventDefault(); document.body.classList.remove("drawer"); mode === "api" ? goApi(a.dataset.id, true) : goGuide(a.dataset.id); });
+  mark(cur);
+}
+function mark(id) {
+  cur = id;
+  $$("#nav a").forEach(a => a.setAttribute("aria-current", a.dataset.id === id ? "page" : "false"));
+  const a = $(`#nav a[data-id="${id}"]`); if (a) { const r = a.getBoundingClientRect(), s = $("#side").getBoundingClientRect(); if (r.top < s.top + 50 || r.bottom > s.bottom) a.scrollIntoView({ block: "nearest" }); }
+}
+$("#filter").addEventListener("input", nav);
+$("#filter").addEventListener("keydown", e => { if (e.key === "Escape") { e.target.value = ""; nav(); e.target.blur(); } if (e.key === "Enter") { const a = $("#nav a"); a && a.click(); } });
+addEventListener("keydown", e => { if ((e.key === "f" || e.key === "F") && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !e.metaKey && !e.ctrlKey) { e.preventDefault(); $("#filter").focus(); } });
+
+// ---------- API page ----------
+let spy;
+function renderApi() {
+  const errRows = A.errors.map(x => `<tr><td>${x.code}</td><td>${x.name}</td><td>${inline(x.desc)}</td></tr>`).join("");
+  $("#main").innerHTML = `
+  <section class="row" id="intro" data-ep="intro"><div class="doc"><div class="eyebrow">API reference</div><h1 class="display">Connect API</h1><p class="lead">${inline(A.intro)}</p>
+    <h4>Base URL</h4><div class="baseurl"><span>${A.base}</span><button class="icon-btn" data-copytext="${A.base}" aria-label="Copy">${icon("copy")}</button></div>
+    <h4>Resources</h4><ul class="params">${A.groups.map(g => `<li><div class="pname"><b>${esc(g.title)}</b><span class="type">${g.endpoints.length} endpoint${g.endpoints.length > 1 ? "s" : ""}</span></div><div class="pdesc">${g.endpoints.map(e => `<a href="#api/${e.id}" data-jump="${e.id}" style="color:inherit">${esc(e.title)}</a>`).join(" · ")}</div></li>`).join("")}</ul></div>
+    <div class="codecol"><div class="stick"><div class="card"><header><span class="t">Quick start</span>${langTabs()}</header><pre><code data-req="get-status">${hcode(sample(EPS[0], lang))}</code></pre></div></div></div></section>
+  <section class="row" id="auth" data-ep="auth"><div class="doc"><h2 class="display">Authentication</h2><p class="lead">${inline(A.auth)}</p>
+    <h4>Header</h4><ul class="params"><li><div class="pname"><b>Authorization</b><span class="type">string</span><span class="req">required</span></div><div class="pdesc">${inline("`Bearer` followed by your token.")}</div></li></ul></div>
+    <div class="codecol"><div class="stick"><div class="card"><header><span class="t">Every request</span></header><pre><code>${hcode('Authorization: Bearer hlc_live_8Jq2…')}</code></pre></div></div></div></section>
+  <section class="row" id="errors" data-ep="errors"><div class="doc"><h2 class="display">Errors</h2><p class="lead">${inline("Errors use normal HTTP status codes and always return the same shape: a stable `code` you can branch on and a `message` for humans.")}</p>
+    <table class="errs">${errRows}</table></div>
+    <div class="codecol"><div class="stick"><div class="card"><header><span class="t">Error response</span><span class="status err"><i></i>409</span></header><pre><code>${hjson({ error: { code: "machine_busy", message: "The machine is steaming. Try again when it's ready.", status: 409 } })}</code></pre></div></div></div></section>
+  ${A.groups.map(g => g.endpoints.map(e => `
+  <section class="row" id="${e.id}" data-ep="${e.id}"><div class="doc"><div class="eyebrow">${esc(g.title)}</div><h2 class="display">${esc(e.title)}</h2>
+    <div class="ep"><span class="m ${e.method}">${e.method}</span><span class="path">/v1<b>${esc(e.path)}</b></span></div>
+    <p class="lead">${inline(e.desc)}</p>
+    <h4><span>Parameters</span><span>${e.params.length || ""}</span></h4>${e.params.length ? `<ul class="params">${e.params.map(p => `<li><div class="pname"><b>${p.name}</b><span class="type">${p.type}</span>${p.req ? '<span class="req">required</span>' : ""}${p.in ? `<span class="in">${p.in}</span>` : ""}</div><div class="pdesc">${inline(p.desc)}</div></li>`).join("")}</ul>` : `<div class="noparams">No parameters.</div>`}
+    ${e.guide && byId[e.guide] ? `<a class="guide-link" href="#${e.guide}" data-guide="${e.guide}">${icon("book")} Guide: ${esc(byId[e.guide].title)} ${icon("right")}</a>` : ""}</div>
+    <div class="codecol"><div class="stick">${codeCards(e)}</div></div></section>`).join("")).join("")}
+  <div style="height:40vh"></div>`;
+  wire();
+  spy = K.spy(window, () => $$("[data-ep]"), el => { mark(el.dataset.ep); history.replaceState(null, "", "#api/" + el.dataset.ep); }, innerHeight * .35);
+}
+function wire() {
+  $$("[data-lang]").forEach(b => b.onclick = () => {
+    lang = b.dataset.lang; try { localStorage.setItem("dd-lang", lang); } catch (e) {}
+    $$("[data-lang]").forEach(x => x.setAttribute("aria-pressed", x.dataset.lang === lang));
+    $$("[data-req]").forEach(c => { const e = EPS.find(x => x.id === c.dataset.req); c.innerHTML = hcode(sample(e, lang)); c.style.animation = "none"; void c.offsetWidth; c.style.animation = ""; });
+  });
+  $$("[data-copyreq]").forEach(b => b.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(sample(EPS.find(x => x.id === b.dataset.copyreq), lang)).catch(() => {}); K.toast("Request copied"); });
+  $$("[data-copytext]").forEach(b => b.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(b.dataset.copytext).catch(() => {}); K.toast("Copied"); });
+  $$("[data-run]").forEach(b => b.onclick = () => {
+    const e = EPS.find(x => x.id === b.dataset.run), out = $(`[data-res="${e.id}"]`), st = $(`[data-st="${e.id}"]`);
+    out.parentElement.outerHTML = `<div class="shimmer" data-sh="${e.id}"><i style="width:40%"></i><i style="width:75%"></i><i style="width:60%"></i><i style="width:30%"></i></div>`;
+    st.innerHTML = `<span class="ms">sending…</span>`;
+    setTimeout(() => { const ms = 18 + Math.round(Math.random() * 40); $(`[data-sh="${e.id}"]`).outerHTML = `<pre><code data-res="${e.id}">${hjson(e.response)}</code></pre>`; st.innerHTML = `<i></i>200 OK <span class="ms">${ms} ms</span>`; }, 650);
+  });
+  $$("[data-guide]").forEach(a => a.onclick = ev => { ev.preventDefault(); goGuide(a.dataset.guide); });
+  $$("[data-jump]").forEach(a => a.onclick = ev => { ev.preventDefault(); goApi(a.dataset.jump, true); });
+}
+function goApi(id, smooth) {
+  if (mode !== "api" || !$("#intro")) { mode = "api"; setMode(); nav(); renderApi(); }
+  const el = document.getElementById(id) || $("#intro");
+  scrollTo({ top: el.offsetTop - 60 + 1, behavior: smooth ? "smooth" : "instant" });
+  mark(el.dataset.ep);
+}
+
+// ---------- Guides ----------
+function goGuide(id, sub) {
+  const s = byId[id] || flat[0], first = mode !== "guides";
+  mode = "guides"; setMode(); if (first) nav();
+  const prev = flat[s.i - 1], next = flat[s.i + 1], rel = EPS.filter(e => e.guide === s.id);
+  $("#main").innerHTML = `<div class="gpage enter"><article class="gart">
+      <nav class="crumbs" data-w="breadcrumbs">Guides ${icon("chev")} ${esc(s.chapter.title)} ${icon("chev")} <b style="color:var(--dd-text-soft);font-weight:500">${esc(s.title)}</b></nav>
+      <h1 class="display" style="margin:0 0 12px;font-size:calc(clamp(30px,4vw,40px) * var(--dd-head-scale));line-height:1.1">${esc(s.title)}</h1>
+      <div class="meta"><span>${icon("clock")} ${s.min} min read</span></div>
+      <div id="ov">${K.answer(s)}</div><div class="prose">${K.render(s)}</div>
+      <div class="gpager" data-w="pager">${prev ? `<button class="btn" data-g="${prev.id}">${icon("left")} ${esc(prev.title)}</button>` : "<span></span>"}${next ? `<button class="btn" data-g="${next.id}">${esc(next.title)} ${icon("right")}</button>` : ""}</div>
+    </article>
+    <aside class="gaside" data-w="toc"><div><h5>On this page</h5><a class="t" href="#ov" data-t="ov">Overview</a>${K.subs(s).map(h => `<a class="t" href="#${h.id}" data-t="${h.id}">${esc(h.text)}</a>`).join("")}</div>
+      ${rel.length ? `<div class="relapi"><h5>Do it from code</h5>${rel.map(e => `<a href="#api/${e.id}" data-api="${e.id}"><span class="m ${e.method}">${e.method}</span>${esc(e.path)}</a>`).join("")}</div>` : ""}</aside></div>`;
+  $$("[data-g]").forEach(b => b.onclick = () => goGuide(b.dataset.g));
+  $$("[data-api]").forEach(a => a.onclick = ev => { ev.preventDefault(); goApi(a.dataset.api); });
+  $$(".gaside a.t").forEach(a => a.onclick = ev => { ev.preventDefault(); document.getElementById(a.dataset.t).scrollIntoView({ behavior: "smooth", block: "start" }); });
+  mark(s.id); history.replaceState(null, "", "#" + s.id);
+  const t = sub && document.getElementById(sub);
+  t ? t.scrollIntoView({ block: "start" }) : scrollTo({ top: 0, behavior: "instant" });
+  spy = K.spy(window, () => $$("#ov, .gart .prose > h3"), el => $$(".gaside a.t").forEach(a => a.classList.toggle("on", a.dataset.t === el.id)), 140);
+}
+function setMode() { $$("#modes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === mode)); $("#filter").value = ""; }
+
+K.go = (id, sub) => goGuide(id, sub);
+const h = location.hash.slice(1);
+if (h.startsWith("api")) { mode = "api"; setMode(); nav(); renderApi(); const id = h.split("/")[1]; if (id) setTimeout(() => goApi(id), 30); }
+else if (byId[h]) goGuide(h);
+else { nav(); renderApi(); }
+</script>
+</body>
+</html>
