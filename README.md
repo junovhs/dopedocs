@@ -268,3 +268,12 @@ Fontsource-compatible CDN mirror; the default is `https://cdn.jsdelivr.net/npm`.
 The CLI owns its marked font blocks and family asset directories; keep other
 hand-written rules outside those blocks. Removing a family retains other font
 stack entries. No font catalog or font files ship in the dopedocs package.
+
+Font installation also writes a metric-matched local fallback after the chosen
+family in its stack. Display/body/UI roles use Arial and mono uses Courier New,
+with separate weight/style faces. `size-adjust` matches x-height (cap height
+when unavailable); ascent, descent and line gap follow the installed font.
+This reduces shifts during font loading, though different glyph widths can
+still change wrapping. If the named system font is unavailable, the rest of
+your existing stack remains available. Removing a font removes its generated
+fallbacks too. Unchanged sites get no new faces until they run `fonts add`.

@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, extname, join, resolve } from "node:path";
 import { create, type Font } from "fontkit";
 import { parse } from "postcss";
+import { fallbackFamily, renderFontFallback, type SystemFallback } from "./font-fallback.js";
 import { parseTheme, readThemeFile, updateTheme } from "./theme.js";
 
 export interface FontOptions {
@@ -138,7 +139,12 @@ export async function addFont(input: string, options: FontOptions = {}): Promise
     let css = readThemeFile(target.file);
     const prior = parseTheme(css)[`--dd-${role}`];
     const prefix = `${quote(family)}, `;
-    const stack = prior?.startsWith(prefix) ? prior : prefix + (prior ?? (role === "mono" ? "monospace" : "var(--dd-sans, sans-serif)"));
+    const system = role === "mono" ? "Courier New" : "Arial";
+    const fallbackPrefix = `${quote(fallbackFamily(family, system))}, `;
+    let tail = prior ?? (role === "mono" ? "monospace" : "var(--dd-sans, sans-serif)");
+    if (tail.startsWith(prefix)) tail = tail.slice(prefix.length);
+    if (tail.startsWith(fallbackPrefix)) tail = tail.slice(fallbackPrefix.length);
+    const stack = prefix + fallbackPrefix + tail;
     css = updateTheme(css, role, stack);
     const oldRange = blockRange(css, id);
     const retained: string[] = [];
@@ -148,7 +154,9 @@ export async function addFont(input: string, options: FontOptions = {}): Promise
         rule.walkDecls("font-style", decl => { style = decl.value; });
         if (!faces.some(face => String(face.weight) === weight && face.style === style)) retained.push(rule.toString());
     });
-    const block = [marker(id), ...retained, ...faces.map(face => `@font-face {\n    font-family: ${quote(family)};\n    font-style: ${face.style};\n    font-weight: ${face.weight};\n    font-display: swap;\n    src: url(${quote(`${target.publicPath}/${id}/${face.weight}-${face.style}.woff2`)}) format("woff2");\n    unicode-range: ${face.range};\n}`), marker(id, true)].join("\n");
+    const systems = (["Arial", "Courier New"] as SystemFallback[]).filter(name => Object.values(parseTheme(css)).some(value => value.includes(quote(fallbackFamily(family, name)))));
+    const fallbacks = faces.flatMap(face => systems.map(name => renderFontFallback(fontOf(face.bytes), family, name, face.weight, face.style, face.range)));
+    const block = [marker(id), ...retained, ...faces.map(face => `@font-face {\n    font-family: ${quote(family)};\n    font-style: ${face.style};\n    font-weight: ${face.weight};\n    font-display: swap;\n    src: url(${quote(`${target.publicPath}/${id}/${face.weight}-${face.style}.woff2`)}) format("woff2");\n    unicode-range: ${face.range};\n}`), ...fallbacks, marker(id, true)].join("\n");
     css = replaceBlock(css, id, block);
     parse(css);
     // All requests, validation and CSS edits finish before mutating the host.
@@ -171,7 +179,10 @@ export function removeFont(input: string, options: FontOptions = {}): void {
     const values = parseTheme(css);
     for (const role of roles) {
         const value = values[`--dd-${role}`];
-        if (value?.includes(`${quote(installed.family)}, `)) css = updateTheme(css, role, value.replace(`${quote(installed.family)}, `, ""));
+        if (!value) continue;
+        let next = value.replace(`${quote(installed.family)}, `, "");
+        for (const system of ["Arial", "Courier New"] as SystemFallback[]) next = next.replace(`${quote(fallbackFamily(installed.family, system))}, `, "");
+        if (next !== value) css = updateTheme(css, role, next);
     }
     writeFileSync(target.file, css);
     rmSync(join(target.directory, installed.id), { recursive: true, force: true });

@@ -35,9 +35,9 @@ test('built CLI installs only selected Fontsource faces and licence, renders loc
     expect(result.status, result.stderr).toBe(0);
     const css = readFileSync(theme, 'utf8');
     expect(css.startsWith(original)).toBe(true);
-    expect(css).toContain('--dd-display: "Fraunces", var(--dd-sans, sans-serif)');
+    expect(css).toContain('--dd-display: "Fraunces", "Fraunces Fallback Arial", var(--dd-sans, sans-serif)');
     expect(css.match(/font-display: swap/g)).toHaveLength(2);
-    expect(css.match(/unicode-range:/g)).toHaveLength(2);
+    expect(css.match(/unicode-range:/g)).toHaveLength(4);
     const folder = join(host, 'public/fonts/dopedocs/fraunces');
     expect(readdirSync(folder).sort()).toEqual(['400-normal.woff2', '600-normal.woff2', 'LICENSE.txt']);
     expect(readFileSync(join(folder, 'LICENSE.txt'), 'utf8')).toContain('SIL OPEN FONT LICENSE');
