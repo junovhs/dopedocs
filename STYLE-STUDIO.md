@@ -1,8 +1,10 @@
 # Style Studio: the direction for how dopedocs looks and moves
 
 **Status:** owner-approved direction, 2026-10-25. Proof of concept in
-[`prototypes/style-studio/`](prototypes/style-studio/). Nothing here is built
-into the engine yet. The work is filed in Ishoo; see "Filed work" at the end.
+[`prototypes/style-studio/`](prototypes/style-studio/). The first wave is built
+(theme file, type tokens, fonts, a first studio), but the studio panel is still
+below the prototype's bar. The work is filed in Ishoo; see "Filed work" at the
+end.
 
 ## The idea in one paragraph
 
@@ -88,9 +90,14 @@ These accepted decisions govern the work. Read them in full with
   the host's site, and writes `@font-face` and the font tokens into
   `docs-theme.css`. Readers never load fonts from Google or any other third
   party. The prototype's `fonts.css` links Google directly; that is demo-only.
-- **DEC-09: dopedocs adds docs to an existing website, themed by your own
-  tokens.** The studio must be able to start from the host's tokens, not
-  replace them. A skin is a starting point the host can alias over.
+- **DEC-15 (accepted 2026-10-26, replaces DEC-09): dopedocs is the docs layer
+  for any app or site, and it feels built in.** People and AI/search crawlers
+  are both primary readers. The studio must be able to start from the host's
+  tokens, not replace them. A skin is a starting point the host can alias over.
+- **DEC-16 (accepted 2026-10-26): quality over speed.** Visual work closes only
+  after screenshots meet the design bar and the owner has reviewed them, and the
+  code is written to be read. STU-02 and FONT-03 closed on function alone and
+  fell short; don't repeat that.
 - **DEC-07: `/docs/<id>` always serves the static page, with the same bar and
   rail as the panel.** Structural options (sidebar side, outline position) must
   render the same in the panel and on static pages.
@@ -334,6 +341,18 @@ Filed in Ishoo on 2026-10-25 across three plans. Read each issue with
 | STU-04 | Readability guardrails |
 | STU-05 | Acceptance: rebuild the Cloudflare-style and Vercel-style looks with options only |
 
+Added 2026-10-26 after a design review found the shipped studio (STU-02,
+FONT-03) was a form of raw text boxes, well short of the prototype:
+
+| Issue | What |
+| --- | --- |
+| STU-06 | Control kit: color, slider, segmented and switch controls, plain labels, defaults, a designed panel, readable code. **Start here.** |
+| STU-07 | Live preview while dragging; one write per skin or multi-token change |
+| FONT-04 | Visual font browser: cards drawn in their own face, hover preview, weight chips |
+| TYPO-04 | Every TYPO-01/02 typography token reachable in the Type tab, Basic and Advanced |
+| STU-08 | Every documented token has a studio control, enforced by a coverage test |
+| PERF-01 | Reader page-weight budget that fails the build on growth |
+
 **Plan `typography-and-fonts`**
 
 | Issue | What |
@@ -361,7 +380,10 @@ Filed in Ishoo on 2026-10-25 across three plans. Read each issue with
 | LAY-04 | Help Center layout |
 | LAY-05 | Reader layout on the complete manual page |
 
-**Where to start:** COMP-01 (the compatibility safety net) has no blockers and
-every first-wave issue waits on it. Then STU-01 (the theme file) and TYPO-01
-(basic type tokens), then LAY-03, then STU-02 (the studio).
-Typography is what readers see most.
+LAY-05 (Reader) is labelled `later`. LAY-02 (host header and footer) is
+`important`, because feeling built in is the core promise.
+
+**Where to start (updated 2026-10-26):** The first wave (COMP-01, STU-01,
+TYPO-01/02/03, LAY-03, STU-02, FONT-01/02/03) has landed. Next comes STU-06,
+then STU-07, TYPO-04 and FONT-04 on top of it, then STU-08. PERF-01 has no
+blockers and can land any time. Typography is what readers see most.
