@@ -94,6 +94,12 @@ These accepted decisions govern the work. Read them in full with
 - **DEC-07: `/docs/<id>` always serves the static page, with the same bar and
   rail as the panel.** Structural options (sidebar side, outline position) must
   render the same in the panel and on static pages.
+- **DEC-14 (accepted 2026-10-25): upgrades never make consumers rewrite code.**
+  dopedocs is live in other projects. Every change is additive: new tokens fall
+  back to today's look, and renames keep the old name as a deprecated alias
+  with a build warning. A breaking change is allowed only if the old way would
+  chain dopedocs down, and it must ship with `dopedocs upgrade`, an automatic
+  codemod. COMP-01's public-surface snapshot test catches accidental breaks.
 - **The studio is a development tool.** It never ships to readers. The prototype
   shows it beside the preview. In production, think `dopedocs studio`, or a
   dev-server overlay that writes the theme file.
@@ -317,6 +323,7 @@ Filed in Ishoo on 2026-10-25 across three plans. Read each issue with
 
 | Issue | What |
 | --- | --- |
+| COMP-01 | Public-surface snapshot test (lands first; DEC-14) |
 | STU-01 | Theme file module and `dopedocs theme get/set/list` (terminal parity) |
 | LAY-01 | Spacing scale token and line length in characters |
 | LAY-03 | Structural keyword tokens: sidebar side, outline, header, current-page marker, card |
@@ -354,6 +361,7 @@ Filed in Ishoo on 2026-10-25 across three plans. Read each issue with
 | LAY-04 | Help Center layout |
 | LAY-05 | Reader layout on the complete manual page |
 
-**Where to start:** STU-01 (the theme file) and TYPO-01 (basic type tokens) have
-no blockers. Do those first, then LAY-03, then STU-02 (the studio).
+**Where to start:** COMP-01 (the compatibility safety net) has no blockers and
+every first-wave issue waits on it. Then STU-01 (the theme file) and TYPO-01
+(basic type tokens), then LAY-03, then STU-02 (the studio).
 Typography is what readers see most.
