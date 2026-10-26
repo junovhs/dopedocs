@@ -1,0 +1,54 @@
+{
+  "user-manual": {
+    "files": [
+      "docs/clean/index.html",
+      "docs/focus/index.html",
+      "docs/index.html",
+      "docs/light/index.html",
+      "facts.json",
+      "llms.txt",
+      "questions.json",
+      "robots.txt",
+      "sitemap.xml"
+    ],
+    "urls": [
+      "href=\"/\"",
+      "href=\"/docs/\"",
+      "href=\"/docs/clean/\"",
+      "href=\"/docs/focus/\"",
+      "href=\"/docs/light/\"",
+      "href=\"/manual-assets/lamp.svg\"",
+      "href=\"https://lumen-desk.example/docs/\"",
+      "href=\"https://lumen-desk.example/docs/clean/\"",
+      "href=\"https://lumen-desk.example/docs/focus/\"",
+      "href=\"https://lumen-desk.example/docs/light/\"",
+      "href=\"https://lumen-desk.example/start\"",
+      "src=\"/manual-assets/dial.webm\"",
+      "src=\"/manual-assets/lamp-compact.svg\"",
+      "src=\"/manual-assets/lamp.svg\""
+    ]
+  },
+  "theme": {
+    "files": [
+      "docs/index.html",
+      "docs/join/index.html",
+      "docs/visit/index.html",
+      "facts.json",
+      "llms.txt",
+      "questions.json",
+      "robots.txt",
+      "sitemap.xml"
+    ],
+    "urls": [
+      "href=\"/\"",
+      "href=\"/docs-theme.css\"",
+      "href=\"/docs/\"",
+      "href=\"/docs/dopedocs.css\"",
+      "href=\"/docs/join/\"",
+      "href=\"/docs/visit/\"",
+      "href=\"https://field-guide.example/docs/\"",
+      "href=\"https://field-guide.example/docs/join/\"",
+      "href=\"https://field-guide.example/docs/visit/\""
+    ]
+  }
+}
