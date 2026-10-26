@@ -1792,3 +1792,9 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-card { box-shadow: var(--dd-card-shadow, none); }
 .dd-card, .dd-details, .dd-media { border-width: var(--dd-border-width, 1px); }
+
+/* Role-specific OpenType values keep a chosen font's settings with that role. */
+.dd-page, .dd-main { font-feature-settings: var(--dd-body-features, var(--dd-features, normal)); font-variation-settings: var(--dd-body-variations, var(--dd-variations, normal)); }
+.dd-title, .dd-section-title { font-feature-settings: var(--dd-display-features, var(--dd-features, normal)); font-variation-settings: var(--dd-display-variations, var(--dd-variations, normal)); }
+.dd-nav, .dd-bar { font-feature-settings: var(--dd-ui-features, normal); font-variation-settings: var(--dd-ui-variations, normal); }
+.dd-section code, .dd-code { font-feature-settings: var(--dd-mono-features, var(--dd-features, normal)); font-variation-settings: var(--dd-mono-variations, var(--dd-variations, normal)); }

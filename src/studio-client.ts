@@ -19,6 +19,7 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         });
         $('#export-css').textContent = state.css || '/* Choose a control to create your theme. */';
         preview();
+        void refreshFontCapabilities();
     }
     async function request(path: string, data?: unknown) {
         const response = await fetch('/__dopedocs/' + path, data === undefined ? {} : {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
@@ -38,7 +39,7 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(tab=>tab.setAttribute('aria-selected',String(tab===button)));
         document.querySelectorAll<HTMLElement>('[data-panel]').forEach(panel=>panel.hidden=panel.dataset.panel!==button.dataset.tab);
     });
-    $('#reload').addEventListener('click', () => { request('theme').then(value=>{state=value;render();status('Read from your theme file');}).catch(error=>status(error.message)); });
+    $('#reload').addEventListener('click', () => { request('theme').then(value=>{state=value;clearFontPreview();render();status('Read from your theme file');}).catch(error=>status(error.message)); });
     function palette() {
         const skin = ($('#skin') as HTMLSelectElement).value;
         const mode = ($('#mode') as HTMLSelectElement).value;
@@ -56,7 +57,55 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
     function clearFontPreview() {
         for (const role of ['display','body','ui','mono']) frame.contentDocument?.documentElement.style.removeProperty('--dd-'+role);
     }
-    $('#font-role').addEventListener('change',clearFontPreview);
+    $('#font-role').addEventListener('change',()=>{clearFontPreview();void refreshFontCapabilities();});
+    type Capabilities={family:string;features:{tag:string;name:string}[];axes:{tag:string;name:string;min:number;default:number;max:number}[]};
+    let featureRequest=0;
+    function setting(token:string,tag:string):number|undefined {
+        const entries=[...(state.tokens[token]??'').matchAll(/["']([a-zA-Z0-9]{4})["']\s+(on|off|-?\d+(?:\.\d+)?)/g)];
+        const value=entries.find(entry=>entry[1]===tag)?.[2];
+        return value===undefined?undefined:value==='on'?1:value==='off'?0:Number(value);
+    }
+    function setSetting(token:string,tag:string,value?:number) {
+        status('Saving…');
+        queue=queue.then(async()=>{
+            const parts=(state.tokens[token]??'').split(',').filter(part=>part.trim()&&part.trim()!=='normal'&&!new RegExp('^["\']'+tag+'["\']').test(part.trim()));
+            if(value!==undefined) parts.push('"'+tag+'" '+value);
+            state=await request('theme',{token,value:parts.length?parts.join(', '):undefined});render();status('Saved to your theme file');
+        }).catch(error=>status(error.message));
+    }
+    async function refreshFontCapabilities() {
+        const requestId=++featureRequest;
+        try {
+            const role=field('#font-role');
+            const capabilities:Capabilities|null=await request('font-features?role='+encodeURIComponent(role));
+            if(requestId!==featureRequest) return;
+            const features=$('#font-features'),axes=$('#font-axes');features.replaceChildren();axes.replaceChildren();
+            $('#feature-message').textContent=capabilities?'Supported by '+capabilities.family:'Install a local font for this role to inspect its features. Host/system fonts are not guessed.';
+            if(!capabilities) return;
+            const featureToken='--dd-'+role+'-features',axisToken='--dd-'+role+'-variations';
+            for(const feature of capabilities.features) {
+                const row=document.createElement('div');row.className='control';
+                const label=document.createElement('label');label.textContent=feature.name;
+                const technical=document.createElement('small');technical.textContent=feature.tag;
+                const input=document.createElement('input');input.type='checkbox';input.dataset.feature=feature.tag;
+                input.checked=(setting(featureToken,feature.tag)??(['liga','clig','calt','kern'].includes(feature.tag)?1:0))!==0;
+                input.onchange=()=>setSetting(featureToken,feature.tag,input.checked?1:0);
+                const reset=document.createElement('button');reset.textContent='↺';reset.setAttribute('aria-label','Reset '+feature.name);reset.onclick=()=>setSetting(featureToken,feature.tag);
+                label.append(technical,input);row.append(label,reset);features.append(row);
+            }
+            for(const axis of capabilities.axes) {
+                const label=document.createElement('label');label.textContent=axis.name;
+                const technical=document.createElement('small');technical.textContent=axis.tag+' · '+axis.min+'–'+axis.max+' · default '+axis.default;
+                const slider=document.createElement('input');slider.type='range';slider.min=String(axis.min);slider.max=String(axis.max);slider.step=[axis.min,axis.max,axis.default].every(Number.isInteger)?'1':'any';slider.value=String(setting(axisToken,axis.tag)??axis.default);slider.dataset.axis=axis.tag;
+                const output=document.createElement('output');output.textContent=slider.value;
+                slider.oninput=()=>{output.textContent=slider.value;frame.contentDocument?.documentElement.style.setProperty(axisToken,'"'+axis.tag+'" '+slider.value);};
+                slider.onchange=()=>{frame.contentDocument?.documentElement.style.removeProperty(axisToken);setSetting(axisToken,axis.tag,Number(slider.value));};
+                const reset=document.createElement('button');reset.textContent='Reset '+axis.name;reset.onclick=()=>setSetting(axisToken,axis.tag);
+                label.append(technical,slider,output,reset);axes.append(label);
+            }
+            if(!capabilities.features.length&&!capabilities.axes.length) $('#feature-message').textContent+=' — no optional features or variable axes in this face.';
+        } catch(error) {$('#feature-message').textContent=(error as Error).message;}
+    }
     async function fontSearch() {
         fontMessage('Loading catalog…');
         try {

@@ -134,6 +134,16 @@ export async function addFont(input: string, options: FontOptions = {}): Promise
     if (!license.length) throw new Error("Font licence is empty");
     const id = slug(family);
     if (!id) throw new Error("Font family needs a usable file name");
+    // fontkit's variation instancer expects an sfnt directory, not WOFF2's
+    // compressed table directory. Decode variable faces for metric calculation
+    // while retaining the original WOFF2 bytes for hosting and feature inspection.
+    const metricFonts: Font[] = [];
+    for (const face of faces) {
+        const font = fontOf(face.bytes);
+        metricFonts.push(font.variationAxes.wght
+            ? fontOf(await (await import("wawoff2")).decompress(Buffer.from(face.bytes)))
+            : font);
+    }
     const target = paths(options);
     const folder = join(target.directory, id);
     let css = readThemeFile(target.file);
@@ -155,7 +165,7 @@ export async function addFont(input: string, options: FontOptions = {}): Promise
         if (!faces.some(face => String(face.weight) === weight && face.style === style)) retained.push(rule.toString());
     });
     const systems = (["Arial", "Courier New"] as SystemFallback[]).filter(name => Object.values(parseTheme(css)).some(value => value.includes(quote(fallbackFamily(family, name)))));
-    const fallbacks = faces.flatMap(face => systems.map(name => renderFontFallback(fontOf(face.bytes), family, name, face.weight, face.style, face.range)));
+    const fallbacks = faces.flatMap((face, index) => systems.map(name => renderFontFallback(metricFonts[index], family, name, face.weight, face.style, face.range)));
     const block = [marker(id), ...retained, ...faces.map(face => `@font-face {\n    font-family: ${quote(family)};\n    font-style: ${face.style};\n    font-weight: ${face.weight};\n    font-display: swap;\n    src: url(${quote(`${target.publicPath}/${id}/${face.weight}-${face.style}.woff2`)}) format("woff2");\n    unicode-range: ${face.range};\n}`), ...fallbacks, marker(id, true)].join("\n");
     css = replaceBlock(css, id, block);
     parse(css);

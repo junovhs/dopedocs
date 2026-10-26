@@ -305,3 +305,23 @@ Hiding a piece only affects presentation; its accessible content is hidden too.
 
 `--dd-card-shadow` overrides card shadows (default none, raised cards use a soft shadow).
 `--dd-border-width` sets card, disclosure and media frame widths (default 1px).
+
+### Supported features by font role
+
+The Studio's Advanced type section reads the first-choice font's local
+`@font-face` file for the selected role. It offers only optional features
+actually present in GSUB/GPOS and sliders for actual variable axes. Named
+stylistic sets use the font's labels when available. System fonts and unresolved
+host aliases are not guessed; install/select a local face to inspect it.
+A selected Google family's static weight files may have no variable axes even
+when the catalog also offers a variable edition. Upload that variable font to
+expose its axes. A family with several installed faces is inspected using its
+first matching local face; features may differ in other weights/subsets.
+
+`--dd-display-features`, `--dd-body-features`, `--dd-ui-features`,
+`--dd-mono-features` carry per-role font-feature-settings; e.g. `"smcp" 1,
+"ss01" 1`. Their `--dd-display-variations`, `--dd-body-variations`,
+`--dd-ui-variations`, `--dd-mono-variations` partners carry
+font-variation-settings, e.g. `"wght" 550, "wdth" 95`. Reading roles default to
+the generic `--dd-features`/`--dd-variations`; interface defaults to normal.
+Each toggle or axis can be reset independently without erasing other settings.

@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import { documentedThemeTokens, parseTheme, readThemeFile, writeThemeToken } from './theme.js';
 import { structuralClasses } from './structure.js';
+import { installedFontCapabilities } from './font-features.js';
 import { fontCatalog, previewFont, installStudioFont } from './studio-fonts.js';
 import { studioPalettes } from './studio-palettes.js';
 import { studioClient } from './studio-client.js';
@@ -25,7 +26,7 @@ function fontPickerHtml() {
 <button id="font-search-button">Search catalog</button><p id="font-message" role="status"></p><div id="font-results"></div>
 <label>Weights<input id="font-weights" value="400" placeholder="400,700"></label><label>Language subset<input id="font-subset" value="latin"></label>
 <div id="font-drop" tabindex="0"><label>Your own font — drop here or choose<input id="font-file" type="file" accept=".woff2,.otf,.ttf"></label></div>
-<label>Font licence text<textarea id="font-license" rows="4" placeholder="Paste the licence that permits hosting this font"></textarea></label><button id="font-upload">Install your font</button></details>`;
+<label>Font licence text<textarea id="font-license" rows="4" placeholder="Paste the licence that permits hosting this font"></textarea></label><button id="font-upload">Install your font</button></details><details id="advanced-type"><summary>Advanced type</summary><p id="feature-message">Choose an installed font role to inspect its supported features.</p><div id="font-features"></div><div id="font-axes"></div></details>`;
 }
 function studioHtml() {
     const controls = (items: Control[]) => items.map(([label,name,options])=>`<div class="control"><label>${label}<small>--dd-${name}</small>${options?`<select data-token="--dd-${name}"><option value="">Default</option>${options.split('|').map(value=>`<option>${value}</option>`).join('')}</select>`:`<input data-token="--dd-${name}" placeholder="Default" spellcheck="false">`}</label><button data-reset="--dd-${name}" aria-label="Reset ${label}">↺</button></div>`).join('');
@@ -57,6 +58,10 @@ export function serveStudio(server: DevServerLike, options: {file: string; build
                 return send(html.replace('</head>',`<link rel="stylesheet" href="${PREFIX}theme.css"></head>`),'text/html');
             }
             if (req.method==='GET' && path===PREFIX+'theme.css') return send(readThemeFile(file),'text/css');
+            if (req.method==='GET' && path===PREFIX+'font-features') {
+                const role=new URL(req.url!, 'http://localhost').searchParams.get('role')??'body';
+                return send(JSON.stringify(installedFontCapabilities(file,options.publicDir,role)));
+            }
             if (req.method==='GET' && path===PREFIX+'fonts') return send(JSON.stringify(await fontCatalog()));
             if (req.method==='GET' && path===PREFIX+'font-preview') {
                 const params=new URL(req.url!, 'http://localhost').searchParams;
