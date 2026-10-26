@@ -2,11 +2,13 @@
 import { resolve } from "node:path";
 import { documentedThemeTokens, normalizeThemeToken, parseTheme, readThemeFile, writeThemeToken } from "./theme.js";
 
-const usage = "Usage: dopedocs theme list|get <token>|set <token> <value>|unset <token> [--file docs-theme.css]";
+const usage = "Usage: dopedocs fonts add|list|remove (use README for font options); dopedocs theme list|get <token>|set <token> <value>|unset <token> [--file docs-theme.css]";
 try {
     const args = process.argv.slice(2);
     if (!args.length || args.includes("--help") || args.includes("-h")) {
         console.log(usage);
+    } else if (args[0] === "fonts") {
+        await (await import("./fonts.js")).fontsCommand(args.slice(1));
     } else {
         let file = "docs-theme.css";
         const index = args.indexOf("--file");

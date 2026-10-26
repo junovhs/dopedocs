@@ -1,6 +1,7 @@
 import { mkdtempSync, cpSync, symlinkSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { spawn } from 'node:child_process';
 import { spawnCommand } from '../scripts/run-command.mjs';
 
 export function buildPackage() {
@@ -14,6 +15,14 @@ export function buildPackage() {
     return {
         scratch,
         run: (args, cwd, env = {}) => spawnCommand(process.execPath, [join(scratch, 'dist/cli.js'), ...args], { cwd, env: { ...process.env, ...env }, encoding: 'utf8' }),
+        runAsync: (args, cwd) => new Promise((resolve, reject) => {
+            const child = spawn(process.execPath, [join(scratch, 'dist/cli.js'), ...args], { cwd, env: process.env });
+            let stdout = '', stderr = '';
+            child.stdout.on('data', chunk => { stdout += chunk; });
+            child.stderr.on('data', chunk => { stderr += chunk; });
+            child.on('error', reject);
+            child.on('close', status => resolve({ status, stdout, stderr }));
+        }),
         cleanup: () => rmSync(scratch, { recursive: true, force: true }),
     };
 }

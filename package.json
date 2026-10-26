@@ -67,6 +67,8 @@
         "check:release": "npm run build && node scripts/check-release.mjs"
     },
     "devDependencies": {
+        "@fontsource/fraunces": "^5.3.0",
+        "@types/fontkit": "^2.0.9",
         "@types/node": "^22.20.1",
         "photoswipe": "^5.4.4",
         "shiki": "^3.23.0",
@@ -130,6 +132,8 @@
         "dopedocs": "dist/cli.js"
     },
     "dependencies": {
-        "postcss": "^8.5.31"
+        "fontkit": "^2.0.4",
+        "postcss": "^8.5.31",
+        "wawoff2": "^2.0.1"
     }
 }

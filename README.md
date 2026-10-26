@@ -236,3 +236,35 @@ token names warn so forward-compatible host extensions remain possible;
 `list` shows set, documented tokens and `get` exits 1 for an unset value.
 For scripts, `dopedocs/theme` exports the same `parseTheme`, `updateTheme` and
 file helpers. There is no theme configuration object (DEC-05, DEC-12).
+
+### Install a font into your site
+
+```sh
+npx dopedocs fonts add 'Fraunces' --weights 400,600 --role display
+npx dopedocs fonts add ./MyFont.ttf --license ./OFL.txt --role body
+npx dopedocs fonts list
+npx dopedocs fonts remove 'Fraunces'
+```
+
+Google families come from Fontsource. The CLI downloads only the selected
+weights, style (`--italic`) and subset (`--subset latin` by default), resolves a
+package version once, and stores WOFF2 files and the licence under
+`public/fonts/dopedocs/<family>/`. Local OTF/TTF files are converted to WOFF2;
+WOFF2 files are copied. Local files need `--license` or an adjacent `OFL.txt`,
+`LICENSE`, `LICENSE.txt`, `LICENCE` or `LICENCE.txt`. Their embedded family name
+and default weight are used. For multiple static weights, add each local file;
+repeat installs retain the family's other faces.
+
+The commands write `@font-face` rules with `font-display: swap` and
+`unicode-range`, plus the selected `--dd-display`, `--dd-body`, `--dd-ui` or
+`--dd-mono` stack in `docs-theme.css`. Link that file **after** the engine
+stylesheet from both your app and static pages. Font URLs stay local; choosing
+a Google font needs network access only during installation (DEC-13).
+
+Use `--file` for another theme file, `--public-dir` for another public directory,
+and `--public-path` for the deployed URL prefix (default `/fonts/dopedocs`).
+Use the same paths when listing or removing a family. `--source` selects a
+Fontsource-compatible CDN mirror; the default is `https://cdn.jsdelivr.net/npm`.
+The CLI owns its marked font blocks and family asset directories; keep other
+hand-written rules outside those blocks. Removing a family retains other font
+stack entries. No font catalog or font files ship in the dopedocs package.

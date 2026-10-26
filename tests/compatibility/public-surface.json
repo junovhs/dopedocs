@@ -188,6 +188,7 @@
   "documentedTokens": [
     "--dd-accent",
     "--dd-bg",
+    "--dd-body",
     "--dd-code-comment",
     "--dd-code-function",
     "--dd-code-keyword",
@@ -196,6 +197,7 @@
     "--dd-code-string",
     "--dd-code-type",
     "--dd-column",
+    "--dd-display",
     "--dd-duration",
     "--dd-ease",
     "--dd-edge",
@@ -219,11 +221,13 @@
     "--dd-shadow-lift",
     "--dd-spring",
     "--dd-text",
-    "--dd-text-soft"
+    "--dd-text-soft",
+    "--dd-ui"
   ],
   "stylesheetTokens": [
     "--dd-accent",
     "--dd-bg",
+    "--dd-body",
     "--dd-border",
     "--dd-code-comment",
     "--dd-code-function",
@@ -233,6 +237,7 @@
     "--dd-code-string",
     "--dd-code-type",
     "--dd-column",
+    "--dd-display",
     "--dd-duration",
     "--dd-ease",
     "--dd-edge",
@@ -256,7 +261,8 @@
     "--dd-shadow-lift",
     "--dd-spring",
     "--dd-text",
-    "--dd-text-soft"
+    "--dd-text-soft",
+    "--dd-ui"
   ],
   "stylesheetClasses": [
     "dd-accent",
@@ -304,6 +310,7 @@
     "dd-contents",
     "dd-details",
     "dd-details-body",
+    "dd-display",
     "dd-duration",
     "dd-ease",
     "dd-edge",
@@ -402,6 +409,7 @@
     "dd-text",
     "dd-text-soft",
     "dd-title",
+    "dd-ui",
     "dd-visually-hidden",
     "dd-zoom-dialog"
   ],
@@ -489,6 +497,7 @@
     "dd-progress",
     "dd-quote",
     "dd-reading-context",
+    "dd-sans",
     "dd-search",
     "dd-search-index",
     "dd-search-input",

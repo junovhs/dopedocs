@@ -101,6 +101,9 @@ palette for dark mode, these are the two most likely to need attention.
 | Token | Role | Fallback |
 | --- | --- | --- |
 | `--dd-sans` | All prose and headings | `ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif` |
+| `--dd-display` | Titles when a font is explicitly installed | `var(--dd-sans)` |
+| `--dd-body` | Body font when explicitly installed | `var(--dd-sans)` |
+| `--dd-ui` | Navigation and bar when explicitly installed | Existing sans/mono role |
 | `--dd-mono` | Code, `kbd`, the bar | `ui-monospace, SFMono-Regular, Menlo, Consolas, monospace` |
 
 ### Shape

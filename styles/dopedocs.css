@@ -130,7 +130,7 @@
        the host page. Type and colour are established here or the panel renders
        in the browser's default serif while the static page renders correctly. */
     color: var(--dd-text);
-    font-family: var(--dd-sans);
+    font-family: var(--dd-body, var(--dd-sans));
     box-shadow: var(--dd-shadow-lift);
     opacity: 0;
     transform: translateY(16px) scale(0.985);
@@ -392,7 +392,7 @@
     padding: 56px 24px 110px;
     background: var(--dd-bg);
     color: var(--dd-text);
-    font-family: var(--dd-sans);
+    font-family: var(--dd-body, var(--dd-sans));
 }
 
 /* ==========================================================================
@@ -407,7 +407,7 @@
 .dd-title {
     margin: 0 0 12px;
     color: var(--dd-text);
-    font: 700 clamp(28px, 3.4vw, 38px)/1.16 var(--dd-sans);
+    font: 700 clamp(28px, 3.4vw, 38px)/1.16 var(--dd-display, var(--dd-sans));
     letter-spacing: -0.025em;
 }
 
@@ -433,7 +433,7 @@
     padding-bottom: 12px;
     border-bottom: 1px solid var(--dd-line);
     color: var(--dd-text);
-    font: 650 clamp(20px, 2.4vw, 24px)/1.3 var(--dd-sans);
+    font: 650 clamp(20px, 2.4vw, 24px)/1.3 var(--dd-display, var(--dd-sans));
     letter-spacing: -0.025em;
 }
 
@@ -1452,7 +1452,7 @@ a.dd-card:focus-visible,
     margin: 0;
     background: var(--dd-bg);
     color: var(--dd-text);
-    font-family: var(--dd-sans);
+    font-family: var(--dd-body, var(--dd-sans));
 }
 
 .dd-static .dd-bar {
@@ -1677,3 +1677,7 @@ a.dd-card:focus-visible,
 .dd-search-results { padding-inline-start: 16px; max-height: 35vh; overflow: auto; }
 .dd-search-results li { margin-block: 8px; }
 .dd-search-status:empty { display: none; }
+
+/* FONT-01: explicitly selected UI font; existing host defaults remain unchanged. */
+.dd-nav { font-family: var(--dd-ui, var(--dd-sans)); }
+.dd-bar { font-family: var(--dd-ui, var(--dd-mono)); }
