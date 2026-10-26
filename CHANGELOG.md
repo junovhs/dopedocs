@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 - 2026-10-26
+
+- Fix docs served at the site root (`basePath: "/"`): links, canonical URLs,
+  the sitemap and output paths no longer gain a double slash (`//id/`), which
+  browsers read as a different host. Other base paths are byte-identical.
+
 ## 0.6.0 - 2026-10-26
 
 Adds theming, typography and font tooling, and an experimental development
