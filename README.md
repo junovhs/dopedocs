@@ -215,3 +215,24 @@ stays MIT. From 2.0, the planned licence is source-available commercial software
 free for personal and open-source use and licensed per site for commercial use.
 The exact 2.0 text has not been chosen; `LICENSE`, `package.json` and this section
 will change together in that release.
+
+### Edit the host theme from a terminal
+
+Link `docs-theme.css` from your app and static pages, then edit the same file
+with the installed CLI:
+
+```sh
+npx dopedocs theme set accent '#ff6a2b'
+npx dopedocs theme get accent
+npx dopedocs theme list
+npx dopedocs theme unset accent
+```
+
+Use `--file public/docs-theme.css` to select another path. Short names and full
+`--dd-*` names both work. The commands use the `:root` containing
+`/* dopedocs theme */`, or the last top-level `:root` if none is marked. They
+create a managed block when needed and preserve unrelated CSS bytes. Unknown
+token names warn so forward-compatible host extensions remain possible;
+`list` shows set, documented tokens and `get` exits 1 for an unset value.
+For scripts, `dopedocs/theme` exports the same `parseTheme`, `updateTheme` and
+file helpers. There is no theme configuration object (DEC-05, DEC-12).

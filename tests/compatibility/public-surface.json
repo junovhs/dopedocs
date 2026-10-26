@@ -33,6 +33,10 @@
     "./highlight": {
       "types": "./dist/highlight.d.ts",
       "import": "./dist/highlight.js"
+    },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "import": "./dist/theme.js"
     }
   },
   "exportedNames": {
@@ -148,6 +152,14 @@
     ],
     "./highlight": [
       "prepareCode"
+    ],
+    "./theme": [
+      "documentedThemeTokens",
+      "normalizeThemeToken",
+      "parseTheme",
+      "readThemeFile",
+      "updateTheme",
+      "writeThemeToken"
     ]
   },
   "declarations": {
@@ -165,11 +177,13 @@
     "dist/shot-image.d.ts": "import type { DocImage } from \"./schema.js\";\nexport interface ShotRecord {\n    src: string;\n    width: number;\n    height: number;\n    sizes: {\n        width: number;\n        height: number;\n        src: string;\n    }[];\n    webp: {\n        width: number;\n        src: string;\n    }[];\n}\nexport type ShotManifest = Record<string, ShotRecord>;\nexport type ShotImageOptions = Omit<DocImage, \"src\" | \"width\" | \"height\" | \"srcset\" | \"sources\">;\nexport declare function shotImage(manifest: ShotManifest, name: string, options: ShotImageOptions): DocImage;\n",
     "dist/shots.d.ts": "export interface ShotPage {\n    click(selector: string, options?: Record<string, unknown>): Promise<void>;\n    fill(selector: string, value: string, options?: Record<string, unknown>): Promise<void>;\n    hover(selector: string, options?: Record<string, unknown>): Promise<void>;\n    press(selector: string, key: string, options?: Record<string, unknown>): Promise<void>;\n    waitForSelector(selector: string, options?: Record<string, unknown>): Promise<unknown>;\n    waitForTimeout(ms: number): Promise<void>;\n    evaluate<R, A = unknown>(fn: (arg: A) => R | Promise<R>, arg?: A): Promise<R>;\n    goto(url: string, options?: Record<string, unknown>): Promise<unknown>;\n    keyboard: {\n        press(key: string): Promise<void>;\n        type(text: string): Promise<void>;\n    };\n    mouse: {\n        move(x: number, y: number): Promise<void>;\n    };\n}\nexport type ShotFrame = \"viewport\" | \"page\" | string | string[];\nexport interface Shot {\n    name: string;\n    serves?: string;\n    viewport?: {\n        width: number;\n        height: number;\n    };\n    dpr?: number;\n    path?: string;\n    storage?: Record<string, unknown>;\n    before?: (page: ShotPage) => Promise<void>;\n    frame?: ShotFrame;\n    pad?: number;\n    css?: string;\n    widths?: number[];\n    webp?: boolean;\n}\nexport interface ShotsConfig {\n    url?: string;\n    env?: Record<string, string>;\n    out: string;\n    publicPath?: string;\n    time?: string;\n    timezone?: string;\n    locale?: string;\n    viewport?: {\n        width: number;\n        height: number;\n    };\n    storage?: Record<string, unknown>;\n    cache?: RegExp[];\n    cacheDir?: string;\n    fonts?: string[];\n    block?: (string | RegExp)[];\n    css?: string;\n    shots: Shot[];\n}\nexport declare function defineShots(config: ShotsConfig): ShotsConfig;\nexport interface CaptureOptions {\n    only?: string[];\n    out?: string;\n    log?: (line: string) => void;\n    cwd?: string;\n}\nexport interface CapturedFile {\n    shot: string;\n    path: string;\n    width?: number;\n    height?: number;\n    sha256: string;\n}\nexport declare function pngSize(bytes: Uint8Array): {\n    width: number;\n    height: number;\n};\nexport declare function captureShots(config: ShotsConfig, options?: CaptureOptions): Promise<CapturedFile[]>;\n",
     "dist/static.d.ts": "import { type DocSet, type Finding } from \"./schema.js\";\nexport interface RobotsPolicy {\n    search?: string[];\n    training?: string[];\n    allowSearch?: boolean;\n    allowTraining?: boolean;\n}\nexport type Indexing = \"index\" | \"noindex\";\nexport interface BuildStaticOptions {\n    search?: boolean;\n    basePath?: string;\n    entityType?: string;\n    articleType?: string;\n    indexType?: string;\n    siteType?: string;\n    robots?: RobotsPolicy;\n    indexing?: Indexing;\n    stylesheet?: string | string[];\n    now?: Date;\n    staleAfterDays?: number;\n    fullManualNote?: false | {\n        section?: string;\n        index?: string;\n    };\n}\nexport declare const DEFAULT_FULL_MANUAL_NOTE: {\n    section: string;\n    index: string;\n};\nexport declare class InvalidDocumentError extends Error {\n    readonly findings: Finding[];\n    constructor(findings: Finding[]);\n}\nexport declare const DEFAULT_SEARCH_BOTS: string[];\nexport declare const DEFAULT_TRAINING_BOTS: string[];\nexport declare function buildStatic(docs: DocSet, options?: BuildStaticOptions): Record<string, string>;\n",
+    "dist/theme.d.ts": "export declare function normalizeThemeToken(token: string): string;\nexport declare function documentedThemeTokens(): string[];\nexport declare function parseTheme(css: string): Record<string, string>;\nexport declare function updateTheme(css: string, token: string, value?: string): string;\nexport declare function readThemeFile(path: string): string;\nexport declare function writeThemeToken(path: string, token: string, value?: string): void;\n",
     "dist/vite.d.ts": "import { type DevServerLike, type DopedocsHostOptions } from \"./host.js\";\nexport { mergeCrawlerFile } from \"./host.js\";\ninterface ResolvedConfigLike {\n    build?: {\n        outDir?: string;\n    };\n    root?: string;\n    publicDir?: string | false;\n    command?: string;\n}\nexport type DopedocsPluginOptions = DopedocsHostOptions;\nexport declare function dopedocs(options: DopedocsPluginOptions): {\n    name: string;\n    configResolved(config: ResolvedConfigLike): void;\n    configureServer(server: DevServerLike): void;\n    closeBundle(): Promise<void>;\n};\nexport default dopedocs;\n",
     "dist/zoom.d.ts": "export interface ImageZoomOptions {\n    dimensions?: (link: HTMLAnchorElement, image: HTMLImageElement) => {\n        width: number;\n        height: number;\n    } | undefined;\n}\nexport interface ImageZoomHandle {\n    destroy(): void;\n}\nexport declare function mountImageZoom(target: HTMLElement, options?: ImageZoomOptions): ImageZoomHandle;\n"
   },
   "bins": {
-    "dopedocs-shots": "dist/shots-cli.js"
+    "dopedocs-shots": "dist/shots-cli.js",
+    "dopedocs": "dist/cli.js"
   },
   "documentedTokens": [
     "--dd-accent",
