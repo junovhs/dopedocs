@@ -5,7 +5,7 @@
  * section in the build output, and the same pages served in dev so a developer
  * sees what will deploy rather than something only the build produces.
  *
- * Per DEC-06 this must work for a consumer who has only the installed package —
+ * This must work for a consumer who has only the installed package —
  * nothing here reads the dopedocs source tree or resolves paths relative to this
  * repository.
  *
@@ -33,6 +33,9 @@ export type DopedocsPluginOptions = DopedocsHostOptions;
 /**
  * Publishes a documentation set as static pages at build, and serves the same
  * pages in dev.
+ *
+ * DEC-06: works from the installed package alone; nothing here reads the
+ * dopedocs source tree.
  */
 export function dopedocs(options: DopedocsPluginOptions) {
     const host = createHost(options);

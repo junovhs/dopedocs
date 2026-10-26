@@ -5,7 +5,7 @@
  * browser panel and in the static build — one renderer means the page a crawler
  * reads and the page a person reads cannot disagree about anything.
  *
- * Class names are prefixed `dd-` and are public API per DEC-05: a consumer
+ * Class names are prefixed `dd-` and are public API: a consumer
  * overrides any rule with ordinary CSS, so renaming one is a breaking change.
  */
 
@@ -27,6 +27,9 @@ function assertNever(value: never): never {
  * The switch is exhaustive over `DocBlock` and its `default` arm narrows to
  * `never`, so a new member of the union is a compile error here rather than a
  * block that silently renders as nothing.
+ *
+ * DEC-05: every class emitted is a stable `dd-` name and public API; renaming
+ * one is a breaking change.
  */
 export function renderBlock(
     block: DocBlock,

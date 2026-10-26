@@ -1,7 +1,7 @@
 /**
  * The facts registry.
  *
- * DEC-03: a claim a reader could act on — a price, a limit, a guarantee, an
+ * A claim a reader could act on — a price, a limit, a guarantee, an
  * availability window — is defined here once and referenced from prose and from
  * structured data by key. Typing the document shape does not prevent a site
  * disagreeing with itself, because two different string literals in two
@@ -24,6 +24,9 @@ export type FactMap = Record<string, FactDef>;
 /**
  * Declares a set of facts, preserving the literal key names so a reference to a
  * key that does not exist is a type error rather than a runtime surprise.
+ *
+ * DEC-03: a claim a reader could act on is defined here once and referenced by
+ * key from prose and structured data.
  */
 export function defineFacts<const T extends FactMap>(facts: T): T {
     return facts;

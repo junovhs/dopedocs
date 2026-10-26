@@ -14,7 +14,7 @@
  * export default defineConfig({ integrations: [dopedocs({ docs, stylesheet: true })] });
  * ```
  *
- * Per DEC-06 the package needs no `astro` dependency: the hooks are declared
+ * The package needs no `astro` dependency: the hooks are declared
  * structurally, and the object returned is a valid `AstroIntegration`.
  */
 
@@ -33,6 +33,8 @@ interface AstroConfigLike {
 /**
  * Publishes a documentation set into Astro's build output, merging robots.txt
  * and sitemap.xml with the site's own, and serves the same pages in dev.
+ *
+ * DEC-06: needs no `astro` dependency; Astro's hooks are declared structurally.
  */
 export function dopedocs(options: DopedocsAstroOptions) {
     const host = createHost(options);

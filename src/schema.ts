@@ -1,11 +1,11 @@
 /**
  * The authoring surface.
  *
- * DEC-01: documentation is a TypeScript value, not a markup dialect. dopedocs
+ * Documentation is a TypeScript value, not a markup dialect. dopedocs
  * ships no parser, so `tsc` is the only front end and a malformed document
  * fails at the author's keyboard rather than in a reader's browser.
  *
- * DEC-02: `question` and `answer` are required on every section, because the
+ * `question` and `answer` are required on every section, because the
  * annotation that makes documentation answerable cannot be the part that is
  * easiest to skip.
  */
@@ -132,6 +132,9 @@ export type DocBlock =
 /**
  * One page: a nav entry, a body, and the annotation that lets a machine quote
  * it. Pages are the only things with content and the only things with URLs.
+ *
+ * DEC-02: `question` and `answer` are required, so an unannotated page does
+ * not compile.
  */
 export interface DocPage {
     /** URL slug and anchor. Public per DEC-04 — renaming one breaks links. */
@@ -304,7 +307,11 @@ export interface DocSet<F extends FactMap = FactMap> {
     sections: DocSection[];
 }
 
-/** Declares a documentation set, preserving literal fact keys for reference checking. */
+/**
+ * Declares a documentation set, preserving literal fact keys for reference checking.
+ *
+ * DEC-01: the document is a TypeScript value; dopedocs ships no parser.
+ */
 export function defineDocs<const F extends FactMap>(docs: DocSet<F>): DocSet<F> {
     return docs;
 }

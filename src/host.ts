@@ -6,7 +6,7 @@
  * emitting dopedocs' own stylesheet, serving it in dev and writing it beside
  * the site's own files are the same work, so they live here once.
  *
- * Per DEC-06 nothing here reads the dopedocs source tree: the stylesheet is
+ * Nothing here reads the dopedocs source tree: the stylesheet is
  * resolved relative to this module, which is inside node_modules for a real
  * consumer.
  */
@@ -156,7 +156,12 @@ export function mergeCrawlerFile(name: string, existing: string, generated: stri
     return `${head}${entries}\n${deduped.slice(close)}`;
 }
 
-/** The bundled stylesheet's location inside the installed package. */
+/**
+ * The bundled stylesheet's location inside the installed package.
+ *
+ * DEC-06: resolved relative to this module, which sits in node_modules for a
+ * real consumer, never relative to the dopedocs source tree.
+ */
 const OWN_SHEET_URL = new URL("../styles/dopedocs.css", import.meta.url);
 
 /**
