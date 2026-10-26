@@ -181,7 +181,7 @@ export function createHost(options: DopedocsHostOptions) {
     let publicRoot = resolve(projectRoot, "public");
     const basePath = (options.basePath ?? docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the host emits it. */
-    const ownSheetPath = `${basePath}/dopedocs.css`;
+    const ownSheetPath = basePath ? `${basePath}/dopedocs.css` : "dopedocs.css";
     const sheets = stylesheet === undefined ? [] : [stylesheet].flat();
     /** True when dopedocs must emit its own sheet as well as link it. */
     const emitsOwnSheet = sheets.includes(true);

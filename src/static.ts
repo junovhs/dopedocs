@@ -322,9 +322,11 @@ export function buildStatic(
     } = options;
 
     const basePath = trimSlashes(options.basePath ?? docs.basePath ?? "docs");
+    /** The base as a path prefix: empty at the site root, so no URL gains a double slash. */
+    const prefix = basePath ? `${basePath}/` : "";
     const origin = docs.entity.url.replace(/\/+$/, "");
     const entityId = `${origin}/#entity`;
-    const indexUrl = `${origin}/${basePath}/`;
+    const indexUrl = `${origin}/${prefix}`;
     /**
      * Where the site sits on its host, from the entity's own URL — `/` for a
      * site at the domain root, `/product/` for one under a subpath.
@@ -344,11 +346,11 @@ export function buildStatic(
             return "/";
         }
     })();
-    const indexPath = `${homePath}${basePath}/`;
+    const indexPath = `${homePath}${prefix}`;
     /** A section's in-site path, for links a reader follows. */
-    const pathFor = (id: string) => `${homePath}${basePath}/${id}/`;
+    const pathFor = (id: string) => `${homePath}${prefix}${id}/`;
     /** The one canonical URL a section owns (DEC-04). */
-    const urlFor = (id: string) => `${origin}/${basePath}/${id}/`;
+    const urlFor = (id: string) => `${origin}/${prefix}${id}/`;
     const lastmod = now.toISOString().slice(0, 10);
     const facts = docs.facts;
 
@@ -404,7 +406,7 @@ export function buildStatic(
         `</ul></nav>`;
 
     const out: Record<string, string> = {};
-    if (options.search === true) out[`${basePath}/search.js`] = searchScript();
+    if (options.search === true) out[`${prefix}search.js`] = searchScript();
     const entityJson = {
         ...entityNode(docs.entity, entityType, entityId),
         // A version is only meaningful on a software entity; on an Organization
@@ -447,7 +449,7 @@ export function buildStatic(
 
     /* --- index --------------------------------------------------------- */
 
-    out[`${basePath}/index.html`] = page({
+    out[`${prefix}index.html`] = page({
         title: docs.title,
         description: plain(docs.lead, facts, "the document lead"),
         canonical: indexUrl,
@@ -510,7 +512,7 @@ export function buildStatic(
             { name: section.title, item: url },
         ];
 
-        out[`${basePath}/${section.id}/index.html`] = page({
+        out[`${prefix}${section.id}/index.html`] = page({
             title: `${section.title} - ${docs.entity.name}`,
             description: entry.answer,
             canonical: url,

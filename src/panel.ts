@@ -117,7 +117,9 @@ export function mountPanel(
         onToggle,
     } = options;
 
-    const basePath = `/${trimSlashes(options.basePath ?? docs.basePath ?? "docs")}`;
+    const trimmedBase = trimSlashes(options.basePath ?? docs.basePath ?? "docs");
+    /** Empty at the site root, so `${basePath}/${id}/` stays single-slashed. */
+    const basePath = trimmedBase ? `/${trimmedBase}` : "";
     const ordered = flatten(docs.sections);
     const knownIds = new Set(ordered.map((s) => s.id));
 
@@ -213,7 +215,7 @@ export function mountPanel(
     function sectionFromPath(pathname: string): string | undefined | null {
         const base = trimSlashes(basePath);
         const parts = trimSlashes(pathname).split("/");
-        const baseParts = base.split("/");
+        const baseParts = base ? base.split("/") : [];
         if (baseParts.some((p, i) => parts[i] !== p)) return undefined;
         const id = parts[baseParts.length];
         return id && knownIds.has(id) ? id : null;

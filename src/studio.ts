@@ -53,7 +53,7 @@ export function serveStudio(server: DevServerLike, options: {file: string; build
             if (req.method==='GET' && path===PREFIX+'studio') return send(studioHtml(),'text/html');
             if (req.method==='GET' && path===PREFIX+'preview') {
                 const tree=options.build();
-                const html=tree[options.basePath.replace(/^\/+|\/+$/g,'')+'/index.html'];
+                const base=options.basePath.replace(/^\/+|\/+$/g,''); const html=tree[base?`${base}/index.html`:'index.html'];
                 if (!html) throw new Error('No generated manual to preview');
                 return send(html.replace('</head>',`<link rel="stylesheet" href="${PREFIX}theme.css"></head>`),'text/html');
             }

@@ -91,6 +91,22 @@ describe("the written tree", () => {
         expect(Object.keys(custom)).toContain("help/what-it-is/index.html");
         expect(custom["help/index.html"]).toContain("https://noceremony.app/help/");
     });
+
+    it("serves the docs at the site root without double slashes", () => {
+        for (const basePath of ["/", ""]) {
+            const root = buildStatic(docs, { now, basePath, search: true });
+            expect(Object.keys(root)).toContain("index.html");
+            expect(Object.keys(root)).toContain("what-it-is/index.html");
+            expect(Object.keys(root)).toContain("search.js");
+            expect(Object.keys(root).some((path) => path.startsWith("/"))).toBe(false);
+            const page = root["what-it-is/index.html"]!;
+            expect(page).toContain('href="/what-it-is/"');
+            expect(page).toContain('<link rel="canonical" href="https://noceremony.app/what-it-is/">');
+            for (const [path, body] of Object.entries(root)) {
+                expect(body, path).not.toMatch(/(?:href|src)="\/\/|https:\/\/noceremony\.app\/\//);
+            }
+        }
+    });
 });
 
 describe("complete manual navigation", () => {
