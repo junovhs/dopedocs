@@ -188,3 +188,35 @@ preparation adds semantic classes without inline colours. Override any of:
 Classes: `dd-code-block`, `dd-code-language`, `dd-code`, and
 `dd-code-token--keyword` / `--string` / `--number` / `--comment` / `--function` /
 `--type` / `--punctuation`. The host's dark palette controls these as usual.
+
+### Basic typography
+
+These tokens are optional. Unset tokens retain the original contextual sizes
+and weights. Set them on `:root` or the docs container; font roles fall back to
+`--dd-sans` (and `--dd-ui` remains supported for interface fonts).
+
+| Token | Role | Unset behavior |
+| --- | --- | --- |
+| `--dd-display` | Headings font | `--dd-sans` |
+| `--dd-body` | Reading font | `--dd-sans` |
+| `--dd-caption` | Caption font | body font |
+| `--dd-text-size` | Paragraph, answer and list size | 15.5px |
+| `--dd-scale-ratio` | Heading scale multiplier relative to 1.25 | 1.25 preserves existing fluid sizes |
+| `--dd-h1-size` | Title override | clamp(28px, 3.4vw, 38px), 27px on narrow screens |
+| `--dd-h2-size` | Section heading override | clamp(20px, 2.4vw, 24px) |
+| `--dd-h3-size` | Subheading override | clamp(16px, 2vw, 18px) |
+| `--dd-h4-size` | Fourth-level heading override | 1rem |
+| `--dd-leading` | Body line height | 1.75 |
+| `--dd-heading-leading` | Heading line height | title 1.16, section 1.3 |
+| `--dd-nav-leading` | Navigation line height | link 1.4, group 1.5 |
+| `--dd-display-track` | Heading letter spacing | -0.025em |
+| `--dd-body-track` | Body letter spacing | normal |
+| `--dd-caps-track` | Label letter spacing | existing contextual spacing |
+| `--dd-heading-weight` | Heading weight | title 700, section 650 |
+| `--dd-nav-size` | Sidebar link size | 13px |
+| `--dd-toc-size` | Contents link size | 14px |
+| `--dd-meta-size` | Reading context size | 12px |
+| `--dd-code-size` | Code size | inline 12.5px, block 13px |
+
+Headings balance their lines and paragraphs use pretty wrapping where supported.
+Use rem or clamp() values to follow the reader's preferred font size.
