@@ -1,6 +1,33 @@
 # Changelog
 
-## 0.5.1 - Unreleased
+## 0.6.0 - 2026-10-26
+
+Adds theming, typography and font tooling, and an experimental development
+Studio. Every change is additive: existing content, themes, URLs and imports
+keep working unchanged.
+
+- **Experimental Studio:** opt in with `studio: true` in the Vite or Astro
+  integration and open `/__dopedocs/studio` in development. Style, Layout,
+  Type, Pieces and Export tabs edit a live preview of your real manual and save
+  to one hand-editable `--dd-*` theme file. Nothing is emitted in production.
+  Its controls and panel layout may still change.
+- `dopedocs theme` CLI and `dopedocs/theme` module edit theme tokens and leave
+  every unrelated byte untouched; `themeFile` is read at build and dev time.
+- Structural layout keywords for the sidebar, outline, header, current marker
+  and cards, with stable classes and responsive CSS.
+- Typography tokens: font roles, heading scale, leading, tracking, weights,
+  OpenType features and variations, hyphenation, drop caps, heading counters and
+  tabular tables. Studio toggles only the features an installed font supports.
+- `dopedocs fonts add/list/remove`: self-hosts Fontsource or local fonts with
+  their licence and generates metric-matched fallbacks to reduce layout shift.
+  Studio adds catalog search, preview and upload. Readers never fetch fonts from
+  a third party.
+- Optional typed API reference metadata in `defineDocs`, with validation and
+  generated cURL, `fetch` and Python samples (`api-samples.json`).
+- Compatibility test suite covering exports, types, tokens, classes and
+  byte-exact static output, so future releases can prove they are additive.
+
+## 0.5.1 - 2026-10-19
 
 - Remove the duplicate inline table of contents on the complete-manual page;
   the sidebar remains the sole contents navigation.

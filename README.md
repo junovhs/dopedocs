@@ -309,6 +309,9 @@ Builds generate these strings without executing requests.
 
 ### Development Studio
 
+> **Experimental.** The Studio's controls and panel layout may change between
+> minor releases. The theme file it writes is plain `--dd-*` CSS and stays valid.
+
 Enable `studio: true` in the existing Vite or Astro dopedocs integration and
 set `themeFile: 'public/docs-theme.css'` (or your own host-owned CSS path).
 Keep `stylesheet: [true, '/docs-theme.css']` so the same file styles production.
