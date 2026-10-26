@@ -1694,3 +1694,62 @@ h4.dd-section-title { font-size: var(--dd-h4-size, 1rem); }
 .dd-figcaption { font-family: var(--dd-caption, var(--dd-body, var(--dd-sans))); }
 .dd-section code { font-size: var(--dd-code-size, 12.5px); }
 .dd-code { font-size: var(--dd-code-size, 13px); }
+
+/* Advanced type: optional native CSS features, shared by both surfaces. */
+.dd-page, .dd-main {
+    font-variant-caps: var(--dd-small-caps, normal);
+    font-variant-numeric: var(--dd-number-style, normal);
+    font-variant-ligatures: var(--dd-ligatures, normal);
+    font-feature-settings: var(--dd-features, normal);
+    font-variation-settings: var(--dd-variations, normal);
+    font-optical-sizing: var(--dd-optical-sizing, auto);
+    font-synthesis: var(--dd-font-synthesis, weight style small-caps);
+    font-kerning: var(--dd-kerning, auto);
+    word-spacing: var(--dd-word-spacing, normal);
+    hanging-punctuation: var(--dd-hanging-punctuation, none);
+    counter-reset: dd-h2;
+}
+.dd-p {
+    hyphens: var(--dd-hyphens, manual);
+    hyphenate-limit-chars: var(--dd-hyphen-limit, auto);
+    text-align: var(--dd-text-align, start);
+    text-justify: var(--dd-text-justify, auto);
+    margin-block-end: var(--dd-paragraph-gap, 16px);
+    widows: var(--dd-widows, 2);
+    orphans: var(--dd-orphans, 2);
+}
+.dd-p:last-child { margin-block-end: 0; }
+.dd-p + .dd-p { text-indent: var(--dd-paragraph-indent, 0); }
+.dd-p::first-letter {
+    initial-letter: var(--dd-drop-cap, normal);
+    font-size: var(--dd-drop-cap-size, inherit);
+}
+.dd-link {
+    text-decoration-line: var(--dd-link-decoration, underline);
+    text-decoration-thickness: var(--dd-link-thickness, auto);
+    text-underline-offset: var(--dd-link-offset, 3px);
+    text-decoration-color: var(--dd-link-underline-color, var(--dd-accent));
+    text-decoration-style: var(--dd-link-style, solid);
+    text-decoration-skip-ink: var(--dd-link-skip-ink, auto);
+}
+.dd-link:hover {
+    text-decoration-line: var(--dd-link-hover-decoration, var(--dd-link-decoration, underline));
+}
+.dd-list { padding-inline-start: var(--dd-list-indent, 19px); }
+.dd-contents .dd-list { padding-inline-start: var(--dd-list-indent, 18px); }
+ul.dd-list { list-style-type: var(--dd-bullet-style, disc); }
+ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
+.dd-list li { margin-block-end: var(--dd-list-item-gap, 8px); }
+.dd-section { counter-reset: dd-h3; }
+.dd-section > h2.dd-section-title { counter-increment: dd-h2; }
+.dd-section > h2.dd-section-title::before { content: var(--dd-heading-number, none); }
+.dd-section > h3.dd-section-title { counter-increment: dd-h3; }
+.dd-section > h3.dd-section-title::before { content: var(--dd-subheading-number, none); }
+.dd-section code, .dd-code {
+    font-variant-ligatures: var(--dd-code-ligatures, normal);
+    font-size: var(--dd-code-size, calc(var(--dd-text-size, 15.5px) * var(--dd-code-ratio, 0.8064516129)));
+    tab-size: var(--dd-tab-size, 4);
+}
+.dd-code { font-size: var(--dd-code-size, calc(var(--dd-text-size, 15.5px) * var(--dd-code-ratio, 0.8387096774))); }
+.dd-section .dd-code > code { font-size: inherit; }
+.dd-table { font-variant-numeric: var(--dd-table-numbers, tabular-nums); }

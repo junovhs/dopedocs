@@ -220,3 +220,55 @@ and weights. Set them on `:root` or the docs container; font roles fall back to
 
 Headings balance their lines and paragraphs use pretty wrapping where supported.
 Use rem or clamp() values to follow the reader's preferred font size.
+
+### Advanced typography
+
+Native OpenType options take effect only when the selected font supports them.
+These settings apply to reading content, leaving navigation controls readable.
+Unsupported browser CSS is progressively ignored. Set a correct HTML `lang`
+on the host document for language-dependent hyphenation; `--dd-hyphens: auto`
+is recommended with justified text (dictionary availability varies by browser).
+
+| Token | CSS value / purpose | Default |
+| --- | --- | --- |
+| `--dd-small-caps` | font-variant-caps, e.g. small-caps | normal |
+| `--dd-number-style` | font-variant-numeric, e.g. oldstyle-nums proportional-nums slashed-zero | normal |
+| `--dd-ligatures` | font-variant-ligatures, e.g. common-ligatures discretionary-ligatures | normal |
+| `--dd-features` | font-feature-settings, e.g. `"ss01" 1, "case" 1` | normal |
+| `--dd-variations` | font-variation-settings, e.g. `"wght" 500` | normal |
+| `--dd-optical-sizing` | auto or none | auto |
+| `--dd-font-synthesis` | none to forbid synthesized styles | weight style small-caps |
+| `--dd-kerning` | auto, normal or none | auto |
+| `--dd-word-spacing` | word spacing length | normal |
+| `--dd-hyphens` | none, manual or auto | manual |
+| `--dd-hyphen-limit` | hyphenate-limit-chars, e.g. 6 3 3 | auto |
+| `--dd-text-align` | start or justify | start |
+| `--dd-text-justify` | auto or inter-word | auto |
+| `--dd-hanging-punctuation` | none, first, last, allow-end | none |
+| `--dd-paragraph-gap` | Paragraph end spacing; use 0 for book style | 16px |
+| `--dd-paragraph-indent` | First line of adjacent paragraphs | 0 |
+| `--dd-widows` | Minimum lines at top of printed page | 2 |
+| `--dd-orphans` | Minimum lines at bottom of printed page | 2 |
+| `--dd-link-decoration` | underline or none | underline |
+| `--dd-link-hover-decoration` | Set underline with base decoration none for hover-only | base decoration |
+| `--dd-link-thickness` | Underline thickness | auto |
+| `--dd-link-offset` | Underline offset | 3px |
+| `--dd-link-underline-color` | Underline color | accent |
+| `--dd-link-style` | solid, dotted, dashed, wavy | solid |
+| `--dd-link-skip-ink` | auto or none | auto |
+| `--dd-bullet-style` | Unordered marker, e.g. square | disc |
+| `--dd-list-number-style` | Ordered marker, e.g. lower-roman | decimal |
+| `--dd-list-indent` | List indent | 19px |
+| `--dd-list-item-gap` | List item spacing | 8px |
+| `--dd-drop-cap` | initial-letter line count; browser support varies | normal |
+| `--dd-drop-cap-size` | First-letter fallback size | inherit |
+| `--dd-heading-number` | Set `counter(dd-h2) ". "` for numbered sections | none |
+| `--dd-subheading-number` | Set `counter(dd-h2) "." counter(dd-h3) " "` | none |
+| `--dd-code-ligatures` | Code ligatures, e.g. none | normal |
+| `--dd-code-ratio` | Code size relative to body | inline 0.80645, block 0.83871 |
+| `--dd-tab-size` | Code tab width | 4 |
+| `--dd-table-numbers` | Table number style | tabular-nums |
+
+For book-style paragraphs set gap to 0 and indent to 1.5em. Heading numbers
+use native counters and require no script. Drop caps are opt-in on prose
+paragraphs. Tables use tabular figures by default; set normal to opt out.
