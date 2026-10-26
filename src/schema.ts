@@ -10,6 +10,8 @@
  * easiest to skip.
  */
 
+import { validateApi } from "./api.js";
+import type { ApiMethod } from "./api.js";
 import { plainText } from "./inline.js";
 import type { FactMap } from "./facts.js";
 import { referencedFacts } from "./facts.js";
@@ -292,6 +294,43 @@ export interface DocIdentity {
     mark?: string;
 }
 
+/* ── Optional API reference (DEC-01: typed author data, never a markup parser) ── */
+
+/** A typed request parameter. Examples are JSON values; absent optional examples are omitted from samples. */
+export interface ApiParameter {
+    name: string;
+    type: "string" | "number" | "integer" | "boolean" | "object" | "array";
+    required: boolean;
+    location: "path" | "query" | "header" | "body";
+    description: string;
+    example?: JsonValue;
+}
+/** A documented example response; its body is already JSON data. */
+export interface ApiResponse { status: number; description?: string; body: JsonValue; }
+/** An endpoint links to a real guide page without replacing its required question/answer (DEC-02). */
+export interface ApiEndpoint {
+    id: string;
+    method: ApiMethod;
+    path: string;
+    title: string;
+    description: string;
+    parameters?: ApiParameter[];
+    exampleResponse: ApiResponse;
+    /** A DocPage id, not a group id or external URL. */
+    guide?: string;
+}
+/** A named group of endpoints; ids are unique across API groups and endpoints. */
+export interface ApiResourceGroup { id: string; title: string; description?: string; endpoints: ApiEndpoint[]; }
+/** One row in the shared API error table. */
+export interface ApiError { status: number; code?: string; description: string; }
+/** Optional reference data; existing documentation needs no API section or consumer migration. */
+export interface DocApi {
+    baseUrl: string;
+    authentication?: string;
+    groups: ApiResourceGroup[];
+    errors?: ApiError[];
+}
+
 /* ── The document ────────────────────────────────────────────────────────── */
 
 /** A whole documentation set: who publishes it, what it claims, what it says. */
@@ -305,6 +344,8 @@ export interface DocSet<F extends FactMap = FactMap> {
     lead: string;
     facts: F;
     sections: DocSection[];
+    /** Optional API metadata and build-time request samples; guide annotation stays unchanged. */
+    api?: DocApi;
 }
 
 /**
@@ -339,7 +380,14 @@ export type FindingCode =
     | "invalid-image-dimensions"
     | "reserved-schema-property"
     | "unknown-section-link"
-    | "unsupported-link";
+    | "unsupported-link"
+    | "duplicate-api-id"
+    | "invalid-api-id"
+    | "unknown-api-method"
+    | "unknown-api-guide"
+    | "invalid-api-parameter"
+    | "invalid-api-url"
+    | "invalid-api-response";
 
 /**
  * One problem found in a document. Findings are returned, never thrown: the
@@ -352,6 +400,7 @@ export interface Finding {
     message: string;
     sectionId?: string;
     factKey?: string;
+    endpointId?: string;
 }
 
 /** Tuning for a `validate` run; every field has a working default. */
@@ -685,6 +734,7 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         }
     }
 
+    if (docs.api) findings.push(...validateApi(docs.api, pageIds));
     return findings;
 }
 

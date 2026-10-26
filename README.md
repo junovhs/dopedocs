@@ -277,3 +277,32 @@ This reduces shifts during font loading, though different glyph widths can
 still change wrapping. If the named system font is unavailable, the rest of
 your existing stack remains available. Removing a font removes its generated
 fallbacks too. Unchanged sites get no new faces until they run `fonts add`.
+
+### Typed API reference data
+
+Add an optional `api` field to `defineDocs`. It contains `baseUrl`, optional
+`authentication` text, resource `groups` with `endpoints`, and an optional
+`errors` table. Each endpoint has an id, method, path, title, description,
+parameters and `exampleResponse: { status, body }`; `guide` links to an existing
+page id. See the complete [API example](./examples/api-reference.ts).
+
+Supported methods are `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE` and `OPTIONS`.
+Parameters have a name, type (`string`, `number`, `integer`, `boolean`, `object`
+or `array`), required flag, location (`path`, `query`, `header` or `body`),
+description and optional JSON `example`. Path parameters use `{name}` in the
+path and must be required. Body parameters form a JSON object. Optional
+parameters without examples are omitted; required parameters without examples
+get deterministic illustrative values. Object/array query values use JSON.
+
+`validate(docs)` reports duplicate API ids, unknown methods, invalid request
+metadata and broken guide links. `buildStatic(docs)` rejects fatal findings and
+emits `api-samples.json` only when API metadata exists. API ids are unique
+across resource groups and endpoints; guide ids remain in the page namespace.
+Existing pages keep their required question and answer (DEC-02).
+
+`generateApiSamples(docs.api)` produces the same endpoint-id map from validated
+API data: `{ curl, javascript, python }`. The samples encode URL parameters and
+quote supplied examples as literal data. JavaScript uses `fetch`, Python uses
+its standard library, and cURL samples use POSIX shell quoting. Authentication
+text is documentation; add a header parameter to include an example token.
+Builds generate these strings without executing requests.

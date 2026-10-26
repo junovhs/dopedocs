@@ -1,3 +1,4 @@
+import { generateApiSamples } from "./api.js";
 import { createSearchIndex, renderSearch, searchScript } from "./search.js";
 /**
  * The static build: what search engines and answer engines actually read.
@@ -647,5 +648,6 @@ export function buildStatic(
             2,
         ) + "\n";
 
+    if (docs.api) out["api-samples.json"] = JSON.stringify(generateApiSamples(docs.api), null, 2) + "\n";
     return out;
 }
