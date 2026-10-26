@@ -294,3 +294,14 @@ a rebuild/reload. These values are keywords, not CSS expressions or aliases.
 The outline refers to the generated contents on the whole-manual page.
 On small screens side outlines return to normal flow and navigation stays above
 content. Default pages retain the original left rail and inline contents.
+
+### Optional pieces and texture
+
+`--dd-texture` is a CSS background-image (default none).
+`--dd-show-nav`, `--dd-show-contents`, `--dd-show-search`,
+`--dd-show-progress`, `--dd-show-answer` accept `none` to hide a piece;
+reset to retain its usual display. `--dd-show-pager` defaults to grid.
+Hiding a piece only affects presentation; its accessible content is hidden too.
+
+`--dd-card-shadow` overrides card shadows (default none, raised cards use a soft shadow).
+`--dd-border-width` sets card, disclosure and media frame widths (default 1px).

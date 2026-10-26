@@ -306,3 +306,15 @@ quote supplied examples as literal data. JavaScript uses `fetch`, Python uses
 its standard library, and cURL samples use POSIX shell quoting. Authentication
 text is documentation; add a header parameter to include an example token.
 Builds generate these strings without executing requests.
+
+### Development Studio
+
+Enable `studio: true` in the existing Vite or Astro dopedocs integration and
+set `themeFile: 'public/docs-theme.css'` (or your own host-owned CSS path).
+Keep `stylesheet: [true, '/docs-theme.css']` so the same file styles production.
+Start the host's dev server, then open `/__dopedocs/studio` on localhost.
+The Remix tabs edit Style, Layout, Type and Pieces beside your real generated
+manual. Changes save automatically to the theme file; Export shows its CSS.
+Reload file reads hand edits. Reset removes only that token's declaration.
+The editor only runs in development and no Studio routes or scripts are emitted
+by a production build. Do not enable it on a remotely accessible dev server.

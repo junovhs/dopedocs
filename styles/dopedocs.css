@@ -1773,7 +1773,22 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-current-line .dd-nav-link.is-active { background: transparent; border-radius: 0; }
 .dd-current-bold .dd-nav-link.is-active { background: transparent; border-color: transparent; font-weight: 800; }
 .dd-current-solid .dd-nav-link.is-active { border-color: transparent; background: var(--dd-accent); color: var(--dd-on-accent); }
-.dd-card-raised .dd-card { box-shadow: 0 4px 16px color-mix(in srgb, var(--dd-ink) 12%, transparent); }
+.dd-card-raised .dd-card { box-shadow: var(--dd-card-shadow, 0 4px 16px color-mix(in srgb, var(--dd-ink) 12%, transparent)); }
 .dd-card-outline .dd-card { background: transparent; }
 .dd-card-flat .dd-card { border-color: transparent; box-shadow: none; }
 .dd-card-tint .dd-card { background: color-mix(in srgb, var(--dd-accent) 8%, var(--dd-panel)); }
+
+/* Optional Studio controls are ordinary theme tokens in production. */
+.dd-static, .dd-shell { background-image: var(--dd-texture, none); }
+@media screen {
+.dd-nav { display: var(--dd-show-nav, block); }
+.dd-contents { display: var(--dd-show-contents, block); }
+.dd-outline-off .dd-contents { display: none; }
+.dd-search { display: var(--dd-show-search, block); }
+.dd-pager { display: var(--dd-show-pager, grid); }
+.dd-progress { display: var(--dd-show-progress, inline-block); }
+.dd-answer { display: var(--dd-show-answer, block); }
+}
+
+.dd-card { box-shadow: var(--dd-card-shadow, none); }
+.dd-card, .dd-details, .dd-media { border-width: var(--dd-border-width, 1px); }

@@ -16,6 +16,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { serveStudio } from "./studio.js";
 import { parseTheme, readThemeFile } from "./theme.js";
 import { structuralClasses } from "./structure.js";
 import type { DocSet } from "./schema.js";
@@ -27,6 +28,8 @@ export interface DopedocsHostOptions extends Omit<BuildStaticOptions, "styleshee
     docs: DocSet;
     /** Host-owned theme CSS path, relative to the project root. */
     themeFile?: string;
+    /** Development-only theme editor at /__dopedocs/studio. Never emitted in production. */
+    studio?: boolean;
     /**
      * Styling for the static pages.
      *
@@ -173,7 +176,7 @@ const OWN_SHEET_URL = new URL("../styles/dopedocs.css", import.meta.url);
  * dev, and write it into an output folder.
  */
 export function createHost(options: DopedocsHostOptions) {
-    const { docs, stylesheet, themeFile, ...rest } = options;
+    const { docs, stylesheet, themeFile, studio, ...rest } = options;
     let projectRoot = process.cwd();
     const basePath = (options.basePath ?? docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the host emits it. */
@@ -221,6 +224,7 @@ export function createHost(options: DopedocsHostOptions) {
      * the server.
      */
     const serve = (server: DevServerLike) => {
+        if (studio) serveStudio(server, {file: resolve(projectRoot, themeFile ?? "docs-theme.css"), build, basePath});
         server.middlewares.use((req, res, next) => {
             const path = (req.url ?? "").split("?")[0] ?? "";
             let tree: Record<string, string>;

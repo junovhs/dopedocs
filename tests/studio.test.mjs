@@ -1,0 +1,30 @@
+import {beforeAll,afterAll,test,expect} from 'vitest';
+import {createServer} from 'node:http';
+import {writeFileSync,readFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';import {join} from 'node:path';import {pathToFileURL} from 'node:url';
+import {buildPackage} from './built-package.mjs';
+let pkg,root,server,url,host;
+beforeAll(async()=>{
+    pkg=buildPackage(); root=mkdtempSync(join(tmpdir(),'dd-studio-'));
+    writeFileSync(join(root,'theme.css'),'/* keep me */\n:root { --dd-accent: #123456; }\n.custom {color: red}');
+    const {createHost}=await import(pathToFileURL(join(pkg.scratch,'dist/host.js')).href);
+    host=createHost({docs:{title:'Real manual',lead:'Real content',entity:{name:'Example',url:'https://example.com',notToBeConfusedWith:[]},facts:{},sections:[]},stylesheet:true,themeFile:'theme.css',studio:true});host.setRoot(root);
+    const middleware=[];host.serve({middlewares:{use:fn=>middleware.push(fn)}});
+    server=createServer((req,res)=>{let i=0;const next=()=>middleware[i++]?.(req,res,next)??undefined;next();});
+    await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));url='http://127.0.0.1:'+server.address().port;
+},30000);
+afterAll(async()=>{await new Promise(resolve=>server.close(resolve));pkg.cleanup();rmSync(root,{recursive:true,force:true});});
+test('dev editor saves/reopens the host file and never enters production output',async()=>{
+    expect(await (await fetch(url+'/__dopedocs/studio')).text()).toContain('Your documentation preview');
+    expect(await (await fetch(url+'/__dopedocs/preview')).text()).toContain('Real manual');
+    const post=data=>fetch(url+'/__dopedocs/theme',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    expect((await post({token:'--dd-sidebar-side',value:'right'})).status).toBe(200);
+    expect(readFileSync(join(root,'theme.css'),'utf8')).toContain('.custom {color: red}');
+    expect((await (await fetch(url+'/__dopedocs/theme')).json()).classes).toContain('dd-sidebar-side-right');
+    const saved=readFileSync(join(root,'theme.css'),'utf8');
+    expect((await post({token:'--dd-accent',value:'red; color: blue'})).status).toBe(400);
+    expect(readFileSync(join(root,'theme.css'),'utf8')).toBe(saved);
+    const rejected=await fetch(url+'/__dopedocs/theme',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://untrusted.example'},body:'{}'});expect(rejected.status).toBe(403);
+    expect(Object.keys(host.build()).some(path=>path.includes('__dopedocs'))).toBe(false);
+    expect(Object.values(host.build()).join('').includes('studioClient')).toBe(false);
+});

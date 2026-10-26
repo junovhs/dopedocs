@@ -1,0 +1,387 @@
+/** Color starting points adapted from the Style Studio prototype; no fonts are downloaded. */
+export const studioPalettes = {
+  "Studio": {
+    "light": {
+      "--dd-bg": "#fbfbfc",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#f3f4f6",
+      "--dd-ink": "#111318",
+      "--dd-on-ink": "#e9eaee",
+      "--dd-text": "#0e1014",
+      "--dd-text-soft": "#474c57",
+      "--dd-muted": "#8a8f9a",
+      "--dd-line": "#e5e6ea",
+      "--dd-line-soft": "#eff0f2",
+      "--dd-accent": "#5a5cf0",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "10px"
+    },
+    "dark": {
+      "--dd-bg": "#0b0c0f",
+      "--dd-panel": "#121318",
+      "--dd-panel-muted": "#1a1c22",
+      "--dd-ink": "#1f2128",
+      "--dd-on-ink": "#e9eaee",
+      "--dd-text": "#f3f4f6",
+      "--dd-text-soft": "#b3b7c1",
+      "--dd-muted": "#747a86",
+      "--dd-line": "#23252c",
+      "--dd-line-soft": "#1a1c21",
+      "--dd-accent": "#8e8fff",
+      "--dd-on-accent": "#0b0c0f",
+      "--dd-radius": "10px"
+    }
+  },
+  "Paper": {
+    "light": {
+      "--dd-bg": "#f6f1e7",
+      "--dd-panel": "#fffcf5",
+      "--dd-panel-muted": "#efe8da",
+      "--dd-ink": "#1f1b16",
+      "--dd-on-ink": "#f4ede0",
+      "--dd-text": "#1b1712",
+      "--dd-text-soft": "#4a4238",
+      "--dd-muted": "#8c8172",
+      "--dd-line": "#e0d6c4",
+      "--dd-line-soft": "#ebe3d4",
+      "--dd-accent": "#b23d18",
+      "--dd-on-accent": "#fffaf0",
+      "--dd-radius": "3px"
+    },
+    "dark": {
+      "--dd-bg": "#17140f",
+      "--dd-panel": "#1e1a14",
+      "--dd-panel-muted": "#28231b",
+      "--dd-ink": "#2b251d",
+      "--dd-on-ink": "#f1e9da",
+      "--dd-text": "#f1e9da",
+      "--dd-text-soft": "#c4b8a3",
+      "--dd-muted": "#8a7f6d",
+      "--dd-line": "#332c22",
+      "--dd-line-soft": "#25201a",
+      "--dd-accent": "#ec8a5c",
+      "--dd-on-accent": "#17140f",
+      "--dd-radius": "3px"
+    }
+  },
+  "Swiss": {
+    "light": {
+      "--dd-bg": "#ffffff",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#f2f2f2",
+      "--dd-ink": "#000000",
+      "--dd-on-ink": "#ffffff",
+      "--dd-text": "#000000",
+      "--dd-text-soft": "#262626",
+      "--dd-muted": "#7a7a7a",
+      "--dd-line": "#e0e0e0",
+      "--dd-line-soft": "#ededed",
+      "--dd-accent": "#ff2e00",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "0px"
+    },
+    "dark": {
+      "--dd-bg": "#000000",
+      "--dd-panel": "#0a0a0a",
+      "--dd-panel-muted": "#161616",
+      "--dd-ink": "#161616",
+      "--dd-on-ink": "#ffffff",
+      "--dd-text": "#ffffff",
+      "--dd-text-soft": "#d6d6d6",
+      "--dd-muted": "#8a8a8a",
+      "--dd-line": "#262626",
+      "--dd-line-soft": "#181818",
+      "--dd-accent": "#ff4a1f",
+      "--dd-on-accent": "#000000",
+      "--dd-radius": "0px"
+    }
+  },
+  "Nordic": {
+    "light": {
+      "--dd-bg": "#f5f7fa",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#eceff4",
+      "--dd-ink": "#1c2433",
+      "--dd-on-ink": "#e5e9f0",
+      "--dd-text": "#1c2433",
+      "--dd-text-soft": "#4c566a",
+      "--dd-muted": "#8a94a6",
+      "--dd-line": "#e1e5ec",
+      "--dd-line-soft": "#eceff3",
+      "--dd-accent": "#2f6fdb",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "8px"
+    },
+    "dark": {
+      "--dd-bg": "#11151c",
+      "--dd-panel": "#161b24",
+      "--dd-panel-muted": "#1d2430",
+      "--dd-ink": "#1d2430",
+      "--dd-on-ink": "#e5e9f0",
+      "--dd-text": "#e5e9f0",
+      "--dd-text-soft": "#a9b3c4",
+      "--dd-muted": "#6b7588",
+      "--dd-line": "#252c39",
+      "--dd-line-soft": "#1b212b",
+      "--dd-accent": "#6ea2ff",
+      "--dd-on-accent": "#11151c",
+      "--dd-radius": "8px"
+    }
+  },
+  "Forest": {
+    "light": {
+      "--dd-bg": "#f4f5ef",
+      "--dd-panel": "#fbfbf7",
+      "--dd-panel-muted": "#e9ebe1",
+      "--dd-ink": "#1d2a1f",
+      "--dd-on-ink": "#e8efe3",
+      "--dd-text": "#1d2a1f",
+      "--dd-text-soft": "#4a5a4c",
+      "--dd-muted": "#87947f",
+      "--dd-line": "#dde2d3",
+      "--dd-line-soft": "#e8ebe0",
+      "--dd-accent": "#2f6b3a",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "12px"
+    },
+    "dark": {
+      "--dd-bg": "#0f1410",
+      "--dd-panel": "#141a15",
+      "--dd-panel-muted": "#1b231c",
+      "--dd-ink": "#1b231c",
+      "--dd-on-ink": "#e4ecdf",
+      "--dd-text": "#e4ecdf",
+      "--dd-text-soft": "#a9b8a5",
+      "--dd-muted": "#6d7b69",
+      "--dd-line": "#232d24",
+      "--dd-line-soft": "#19201a",
+      "--dd-accent": "#7cc488",
+      "--dd-on-accent": "#0f1410",
+      "--dd-radius": "12px"
+    }
+  },
+  "Sandstone": {
+    "light": {
+      "--dd-bg": "#faf6f1",
+      "--dd-panel": "#fffdfa",
+      "--dd-panel-muted": "#f1e9df",
+      "--dd-ink": "#2b2118",
+      "--dd-on-ink": "#f6ede3",
+      "--dd-text": "#2b2118",
+      "--dd-text-soft": "#5c4d3f",
+      "--dd-muted": "#9a8a79",
+      "--dd-line": "#e8ddd0",
+      "--dd-line-soft": "#f0e7dc",
+      "--dd-accent": "#c2672b",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "10px"
+    },
+    "dark": {
+      "--dd-bg": "#1a1511",
+      "--dd-panel": "#211b16",
+      "--dd-panel-muted": "#2a231c",
+      "--dd-ink": "#2a231c",
+      "--dd-on-ink": "#f3e9df",
+      "--dd-text": "#f3e9df",
+      "--dd-text-soft": "#c9b9a8",
+      "--dd-muted": "#8b7b6b",
+      "--dd-line": "#352c24",
+      "--dd-line-soft": "#251f19",
+      "--dd-accent": "#e8935a",
+      "--dd-on-accent": "#1a1511",
+      "--dd-radius": "10px"
+    }
+  },
+  "Ocean": {
+    "light": {
+      "--dd-bg": "#f3f8fa",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#e6f0f4",
+      "--dd-ink": "#0d2530",
+      "--dd-on-ink": "#dff1f6",
+      "--dd-text": "#0d2530",
+      "--dd-text-soft": "#3d5763",
+      "--dd-muted": "#7d97a2",
+      "--dd-line": "#d7e5eb",
+      "--dd-line-soft": "#e5eff3",
+      "--dd-accent": "#0a8ea8",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "12px"
+    },
+    "dark": {
+      "--dd-bg": "#071419",
+      "--dd-panel": "#0b1c22",
+      "--dd-panel-muted": "#10252d",
+      "--dd-ink": "#10252d",
+      "--dd-on-ink": "#dff1f6",
+      "--dd-text": "#dff1f6",
+      "--dd-text-soft": "#9fbcc6",
+      "--dd-muted": "#5f7d88",
+      "--dd-line": "#16313b",
+      "--dd-line-soft": "#0f232a",
+      "--dd-accent": "#3cc8e3",
+      "--dd-on-accent": "#071419",
+      "--dd-radius": "12px"
+    }
+  },
+  "Dusk": {
+    "light": {
+      "--dd-bg": "#f7f5fb",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#efebf7",
+      "--dd-ink": "#1e1a2e",
+      "--dd-on-ink": "#ece8f8",
+      "--dd-text": "#1e1a2e",
+      "--dd-text-soft": "#4f4866",
+      "--dd-muted": "#8e86a6",
+      "--dd-line": "#e4dff0",
+      "--dd-line-soft": "#eeeaf6",
+      "--dd-accent": "#7c5cff",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "14px"
+    },
+    "dark": {
+      "--dd-bg": "#0f0d17",
+      "--dd-panel": "#151221",
+      "--dd-panel-muted": "#1d192c",
+      "--dd-ink": "#1d192c",
+      "--dd-on-ink": "#ece8f8",
+      "--dd-text": "#ece8f8",
+      "--dd-text-soft": "#b3abcc",
+      "--dd-muted": "#736b8f",
+      "--dd-line": "#272238",
+      "--dd-line-soft": "#1a1727",
+      "--dd-accent": "#a78bfa",
+      "--dd-on-accent": "#0f0d17",
+      "--dd-radius": "14px"
+    }
+  },
+  "Candy": {
+    "light": {
+      "--dd-bg": "#fff6fa",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#fbecf4",
+      "--dd-ink": "#2a1238",
+      "--dd-on-ink": "#fbe7f3",
+      "--dd-text": "#23102e",
+      "--dd-text-soft": "#5b4a66",
+      "--dd-muted": "#a28ead",
+      "--dd-line": "#f3dcea",
+      "--dd-line-soft": "#f8e9f1",
+      "--dd-accent": "#f43f8e",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "20px"
+    },
+    "dark": {
+      "--dd-bg": "#150b1d",
+      "--dd-panel": "#1d1027",
+      "--dd-panel-muted": "#271534",
+      "--dd-ink": "#2f1a40",
+      "--dd-on-ink": "#fbeef7",
+      "--dd-text": "#fbeef7",
+      "--dd-text-soft": "#cdb6d6",
+      "--dd-muted": "#8a729a",
+      "--dd-line": "#331d43",
+      "--dd-line-soft": "#241430",
+      "--dd-accent": "#ff6bb0",
+      "--dd-on-accent": "#150b1d",
+      "--dd-radius": "20px"
+    }
+  },
+  "Blueprint": {
+    "light": {
+      "--dd-bg": "#eef3fb",
+      "--dd-panel": "#f8fbff",
+      "--dd-panel-muted": "#e1eaf7",
+      "--dd-ink": "#0b1f44",
+      "--dd-on-ink": "#dfe9ff",
+      "--dd-text": "#0b1f44",
+      "--dd-text-soft": "#3a4f78",
+      "--dd-muted": "#7489ad",
+      "--dd-line": "#cfdcf0",
+      "--dd-line-soft": "#dfe8f5",
+      "--dd-accent": "#1f5eff",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "4px"
+    },
+    "dark": {
+      "--dd-bg": "#0a1630",
+      "--dd-panel": "#0e1c3a",
+      "--dd-panel-muted": "#132446",
+      "--dd-ink": "#132446",
+      "--dd-on-ink": "#dfe9ff",
+      "--dd-text": "#dfe9ff",
+      "--dd-text-soft": "#9fb3da",
+      "--dd-muted": "#6278a3",
+      "--dd-line": "#1c3058",
+      "--dd-line-soft": "#142649",
+      "--dd-accent": "#6fa1ff",
+      "--dd-on-accent": "#0a1630",
+      "--dd-radius": "4px"
+    }
+  },
+  "Ember": {
+    "light": {
+      "--dd-bg": "#fbf7f4",
+      "--dd-panel": "#ffffff",
+      "--dd-panel-muted": "#f3ece6",
+      "--dd-ink": "#24150d",
+      "--dd-on-ink": "#f6e8df",
+      "--dd-text": "#24150d",
+      "--dd-text-soft": "#5a4436",
+      "--dd-muted": "#9a8576",
+      "--dd-line": "#ecdfd5",
+      "--dd-line-soft": "#f3eae3",
+      "--dd-accent": "#e5480f",
+      "--dd-on-accent": "#ffffff",
+      "--dd-radius": "6px"
+    },
+    "dark": {
+      "--dd-bg": "#120c09",
+      "--dd-panel": "#19110d",
+      "--dd-panel-muted": "#221813",
+      "--dd-ink": "#221813",
+      "--dd-on-ink": "#f6e8df",
+      "--dd-text": "#f6e8df",
+      "--dd-text-soft": "#c6ad9e",
+      "--dd-muted": "#85695a",
+      "--dd-line": "#2d211a",
+      "--dd-line-soft": "#1e1611",
+      "--dd-accent": "#ff6a2b",
+      "--dd-on-accent": "#120c09",
+      "--dd-radius": "6px"
+    }
+  },
+  "Terminal": {
+    "light": {
+      "--dd-bg": "#f3f5ef",
+      "--dd-panel": "#fbfcf8",
+      "--dd-panel-muted": "#e7ebe0",
+      "--dd-ink": "#0c0e0b",
+      "--dd-on-ink": "#d8f5b4",
+      "--dd-text": "#0d110b",
+      "--dd-text-soft": "#3e4739",
+      "--dd-muted": "#7c8775",
+      "--dd-line": "#d6dccd",
+      "--dd-line-soft": "#e4e9dc",
+      "--dd-accent": "#3a7d00",
+      "--dd-on-accent": "#f3f5ef",
+      "--dd-radius": "2px"
+    },
+    "dark": {
+      "--dd-bg": "#080a07",
+      "--dd-panel": "#0d100b",
+      "--dd-panel-muted": "#141911",
+      "--dd-ink": "#141911",
+      "--dd-on-ink": "#e6f2d9",
+      "--dd-text": "#e6f2d9",
+      "--dd-text-soft": "#a3b394",
+      "--dd-muted": "#637056",
+      "--dd-line": "#1e251a",
+      "--dd-line-soft": "#151b12",
+      "--dd-accent": "#b5f36a",
+      "--dd-on-accent": "#080a07",
+      "--dd-radius": "2px"
+    }
+  }
+};
