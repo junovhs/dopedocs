@@ -50,7 +50,7 @@ export function dopedocs(options: DopedocsPluginOptions) {
         configResolved(config: ResolvedConfigLike) {
             outDir = config.build?.outDir ?? "dist";
             root = config.root ?? process.cwd();
-            host.setRoot(root);
+            host.setRoot(root, config.publicDir || undefined);
             publicDir = config.publicDir;
             command = config.command;
         },

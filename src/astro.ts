@@ -46,7 +46,7 @@ export function dopedocs(options: DopedocsAstroOptions) {
         hooks: {
             "astro:config:done": ({ config }: { config: AstroConfigLike }) => {
                 publicDir = config.publicDir;
-                host.setRoot(config.root ? fileURLToPath(config.root) : process.cwd());
+                host.setRoot(config.root ? fileURLToPath(config.root) : process.cwd(), publicDir ? fileURLToPath(publicDir) : undefined);
             },
 
             // Astro's dev server is a Vite dev server; the pages are built per

@@ -178,6 +178,7 @@ const OWN_SHEET_URL = new URL("../styles/dopedocs.css", import.meta.url);
 export function createHost(options: DopedocsHostOptions) {
     const { docs, stylesheet, themeFile, studio, ...rest } = options;
     let projectRoot = process.cwd();
+    let publicRoot = resolve(projectRoot, "public");
     const basePath = (options.basePath ?? docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the host emits it. */
     const ownSheetPath = `${basePath}/dopedocs.css`;
@@ -224,7 +225,7 @@ export function createHost(options: DopedocsHostOptions) {
      * the server.
      */
     const serve = (server: DevServerLike) => {
-        if (studio) serveStudio(server, {file: resolve(projectRoot, themeFile ?? "docs-theme.css"), build, basePath});
+        if (studio) serveStudio(server, {file: resolve(projectRoot, themeFile ?? "docs-theme.css"), build, basePath, publicDir: publicRoot});
         server.middlewares.use((req, res, next) => {
             const path = (req.url ?? "").split("?")[0] ?? "";
             let tree: Record<string, string>;
@@ -294,5 +295,5 @@ export function createHost(options: DopedocsHostOptions) {
         }
     };
 
-    return { build, serve, write, setRoot: (root: string) => { projectRoot = root; } };
+    return { build, serve, write, setRoot: (root: string, assets?: string) => { projectRoot = root; publicRoot = assets ?? resolve(root, "public"); } };
 }

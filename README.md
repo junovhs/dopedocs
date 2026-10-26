@@ -318,3 +318,12 @@ manual. Changes save automatically to the theme file; Export shows its CSS.
 Reload file reads hand edits. Reset removes only that token's declaration.
 The editor only runs in development and no Studio routes or scripts are emitted
 by a production build. Do not enable it on a remotely accessible dev server.
+
+In the Studio Type tab, open **Find or upload fonts**. Search Google families
+by name, category or variable support, choose a role and Preview on your own
+text. **Use font** installs the selected weights and language subset into your
+host's public fonts directory with its licence; only the local CSS is saved.
+Preview downloads stay inside the Studio and do not modify the theme file.
+You can also drop a WOFF2, TTF or OTF file and paste its hosting licence.
+Catalog metadata comes from the [Fontsource API](https://fontsource.org/docs/api/fonts).
+Readers never request the catalog or third-party font files.
