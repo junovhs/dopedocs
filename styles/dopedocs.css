@@ -1753,3 +1753,27 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-code { font-size: var(--dd-code-size, calc(var(--dd-text-size, 15.5px) * var(--dd-code-ratio, 0.8387096774))); }
 .dd-section .dd-code > code { font-size: inherit; }
 .dd-table { font-variant-numeric: var(--dd-table-numbers, tabular-nums); }
+
+/* Explicit keyword classes; no class is added for an unset token. */
+@media (min-width: 861px) {
+    .dd-sidebar-side-right .dd-body { grid-template-columns: minmax(0, 1fr) minmax(0, var(--dd-column)) var(--dd-rail) minmax(0, 1fr); }
+    .dd-sidebar-side-right .dd-nav { grid-column: 3; grid-row: 1; border-right: 0; border-left: 1px solid var(--dd-line); }
+    .dd-sidebar-side-right .dd-main, .dd-sidebar-side-right .dd-page { grid-column: 2; grid-row: 1; }
+    .dd-outline-right .dd-contents { float: right; width: 160px; margin-inline: 24px -200px; }
+    .dd-outline-right .dd-page, .dd-outline-right .dd-main { padding-inline-end: 220px; max-width: calc(var(--dd-column) + 200px); }
+    .dd-outline-left .dd-contents { float: left; width: 160px; margin-inline: -200px 24px; }
+    .dd-outline-left .dd-page, .dd-outline-left .dd-main { padding-inline-start: 220px; max-width: calc(var(--dd-column) + 200px); }
+}
+.dd-outline-off .dd-contents { display: none; }
+.dd-header-glass .dd-bar { background: color-mix(in srgb, var(--dd-ink) 85%, transparent); backdrop-filter: blur(16px); }
+.dd-header-solid .dd-bar { background: var(--dd-ink); }
+.dd-header-minimal .dd-bar { background: var(--dd-bg); border-bottom: 1px solid var(--dd-line); }
+.dd-header-minimal .dd-back, .dd-header-minimal .dd-bar-page, .dd-header-minimal .dd-esc { color: var(--dd-text); }
+.dd-current-pill .dd-nav-link.is-active { border-color: transparent; border-radius: 999px; }
+.dd-current-line .dd-nav-link.is-active { background: transparent; border-radius: 0; }
+.dd-current-bold .dd-nav-link.is-active { background: transparent; border-color: transparent; font-weight: 800; }
+.dd-current-solid .dd-nav-link.is-active { border-color: transparent; background: var(--dd-accent); color: var(--dd-on-accent); }
+.dd-card-raised .dd-card { box-shadow: 0 4px 16px color-mix(in srgb, var(--dd-ink) 12%, transparent); }
+.dd-card-outline .dd-card { background: transparent; }
+.dd-card-flat .dd-card { border-color: transparent; box-shadow: none; }
+.dd-card-tint .dd-card { background: color-mix(in srgb, var(--dd-accent) 8%, var(--dd-panel)); }

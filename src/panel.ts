@@ -19,6 +19,7 @@ import { createSearchIndex, renderSearch, mountSearch } from "./search.js";
  *   indexed.
  */
 
+import { structuralClasses, structuralKeywords } from "./structure.js";
 import { icon } from "./icons.js";
 import { escapeHtml, renderBody, renderLead } from "./render.js";
 import { isGroup, pagesOf, type DocPage, type DocSection, type DocSet } from "./schema.js";
@@ -187,6 +188,8 @@ export function mountPanel(
         `<main class="dd-main">${renderLead(docs)}${renderBody(docs)}</main>` +
         `</div></div>`;
     target.appendChild(root);
+    const themeStyle = getComputedStyle(root);
+    root.classList.add(...structuralClasses(Object.fromEntries(Object.keys(structuralKeywords).map(token => [token, themeStyle.getPropertyValue(token)]))));
     const destroySearch = mountSearch(root);
 
     const body = root.querySelector<HTMLElement>(".dd-body")!;

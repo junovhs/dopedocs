@@ -13,9 +13,11 @@
 
 import { readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, join, posix } from "node:path";
+import { dirname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseTheme, readThemeFile } from "./theme.js";
+import { structuralClasses } from "./structure.js";
 import type { DocSet } from "./schema.js";
 import { InvalidDocumentError, buildStatic, type BuildStaticOptions } from "./static.js";
 
@@ -23,6 +25,8 @@ import { InvalidDocumentError, buildStatic, type BuildStaticOptions } from "./st
 export interface DopedocsHostOptions extends Omit<BuildStaticOptions, "stylesheet"> {
     /** The documentation set to publish. */
     docs: DocSet;
+    /** Host-owned theme CSS path, relative to the project root. */
+    themeFile?: string;
     /**
      * Styling for the static pages.
      *
@@ -169,7 +173,8 @@ const OWN_SHEET_URL = new URL("../styles/dopedocs.css", import.meta.url);
  * dev, and write it into an output folder.
  */
 export function createHost(options: DopedocsHostOptions) {
-    const { docs, stylesheet, ...rest } = options;
+    const { docs, stylesheet, themeFile, ...rest } = options;
+    let projectRoot = process.cwd();
     const basePath = (options.basePath ?? docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the host emits it. */
     const ownSheetPath = `${basePath}/dopedocs.css`;
@@ -190,6 +195,12 @@ export function createHost(options: DopedocsHostOptions) {
         let tree: Record<string, string>;
         try {
             tree = buildStatic(docs, buildOptions);
+            if (themeFile) {
+                const classes = structuralClasses(parseTheme(readThemeFile(resolve(projectRoot, themeFile))));
+                if (classes.length) for (const path of Object.keys(tree)) {
+                    if (path.endsWith(".html")) tree[path] = tree[path]!.replace('class="dd-static"', `class="dd-static ${classes.join(" ")}"`);
+                }
+            }
         } catch (error) {
             if (error instanceof InvalidDocumentError) {
                 // Named sections and rules, so the message says what to fix
@@ -279,5 +290,5 @@ export function createHost(options: DopedocsHostOptions) {
         }
     };
 
-    return { build, serve, write };
+    return { build, serve, write, setRoot: (root: string) => { projectRoot = root; } };
 }

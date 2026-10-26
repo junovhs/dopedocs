@@ -272,3 +272,25 @@ is recommended with justified text (dictionary availability varies by browser).
 For book-style paragraphs set gap to 0 and indent to 1.5em. Heading numbers
 use native counters and require no script. Drop caps are opt-in on prose
 paragraphs. Tables use tabular figures by default; set normal to opt out.
+
+### Structural keywords
+
+Pass `themeFile: 'public/docs-theme.css'` to the Vite/Astro integration, and
+include that file in `stylesheet` after the bundled CSS. The integration reads
+its `:root` tokens on each build/dev request and adds stable classes to static
+page roots. The panel reads the same tokens from its inherited CSS on mount.
+Unknown keywords warn and preserve the original layout. Unset tokens add no
+classes, preserving existing output. Hand-editing a structural choice requires
+a rebuild/reload. These values are keywords, not CSS expressions or aliases.
+
+| Token | Values | Class prefix |
+| --- | --- | --- |
+| `--dd-sidebar-side` | left, right | dd-sidebar-side- |
+| `--dd-outline` | right, left, off | dd-outline- |
+| `--dd-header` | glass, solid, minimal | dd-header- |
+| `--dd-current` | pill, line, bold, solid | dd-current- |
+| `--dd-card` | raised, outline, flat, tint | dd-card- |
+
+The outline refers to the generated contents on the whole-manual page.
+On small screens side outlines return to normal flow and navigation stays above
+content. Default pages retain the original left rail and inline contents.

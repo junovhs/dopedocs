@@ -27,6 +27,7 @@ export type DopedocsAstroOptions = DopedocsHostOptions;
 
 /** The part of Astro's resolved config this reads. */
 interface AstroConfigLike {
+    root?: URL;
     publicDir?: URL;
 }
 
@@ -45,6 +46,7 @@ export function dopedocs(options: DopedocsAstroOptions) {
         hooks: {
             "astro:config:done": ({ config }: { config: AstroConfigLike }) => {
                 publicDir = config.publicDir;
+                host.setRoot(config.root ? fileURLToPath(config.root) : process.cwd());
             },
 
             // Astro's dev server is a Vite dev server; the pages are built per
