@@ -7,6 +7,13 @@
   sitemap `lastmod`. Pages without dates no longer claim the build date as
   their modified date, since that told search and answer engines every page
   changed on every deploy. Add dates to pages you want shown as current.
+- **Articles:** add `articles` to your docs for dated answer pages outside the
+  manual. Each article is a normal page (question, answer, blocks, facts) with
+  a required `published` date, optional `updated` and optional `author`. The
+  build emits `/articles/<id>/`, an `/articles/` index newest first and an
+  `/articles/feed.xml` RSS feed, and lists articles in the sitemap, `llms.txt`
+  and `questions.json` with their dates. Docs without articles build exactly
+  as before. The articles' styling is still basic.
 
 ## 0.6.1 - 2026-10-26
 

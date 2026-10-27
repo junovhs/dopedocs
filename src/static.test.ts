@@ -1065,3 +1065,120 @@ describe("dates (DEC-19)", () => {
         expect(withDates("2026-01-02", "2026-01-02")).not.toContain("updated-before-published");
     });
 });
+
+describe("articles (DEC-18)", () => {
+    const withArticles = defineDocs({
+        ...docs,
+        articles: [
+            {
+                id: "older",
+                title: "Exporting & keeping a backup",
+                question: "How do I keep a backup of my No Ceremony list?",
+                answer: "No Ceremony exports the whole list as JSON, and it is {fact:price}.",
+                published: "2026-05-01",
+                blocks: [{ kind: "p", text: "See [Export](section:export) for the steps." }],
+            },
+            {
+                id: "newer",
+                title: "Why the order matters",
+                question: "Why does No Ceremony decide the order of my work?",
+                answer: "No Ceremony picks the next task so you spend no willpower choosing.",
+                published: "2026-06-01",
+                updated: "2026-07-01",
+                author: "Spencer Nunamaker",
+                blocks: [{ kind: "p", text: "Choosing is the expensive part." }],
+            },
+        ],
+    });
+    const built = buildStatic(withArticles, { now: new Date("2030-01-01T00:00:00Z") });
+    const articleNode = (id: string) => nodeOf(built[`articles/${id}/index.html`]!, "Article");
+
+    it("emits a page per article, an index and a feed beside the manual", () => {
+        expect(Object.keys(built)).toEqual(expect.arrayContaining([
+            "articles/index.html",
+            "articles/older/index.html",
+            "articles/newer/index.html",
+            "articles/feed.xml",
+        ]));
+        expect(built["docs/what-it-is/index.html"]).toBe(buildStatic(docs, { now: new Date("2030-01-01T00:00:00Z") })["docs/what-it-is/index.html"]);
+    });
+
+    it("lists the articles newest first on the index", () => {
+        const index = built["articles/index.html"]!;
+        expect(index.indexOf('href="/articles/newer/"')).toBeGreaterThan(-1);
+        expect(index.indexOf('href="/articles/newer/"')).toBeLessThan(index.indexOf('href="/articles/older/"'));
+        const list = nodeOf(index, "CollectionPage").mainEntity as { itemListElement: { url: string }[] };
+        expect(list.itemListElement.map((item) => item.url)).toEqual([
+            "https://noceremony.app/articles/newer/",
+            "https://noceremony.app/articles/older/",
+        ]);
+    });
+
+    it("marks each article up as an Article with its real dates and author", () => {
+        expect(articleNode("newer")).toMatchObject({
+            "@type": "Article",
+            datePublished: "2026-06-01",
+            dateModified: "2026-07-01",
+            author: { "@type": "Person", name: "Spencer Nunamaker" },
+        });
+        expect(articleNode("older")).toMatchObject({ datePublished: "2026-05-01", dateModified: "2026-05-01" });
+        expect(articleNode("older")).not.toHaveProperty("author");
+    });
+
+    it("renders the article as its own page: its h1, dates, facts and links into the manual", () => {
+        const html = built["articles/older/index.html"]!;
+        expect(html).toContain('<link rel="canonical" href="https://noceremony.app/articles/older/">');
+        expect(html).toContain('<time datetime="2026-05-01">May 1, 2026</time>');
+        expect(html).toContain("it is free");
+        expect(html).toContain('href="/docs/export/"');
+        expect(html).not.toContain('class="dd-nav"');
+        expect(built["articles/newer/index.html"]).toContain("Updated <time datetime=\"2026-07-01\">July 1, 2026</time> · By Spencer Nunamaker");
+    });
+
+    it("publishes an RSS feed, newest first, dated by publication", () => {
+        const feed = built["articles/feed.xml"]!;
+        expect(feed.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"')).toBe(true);
+        expect(feed.match(/<item>/g)).toHaveLength(2);
+        expect([...feed.matchAll(/<link>([^<]+)<\/link>/g)].map((m) => m[1])).toEqual([
+            "https://noceremony.app/articles/",
+            "https://noceremony.app/articles/newer/",
+            "https://noceremony.app/articles/older/",
+        ]);
+        expect(feed).toContain("<pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>");
+        expect(feed).toContain("Exporting &amp; keeping a backup");
+        expect(built["articles/index.html"]).toContain('type="application/rss+xml"');
+    });
+
+    it("lists the articles in the sitemap, llms.txt and questions.json with real dates", () => {
+        const sitemap = built["sitemap.xml"]!;
+        expect(sitemap).toContain("<loc>https://noceremony.app/articles/</loc>\n    <lastmod>2026-07-01</lastmod>");
+        expect(sitemap).toContain("<loc>https://noceremony.app/articles/newer/</loc>\n    <lastmod>2026-07-01</lastmod>");
+        expect(sitemap).toContain("<loc>https://noceremony.app/articles/older/</loc>\n    <lastmod>2026-05-01</lastmod>");
+        expect(built["llms.txt"]).toContain("## Articles");
+        expect(built["llms.txt"]).toContain("Published 2026-06-01, updated 2026-07-01");
+        const questions = JSON.parse(built["questions.json"]!).questions;
+        expect(questions.at(-2)).toMatchObject({ id: "newer", published: "2026-06-01", updated: "2026-07-01" });
+        for (const [path, body] of Object.entries(built)) {
+            if (path !== "questions.json" && path !== "facts.json") expect(body, path).not.toContain("2030-01-01");
+        }
+    });
+
+    it("changes nothing for a document without articles", () => {
+        const plainBuild = buildStatic(docs, { now });
+        expect(plainBuild).toEqual(buildStatic({ ...docs, articles: [] }, { now }));
+        expect(Object.keys(plainBuild).some((path) => path.startsWith("articles/"))).toBe(false);
+    });
+
+    it("refuses an undated article and an id shared with a section", () => {
+        const codes = (articles: unknown[]) =>
+            validate(defineDocs({ ...docs, articles: articles as never })).map((f) => f.code);
+        const article = withArticles.articles![0]!;
+        expect(codes([{ ...article, published: undefined }])).toContain("article-without-date");
+        expect(codes([{ ...article, id: "export" }])).toContain("duplicate-section-id");
+        expect(codes([{ ...article, answer: "It is great." }])).toContain("answer-opens-with-pronoun");
+    });
+
+    it("refuses to overwrite a manual page that already uses the articles path", () => {
+        expect(() => buildStatic(withArticles, { now, basePath: "articles" })).toThrow(/articles would overwrite/);
+    });
+});

@@ -164,6 +164,18 @@ export interface DocPage {
 }
 
 /**
+ * A dated, standalone answer page published at `/articles/<id>/`, outside the
+ * manual's reading order (DEC-18). It is a page in every other respect: the
+ * same question, quotable answer, blocks and facts.
+ */
+export interface DocArticle extends DocPage {
+    /** Required: an article is found one at a time, and its date is part of the answer. */
+    published: string;
+    /** Who wrote it, shown as a byline and named in its structured data. */
+    author?: string;
+}
+
+/**
  * A chapter: a labelled, collapsible bucket of pages and nothing else.
  *
  * A group has no body, no answer and no page of its own. Anything a chapter
@@ -352,6 +364,8 @@ export interface DocSet<F extends FactMap = FactMap> {
     lead: string;
     facts: F;
     sections: DocSection[];
+    /** Dated answer pages outside the manual, published at `/articles/` (DEC-18). */
+    articles?: DocArticle[];
     /** Optional API metadata and build-time request samples; guide annotation stays unchanged. */
     api?: DocApi;
 }
@@ -385,6 +399,7 @@ export type FindingCode =
     | "invalid-review-date"
     | "invalid-page-date"
     | "updated-before-published"
+    | "article-without-date"
     | "stale-fact"
     | "empty-image-alt"
     | "invalid-image-dimensions"
@@ -570,7 +585,21 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     };
     checkLinks(docs.lead, "The document lead");
 
-    for (const { section, depth } of walk(docs.sections)) {
+    // DEC-18: an article is checked by every page rule below. Ids stay unique
+    // across both, so no id means two different pages.
+    const articles = (docs.articles ?? []).map((section) => ({ section, depth: 0 }));
+    for (const { section } of articles) {
+        if (!section.published) {
+            findings.push({
+                code: "article-without-date",
+                severity: "fatal",
+                sectionId: section.id,
+                message: `Article "${section.id}" has no published date; an article's date is part of its answer.`,
+            });
+        }
+    }
+
+    for (const { section, depth } of [...walk(docs.sections), ...articles]) {
         const { id } = section;
 
         if (seen.has(id)) {

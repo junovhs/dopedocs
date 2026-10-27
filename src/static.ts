@@ -16,6 +16,7 @@ import { escapeHtml, renderBody, renderLead, renderSection } from "./render.js";
 import {
     hasFatal,
     validate,
+    type DocArticle,
     type DocPage,
     type DocSection,
     type DocSet,
@@ -233,6 +234,8 @@ interface PageInput {
     section?: boolean;
     /** The whole document on one page, linked as the alternate reading. */
     whole?: { url: string; title: string };
+    /** The articles feed, advertised so a feed reader finds it from the page. */
+    feed?: { url: string; title: string };
     indexing: Indexing;
 }
 
@@ -259,7 +262,7 @@ function page(input: PageInput): string {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${esc(canonical)}">
-${input.whole ? `<link rel="alternate" type="text/html" title="${esc(input.whole.title)}" href="${esc(input.whole.url)}">\n` : ""}${entity.logo ? `<meta property="og:image" content="${esc(entity.logo)}">\n` : ""}<meta name="twitter:card" content="summary_large_image">
+${input.whole ? `<link rel="alternate" type="text/html" title="${esc(input.whole.title)}" href="${esc(input.whole.url)}">\n` : ""}${input.feed ? `<link rel="alternate" type="application/rss+xml" title="${esc(input.feed.title)}" href="${esc(input.feed.url)}">\n` : ""}${entity.logo ? `<meta property="og:image" content="${esc(entity.logo)}">\n` : ""}<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
 ${[input.stylesheet ?? []]
@@ -288,6 +291,88 @@ ${chrome.rail}
 
 /** The back arrow. Inline and self-contained so it needs no stylesheet. */
 const BACK_ARROW = icon("arrow-left");
+
+/* ── Articles (DEC-18) ───────────────────────────────────────────────────── */
+
+/** Articles sit at the site root, independent of the manual's base path. */
+const ARTICLES_DIR = "articles";
+
+interface ArticleEntry {
+    article: DocArticle;
+    url: string;
+    question: string;
+    answer: string;
+    /** The date the article last changed: `updated`, else `published` (DEC-19). */
+    modified: string;
+}
+
+/** Every article with its resolved text, newest first; ties keep authoring order. */
+function articleEntriesOf(docs: DocSet, origin: string): ArticleEntry[] {
+    return (docs.articles ?? [])
+        .map((article) => ({
+            article,
+            url: `${origin}/${ARTICLES_DIR}/${article.id}/`,
+            question: plain(article.question, docs.facts, `article "${article.id}"`),
+            answer: plain(article.answer, docs.facts, `article "${article.id}"`),
+            modified: article.updated ?? article.published,
+        }))
+        .sort((a, b) => b.article.published.localeCompare(a.article.published));
+}
+
+/** An ISO day as a reader writes it: "June 1, 2026". */
+const readableDate = (day: string): string =>
+    new Date(`${day}T00:00:00Z`).toLocaleDateString("en-US", {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+
+/** The visible date and byline line, with machine-readable <time> elements. */
+function articleMeta({ article }: ArticleEntry): string {
+    const time = (day: string) =>
+        `<time datetime="${escapeHtml(day)}">${escapeHtml(readableDate(day))}</time>`;
+    const parts = [`Published ${time(article.published)}`];
+    if (article.updated && article.updated !== article.published) {
+        parts.push(`Updated ${time(article.updated)}`);
+    }
+    if (article.author) parts.push(`By ${escapeHtml(article.author)}`);
+    return `<p class="dd-article-meta">${parts.join(" · ")}</p>`;
+}
+
+/**
+ * An RSS 2.0 feed of every article, newest first. Each item is dated by its
+ * publication; the channel carries no build date (DEC-19).
+ */
+function rssFeed(
+    feed: { url: string; title: string },
+    indexUrl: string,
+    entries: ArticleEntry[],
+): string {
+    const esc = escapeHtml;
+    const items = entries
+        .map(({ article, url, answer }) =>
+            `<item>\n` +
+            `<title>${esc(article.title)}</title>\n` +
+            `<link>${esc(url)}</link>\n` +
+            `<guid isPermaLink="true">${esc(url)}</guid>\n` +
+            `<pubDate>${new Date(`${article.published}T00:00:00Z`).toUTCString()}</pubDate>\n` +
+            `<description>${esc(answer)}</description>\n` +
+            `</item>\n`,
+        )
+        .join("");
+    return (
+        `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n` +
+        `<channel>\n` +
+        `<title>${esc(feed.title)}</title>\n` +
+        `<link>${esc(indexUrl)}</link>\n` +
+        `<description>${esc(feed.title)}, newest first.</description>\n` +
+        `<atom:link href="${esc(feed.url)}" rel="self" type="application/rss+xml"/>\n` +
+        items +
+        `</channel>\n</rss>\n`
+    );
+}
 
 /* ── The build ───────────────────────────────────────────────────────────── */
 
@@ -571,12 +656,150 @@ export function buildStatic(
         });
     }
 
+    /* --- articles (DEC-18) ----------------------------------------------
+       Dated answer pages at the site root's /articles/, beside the manual
+       rather than inside it: no rail, no pager, no reading order. A build
+       without articles emits nothing here and is byte-identical to before. */
+
+    const articleEntries = articleEntriesOf(docs, origin);
+    if (articleEntries.length) {
+        const articlesIndexUrl = `${origin}/${ARTICLES_DIR}/`;
+        const articlesIndexPath = `${homePath}${ARTICLES_DIR}/`;
+        const feedUrl = `${articlesIndexUrl}feed.xml`;
+        const feed = { url: feedUrl, title: `${docs.entity.name} articles` };
+        const articlesBar =
+            `<div class="dd-bar">` +
+            `<a class="dd-back" href="${escapeHtml(homePath)}">` +
+            `${BACK_ARROW}${escapeHtml(docs.entity.name)}</a>` +
+            `<span class="dd-bar-page">Articles</span>` +
+            `</div>`;
+        const write = (path: string, contents: string) => {
+            // A section or base path named "articles" would be silently overwritten.
+            if (path in out) {
+                throw new Error(`dopedocs: articles would overwrite "${path}"; rename the section or base path that uses it.`);
+            }
+            out[path] = contents;
+        };
+
+        for (const entry of articleEntries) {
+            const { article, url } = entry;
+            const crumbs = [
+                { name: "Articles", item: articlesIndexUrl },
+                { name: article.title, item: url },
+            ];
+            write(`${ARTICLES_DIR}/${article.id}/index.html`, page({
+                title: `${article.title} - ${docs.entity.name}`,
+                description: entry.answer,
+                canonical: url,
+                entity: docs.entity,
+                stylesheet: options.stylesheet,
+                indexing,
+                feed,
+                chrome: { bar: articlesBar, rail: "" },
+                section: true,
+                body:
+                    articleMeta(entry) +
+                    renderSection(article, facts, { headingLevel: 1, ...links }) +
+                    `<nav class="dd-pager" aria-label="More articles">` +
+                    `<a class="dd-pager-all" href="${escapeHtml(articlesIndexPath)}">All articles</a>` +
+                    `</nav>`,
+                graph: {
+                    "@context": "https://schema.org",
+                    "@graph": [
+                        entityJson,
+                        {
+                            "@type": "Article",
+                            "@id": `${url}#article`,
+                            url,
+                            headline: article.title,
+                            description: entry.answer,
+                            datePublished: article.published,
+                            dateModified: entry.modified,
+                            ...(article.author ? { author: { "@type": "Person", name: article.author } } : {}),
+                            about: { "@id": entityId },
+                            publisher: { "@id": entityId },
+                            isPartOf: { "@id": `${articlesIndexUrl}#page` },
+                            ...(article.keywords?.length
+                                ? { keywords: article.keywords.join(", ") }
+                                : {}),
+                        },
+                        faqNode([entry], `${url}#faq`),
+                        {
+                            "@type": "BreadcrumbList",
+                            "@id": `${url}#breadcrumbs`,
+                            itemListElement: crumbs.map((c, i) => ({
+                                "@type": "ListItem",
+                                position: i + 1,
+                                name: c.name,
+                                item: c.item,
+                            })),
+                        },
+                    ],
+                },
+            }));
+        }
+
+        const list = articleEntries
+            .map((entry) =>
+                `<li class="dd-article-item">` +
+                `<a class="dd-article-link" href="${escapeHtml(`${articlesIndexPath}${entry.article.id}/`)}">` +
+                `${escapeHtml(entry.article.title)}</a>` +
+                articleMeta(entry) +
+                `<p class="dd-article-answer">${escapeHtml(entry.answer)}</p>` +
+                `</li>`,
+            )
+            .join("");
+        write(`${ARTICLES_DIR}/index.html`, page({
+            title: `Articles - ${docs.entity.name}`,
+            description: `Articles from ${docs.entity.name}, newest first.`,
+            canonical: articlesIndexUrl,
+            entity: docs.entity,
+            stylesheet: options.stylesheet,
+            indexing,
+            feed,
+            chrome: { bar: articlesBar, rail: "" },
+            body: `<h1>Articles</h1><ol class="dd-articles">${list}</ol>`,
+            graph: {
+                "@context": "https://schema.org",
+                "@graph": [
+                    entityJson,
+                    {
+                        "@type": "CollectionPage",
+                        "@id": `${articlesIndexUrl}#page`,
+                        url: articlesIndexUrl,
+                        name: `${docs.entity.name} articles`,
+                        about: { "@id": entityId },
+                        mainEntity: {
+                            "@type": "ItemList",
+                            itemListOrder: "https://schema.org/ItemListOrderDescending",
+                            itemListElement: articleEntries.map((entry, i) => ({
+                                "@type": "ListItem",
+                                position: i + 1,
+                                url: entry.url,
+                                name: entry.article.title,
+                            })),
+                        },
+                    },
+                ],
+            },
+        }));
+
+        write(`${ARTICLES_DIR}/feed.xml`, rssFeed(feed, articlesIndexUrl, articleEntries));
+    }
+
     /* --- sitemap -------------------------------------------------------- */
 
     out["sitemap.xml"] =
         `<?xml version="1.0" encoding="UTF-8"?>\n` +
         `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-        [{ url: indexUrl, modified: newest }, ...entries]
+        [
+            { url: indexUrl, modified: newest },
+            ...entries,
+            ...(articleEntries.length
+                ? [{ url: `${origin}/${ARTICLES_DIR}/`, modified: articleEntries.map((e) => e.modified).sort().at(-1) }]
+                : []),
+            ...articleEntries,
+        ]
             .map(
                 ({ url, modified }) =>
                     `  <url>\n    <loc>${escapeHtml(url)}</loc>\n` +
@@ -621,6 +844,17 @@ export function buildStatic(
         entries
             .map((e) => `### ${e.title}\n\n${e.question}\n\n${e.answer}\n\n${e.url}\n`)
             .join("\n") +
+        (articleEntries.length
+            ? `\n## Articles\n\n` +
+              articleEntries
+                  .map((e) =>
+                      `### ${e.article.title}\n\n${e.question}\n\n${e.answer}\n\n` +
+                      `Published ${e.article.published}` +
+                      (e.article.updated ? `, updated ${e.article.updated}` : "") +
+                      `\n\n${e.url}\n`,
+                  )
+                  .join("\n")
+            : "") +
         "\n";
 
     /* --- questions.json ------------------------------------------------- */
@@ -630,12 +864,22 @@ export function buildStatic(
             {
                 entity: docs.entity.name,
                 generated,
-                questions: entries.map((e) => ({
-                    id: e.id,
-                    question: e.question,
-                    answer: e.answer,
-                    url: e.url,
-                })),
+                questions: [
+                    ...entries.map((e) => ({
+                        id: e.id,
+                        question: e.question,
+                        answer: e.answer,
+                        url: e.url,
+                    })),
+                    ...articleEntries.map((e) => ({
+                        id: e.article.id,
+                        question: e.question,
+                        answer: e.answer,
+                        url: e.url,
+                        published: e.article.published,
+                        ...(e.article.updated ? { updated: e.article.updated } : {}),
+                    })),
+                ],
             },
             null,
             2,
