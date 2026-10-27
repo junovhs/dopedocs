@@ -1,7 +1,7 @@
 /** Pure inline rendering and plain-text derivation, with no schema dependency. */
 import type { FactMap } from "./facts.js";
 import { FACT_REFERENCE } from "./facts.js";
-import { LINK_MARK, linkTarget } from "./links.js";
+import { LINK_MARK, linkTarget, stripLinks } from "./links.js";
 
 /**
  * Thrown when prose references a fact the registry does not hold. Shipping a
@@ -110,3 +110,8 @@ export const plainText = (raw: string, facts: FactMap, where: string): string =>
         .replace(/&quot;/g, '\"')
         .replace(/&amp;/g, "&")
         .trim();
+
+/** A heading block's anchor: its own id, else a slug of its words. */
+export function headingId(block: { text: string; id?: string }): string {
+    return block.id ?? stripLinks(block.text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}

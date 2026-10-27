@@ -367,6 +367,7 @@ describe("document", () => {
 export const everyBlockKindIsRendered: Record<DocBlock["kind"], true> = {
     code: true,
     p: true,
+    heading: true,
     list: true,
     callout: true,
     steps: true,

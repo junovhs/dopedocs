@@ -11,12 +11,14 @@ import { createSearchIndex, renderSearch, searchScript } from "./search.js";
  */
 
 import { icon } from "./icons.js";
-import { plainText as plain } from "./inline.js";
-import { escapeHtml, renderBody, renderLead, renderSection } from "./render.js";
+import { headingId, plainText as plain } from "./inline.js";
+import type { FactMap } from "./facts.js";
+import { escapeHtml, inline, renderBlock, renderBody, renderLead, renderSection, type SectionHref } from "./render.js";
 import {
     hasFatal,
     validate,
     type DocArticle,
+    type DocBlock,
     type DocPage,
     type DocSection,
     type DocSet,
@@ -232,6 +234,8 @@ interface PageInput {
     chrome: { bar: string; rail: string };
     /** Marks a single section's page, whose own title is the page's h1. */
     section?: boolean;
+    /** Marks an article or the articles index: one centred column, no rail. */
+    article?: boolean;
     /** The whole document on one page, linked as the alternate reading. */
     whole?: { url: string; title: string };
     /** The articles feed, advertised so a feed reader finds it from the page. */
@@ -275,7 +279,7 @@ ${jsonLd(graph)}
 <body class="dd-static">
 ${chrome.bar}
 <div class="dd-body">
-<main class="dd-page${input.section ? " dd-page--section" : ""}">
+<main class="dd-page${input.section ? " dd-page--section" : ""}${input.article ? " dd-page--article" : ""}">
 <article>
 ${body}
 </article>
@@ -304,6 +308,8 @@ interface ArticleEntry {
     answer: string;
     /** The date the article last changed: `updated`, else `published` (DEC-19). */
     modified: string;
+    /** Minutes to read the body at an unhurried 230 words a minute. */
+    minutes: number;
 }
 
 /** Every article with its resolved text, newest first; ties keep authoring order. */
@@ -315,6 +321,7 @@ function articleEntriesOf(docs: DocSet, origin: string): ArticleEntry[] {
             question: plain(article.question, docs.facts, `article "${article.id}"`),
             answer: plain(article.answer, docs.facts, `article "${article.id}"`),
             modified: article.updated ?? article.published,
+            minutes: readingMinutes(article, docs.facts),
         }))
         .sort((a, b) => b.article.published.localeCompare(a.article.published));
 }
@@ -328,16 +335,157 @@ const readableDate = (day: string): string =>
         day: "numeric",
     });
 
-/** The visible date and byline line, with machine-readable <time> elements. */
-function articleMeta({ article }: ArticleEntry): string {
-    const time = (day: string) =>
-        `<time datetime="${escapeHtml(day)}">${escapeHtml(readableDate(day))}</time>`;
-    const parts = [`Published ${time(article.published)}`];
+/** Reading time from the rendered body, so facts count as the words they become. */
+function readingMinutes(article: DocArticle, facts: FactMap): number {
+    const html = article.blocks
+        .map((block) => renderBlock(block, facts, `article "${article.id}"`))
+        .join(" ");
+    const words = html
+        .replace(/<[^>]+>/g, " ")
+        .split(/\s+/)
+        .filter((word) => /[\p{L}\p{N}]/u.test(word)).length;
+    return Math.max(1, Math.ceil(words / 230));
+}
+
+/** A cover's src as an absolute URL, for structured data a machine reads. */
+const absoluteSrc = (src: string, origin: string): string =>
+    /^https?:\/\//.test(src) ? src : `${origin}/${src.replace(/^\/+/, "")}`;
+
+/** A day a reader can read and a machine can parse. */
+const dateTime = (day: string): string =>
+    `<time datetime="${escapeHtml(day)}">${escapeHtml(readableDate(day))}</time>`;
+
+/** The date line shared by the byline and the cards: published, updated, minutes. */
+function articleDates({ article, minutes }: ArticleEntry): string {
+    const parts = [dateTime(article.published)];
     if (article.updated && article.updated !== article.published) {
-        parts.push(`Updated ${time(article.updated)}`);
+        parts.push(`Updated ${dateTime(article.updated)}`);
     }
-    if (article.author) parts.push(`By ${escapeHtml(article.author)}`);
-    return `<p class="dd-article-meta">${parts.join(" · ")}</p>`;
+    parts.push(`${minutes} min read`);
+    return parts.join(" · ");
+}
+
+/**
+ * The byline: an initial in a circle stands in for a portrait, so an author
+ * needs no photo and the page needs no extra request.
+ */
+function articleByline(entry: ArticleEntry): string {
+    const { author } = entry.article;
+    const avatar = author
+        ? `<span class="dd-avatar" aria-hidden="true">${escapeHtml(author.trim().charAt(0).toUpperCase())}</span>`
+        : "";
+    const name = author ? `<span class="dd-byline-name">By ${escapeHtml(author)}</span>` : "";
+    return (
+        `<div class="dd-byline">${avatar}` +
+        `<p class="dd-article-meta">${name}<span class="dd-byline-dates">${articleDates(entry)}</span></p>` +
+        `</div>`
+    );
+}
+
+/** A card on the articles index: the whole card is one link. */
+function articleCard(entry: ArticleEntry, href: string, level: 2 | 3 = 2): string {
+    const { cover } = entry.article;
+    const img = cover
+        ? `<img class="dd-article-card-image${cover.drawing ? " dd-article-card-image--drawing" : ""}" src="${escapeHtml(cover.src)}" alt=""` +
+          (cover.width !== undefined ? ` width="${cover.width}"` : "") +
+          (cover.height !== undefined ? ` height="${cover.height}"` : "") +
+          ` loading="lazy" decoding="async">`
+        : "";
+    // The cover's art-directed sources carry over, so a dark rendition shows in dark mode.
+    const image = cover?.sources?.length
+        ? `<picture>${cover.sources
+              .map(
+                  (source) =>
+                      `<source srcset="${escapeHtml(source.srcset)}"` +
+                      (source.media ? ` media="${escapeHtml(source.media)}"` : "") +
+                      (source.type ? ` type="${escapeHtml(source.type)}"` : "") +
+                      `>`,
+              )
+              .join("")}${img}</picture>`
+        : img;
+    return (
+        `<li class="dd-article-item${cover ? "" : " dd-article-item--text"}">` +
+        `<a class="dd-article-card" href="${escapeHtml(href)}">` +
+        image +
+        `<span class="dd-article-card-text">` +
+        `<span class="dd-article-meta">${articleDates(entry)}</span>` +
+        `<h${level} class="dd-article-question">${escapeHtml(entry.question)}</h${level}>` +
+        `<span class="dd-article-answer">${escapeHtml(entry.answer)}</span>` +
+        `</span></a></li>`
+    );
+}
+
+/** Where an article page links out: the index, and the other articles to read next. */
+interface ArticleLinks {
+    indexPath: string;
+    more: { entry: ArticleEntry; href: string }[];
+}
+
+/**
+ * "In this article": a link to each heading, so a long article can be
+ * scanned and jumped through. It is a native disclosure, open by default, so
+ * a reader can fold it away with no script. Fewer than two headings is not
+ * worth a list.
+ */
+function articleContents(blocks: DocBlock[], facts: FactMap, where: string): string {
+    const headings = blocks.filter((block) => block.kind === "heading");
+    if (headings.length < 2) return "";
+    const items = headings
+        .map((h) => `<li><a href="#${escapeHtml(headingId(h))}">${inline(h.text, facts, where)}</a></li>`)
+        .join("");
+    return (
+        `<details class="dd-article-toc" open>` +
+        `<summary class="dd-article-toc-title">In this article</summary>` +
+        `<ol>${items}</ol></details>`
+    );
+}
+
+/**
+ * An article page shows a reader exactly what an answer engine quotes: the
+ * question is the heading and the answer is the opening line, before the date
+ * and the body. Read with no stylesheet, the order alone says the same thing.
+ *
+ * It is set like a long-form essay rather than a manual page: a quiet header,
+ * the cover as a wide illustration, the contents, then the writing in one
+ * column with figures free to run wider, and more articles at the end.
+ */
+function articleBody(entry: ArticleEntry, facts: FactMap, sectionHref: SectionHref, links: ArticleLinks): string {
+    const { article } = entry;
+    const where = `article "${article.id}"`;
+    const blocks = article.blocks
+        .map((block) => renderBlock(block, facts, where, sectionHref))
+        .join("");
+    // The cover is the one image the reader sees first, so it loads eagerly.
+    const cover = article.cover
+        ? renderBlock({ kind: "image", ...article.cover, loading: "eager", fetchPriority: "high" }, facts, where, sectionHref)
+        : "";
+    const more = links.more.length
+        ? `<section class="dd-article-more" aria-labelledby="dd-article-more-title">` +
+          `<div class="dd-article-more-head">` +
+          `<h2 class="dd-article-more-title" id="dd-article-more-title">More articles</h2>` +
+          `<a class="dd-article-all" href="${escapeHtml(links.indexPath)}">All articles</a>` +
+          `</div>` +
+          `<ol class="dd-articles dd-articles--more">` +
+          links.more.map(({ entry: other, href }) => articleCard(other, href, 3)).join("") +
+          `</ol></section>`
+        : `<nav class="dd-article-more" aria-label="More articles">` +
+          `<a class="dd-article-all" href="${escapeHtml(links.indexPath)}">All articles</a></nav>`;
+    return (
+        `<div class="dd-article" id="${escapeHtml(article.id)}">` +
+        `<header class="dd-article-head">` +
+        `<p class="dd-article-crumbs"><a href="${escapeHtml(links.indexPath)}">Articles</a></p>` +
+        `<h1 class="dd-article-question">${inline(article.question, facts, where, sectionHref)}</h1>` +
+        `<p class="dd-article-lede">${inline(article.answer, facts, where, sectionHref)}</p>` +
+        articleByline(entry) +
+        `</header>` +
+        (cover ? `<div class="dd-article-cover">${cover}</div>` : "") +
+        `<div class="dd-article-body">` +
+        articleContents(article.blocks, facts, where) +
+        blocks +
+        `</div>` +
+        more +
+        `</div>`
+    );
 }
 
 /**
@@ -697,12 +845,15 @@ export function buildStatic(
                 feed,
                 chrome: { bar: articlesBar, rail: "" },
                 section: true,
-                body:
-                    articleMeta(entry) +
-                    renderSection(article, facts, { headingLevel: 1, ...links }) +
-                    `<nav class="dd-pager" aria-label="More articles">` +
-                    `<a class="dd-pager-all" href="${escapeHtml(articlesIndexPath)}">All articles</a>` +
-                    `</nav>`,
+                article: true,
+                body: articleBody(entry, facts, pathFor, {
+                    indexPath: articlesIndexPath,
+                    // The newest others: the index's order, not a guess at relevance (DEC-18).
+                    more: articleEntries
+                        .filter((other) => other !== entry)
+                        .slice(0, 3)
+                        .map((other) => ({ entry: other, href: `${articlesIndexPath}${other.article.id}/` })),
+                }),
                 graph: {
                     "@context": "https://schema.org",
                     "@graph": [
@@ -716,6 +867,7 @@ export function buildStatic(
                             datePublished: article.published,
                             dateModified: entry.modified,
                             ...(article.author ? { author: { "@type": "Person", name: article.author } } : {}),
+                            ...(article.cover ? { image: absoluteSrc(article.cover.src, origin) } : {}),
                             about: { "@id": entityId },
                             publisher: { "@id": entityId },
                             isPartOf: { "@id": `${articlesIndexUrl}#page` },
@@ -740,14 +892,7 @@ export function buildStatic(
         }
 
         const list = articleEntries
-            .map((entry) =>
-                `<li class="dd-article-item">` +
-                `<a class="dd-article-link" href="${escapeHtml(`${articlesIndexPath}${entry.article.id}/`)}">` +
-                `${escapeHtml(entry.article.title)}</a>` +
-                articleMeta(entry) +
-                `<p class="dd-article-answer">${escapeHtml(entry.answer)}</p>` +
-                `</li>`,
-            )
+            .map((entry) => articleCard(entry, `${articlesIndexPath}${entry.article.id}/`))
             .join("");
         write(`${ARTICLES_DIR}/index.html`, page({
             title: `Articles - ${docs.entity.name}`,
@@ -758,7 +903,11 @@ export function buildStatic(
             indexing,
             feed,
             chrome: { bar: articlesBar, rail: "" },
-            body: `<h1>Articles</h1><ol class="dd-articles">${list}</ol>`,
+            article: true,
+            body:
+                `<header class="dd-articles-head"><h1 class="dd-title">Articles</h1>` +
+                (docs.entity.tagline ? `<p class="dd-lead">${escapeHtml(docs.entity.tagline)}</p>` : "") +
+                `</header><ol class="dd-articles dd-articles--index">${list}</ol>`,
             graph: {
                 "@context": "https://schema.org",
                 "@graph": [

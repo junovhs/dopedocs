@@ -48,6 +48,8 @@ export interface DocImage {
     position?: "center" | "top" | "bottom" | "left" | "right";
     /** Makes the image a link to a larger or original rendition. */
     href?: string;
+    /** A drawing or diagram rather than a screenshot: shown without a frame. */
+    drawing?: boolean;
 }
 
 /** Semantic highlighting data produced by the optional build-time adapter. */
@@ -58,6 +60,13 @@ export interface CodeToken { text: string; tone?: CodeTone; }
 export type DocBlock =
     | { kind: "code"; code: string; language?: string; caption?: string; tokens?: CodeToken[] }
     | { kind: "p"; text: string }
+    | {
+          kind: "heading";
+          /** A subheading inside a page. Articles list them as "In this article". */
+          text: string;
+          /** The anchor. Defaults to a slug of the text. */
+          id?: string;
+      }
     | { kind: "list"; items: string[]; ordered?: boolean }
     | { kind: "callout"; text: string; tone?: "note" | "warn" }
     | {
@@ -113,7 +122,11 @@ export type DocBlock =
           href?: string;
           rows: [label: string, value: string][];
       }
-    | ({ kind: "image" } & DocImage)
+    | ({
+          kind: "image";
+          /** In an article, the figure spans wider than the text, for a diagram that needs room. */
+          wide?: boolean;
+      } & DocImage)
     | {
           kind: "gallery";
           images: DocImage[];
@@ -173,6 +186,8 @@ export interface DocArticle extends DocPage {
     published: string;
     /** Who wrote it, shown as a byline and named in its structured data. */
     author?: string;
+    /** The picture an article leads with, also its card image on the index. */
+    cover?: DocImage;
 }
 
 /**
@@ -497,6 +512,7 @@ function* walk(
 function proseOf(block: DocBlock): string[] {
     switch (block.kind) {
         case "p":
+        case "heading":
             return [block.text];
         case "list":
             return block.items;
@@ -589,6 +605,14 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     // across both, so no id means two different pages.
     const articles = (docs.articles ?? []).map((section) => ({ section, depth: 0 }));
     for (const { section } of articles) {
+        if (section.cover && !section.cover.alt.trim()) {
+            findings.push({
+                code: "empty-image-alt",
+                severity: "fatal",
+                sectionId: section.id,
+                message: `The cover of article "${section.id}" has a blank alt; say what it shows.`,
+            });
+        }
         if (!section.published) {
             findings.push({
                 code: "article-without-date",

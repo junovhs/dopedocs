@@ -1798,3 +1798,509 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-title, .dd-section-title { font-feature-settings: var(--dd-display-features, var(--dd-features, normal)); font-variation-settings: var(--dd-display-variations, var(--dd-variations, normal)); }
 .dd-nav, .dd-bar { font-feature-settings: var(--dd-ui-features, normal); font-variation-settings: var(--dd-ui-variations, normal); }
 .dd-section code, .dd-code { font-feature-settings: var(--dd-mono-features, var(--dd-features, normal)); font-variation-settings: var(--dd-mono-variations, var(--dd-variations, normal)); }
+
+/* ==========================================================================
+   Articles (ART-02, DEC-18)
+   Articles are read, not looked up, so they are set like a long-form essay:
+   a quiet header (the question as headline, the answer an engine quotes as
+   the standfirst, a byline), the cover as a wide illustration, the contents,
+   then the writing in one column with figures that may run wider. Existing
+   tokens only and no script, so any host's theme carries over.
+   ========================================================================== */
+
+/* A subheading inside a page, in the panel and on any static page. Its "#"
+   link shows on hover, for sharing a place in a long page. */
+.dd-heading {
+    margin: 40px 0 12px;
+    color: var(--dd-text);
+    font: var(--dd-heading-weight, 650) 22px/1.25 var(--dd-display, var(--dd-sans));
+    letter-spacing: var(--dd-display-track, -0.02em);
+    scroll-margin-top: 76px;
+}
+
+.dd-heading-link {
+    margin-left: 0.35em;
+    color: var(--dd-muted);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--dd-duration, 200ms) var(--dd-ease, ease);
+}
+
+.dd-heading:hover .dd-heading-link,
+.dd-heading-link:focus-visible {
+    opacity: 1;
+}
+
+/* No rail: articles and their index span the window, and each part below
+   sets its own width. */
+.dd-static .dd-page--article {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    padding: 72px 24px 104px;
+    box-sizing: border-box;
+}
+
+/* --- the header ---------------------------------------------------------- */
+
+.dd-article-head,
+.dd-article-body {
+    max-width: 680px;
+    margin-inline: auto;
+}
+
+.dd-article-crumbs {
+    margin: 0 0 20px;
+    color: var(--dd-muted);
+    font: 500 14px/1 var(--dd-ui, var(--dd-sans));
+}
+
+.dd-article-crumbs a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.dd-article-crumbs a:is(:hover, :focus-visible) {
+    color: var(--dd-text);
+}
+
+.dd-article-question {
+    margin: 0 0 18px;
+    font: var(--dd-heading-weight, 700) clamp(32px, 4.4vw, 48px)/1.1 var(--dd-display, var(--dd-sans));
+    letter-spacing: var(--dd-display-track, -0.03em);
+    text-wrap: balance;
+}
+
+.dd-article-lede {
+    margin: 0 0 24px;
+    color: var(--dd-text-soft);
+    font-size: clamp(18px, 1.8vw, 20px);
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+
+.dd-byline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dd-avatar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--dd-panel-muted);
+    color: var(--dd-text);
+    font: 600 13px/1 var(--dd-ui, var(--dd-sans));
+}
+
+.dd-article-meta {
+    margin: 0;
+    color: var(--dd-muted);
+    font: 500 13.5px/1.45 var(--dd-ui, var(--dd-sans));
+}
+
+.dd-byline-name {
+    display: block;
+    color: var(--dd-text);
+    font-weight: 600;
+}
+
+/* --- figures: the cover and the body's pictures and diagrams ------------- */
+
+/* Each figure sits in a panel with its caption along the bottom, the way a
+   diagram is set in a technical essay. */
+.dd-article-cover {
+    max-width: 960px;
+    margin: 48px auto 0;
+}
+
+.dd-article :is(.dd-article-cover, .dd-article-body) .dd-figure {
+    max-width: none;
+    margin: 40px 0;
+    overflow: hidden;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel);
+}
+
+.dd-article .dd-article-cover .dd-figure {
+    margin: 0;
+}
+
+.dd-article .dd-figure > :is(.dd-media, picture, .dd-media-link) {
+    width: calc(100% - 56px);
+    margin: 28px;
+}
+
+.dd-article .dd-figure picture > .dd-media {
+    width: 100%;
+}
+
+/* A drawing is the panel's content, not a screenshot in a frame. */
+.dd-media.dd-media--drawing {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+}
+
+.dd-article .dd-figure .dd-figcaption {
+    margin: 0;
+    padding: 12px 18px;
+    border-top: 1px solid var(--dd-line);
+    color: var(--dd-muted);
+    font-size: 13.5px;
+}
+
+/* A wide figure runs past the text on both sides, up to the cover's width. */
+.dd-article .dd-article-body .dd-figure--wide {
+    width: min(960px, 100vw - 48px);
+    margin-left: calc(50% - min(480px, 50vw - 24px));
+}
+
+/* --- the contents and the body ------------------------------------------- */
+
+.dd-article-toc {
+    margin: 0 0 40px;
+    padding: 16px 20px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    background: var(--dd-panel);
+}
+
+.dd-article-toc-title {
+    display: flex;
+    justify-content: space-between;
+    color: var(--dd-muted);
+    font: 500 14px/1.4 var(--dd-ui, var(--dd-sans));
+    cursor: pointer;
+    list-style: none;
+}
+
+.dd-article-toc-title::-webkit-details-marker {
+    display: none;
+}
+
+.dd-article-toc-title::after {
+    content: "↓";
+}
+
+.dd-article-toc[open] > .dd-article-toc-title::after {
+    content: "↑";
+}
+
+.dd-article-toc ol {
+    display: grid;
+    gap: 6px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dd-article-toc a {
+    color: var(--dd-text);
+    font: 500 15px/1.4 var(--dd-ui, var(--dd-sans));
+    text-decoration: none;
+}
+
+.dd-article-toc a:is(:hover, :focus-visible) {
+    color: var(--dd-accent);
+}
+
+.dd-article-body {
+    padding-top: 48px;
+}
+
+/* Body text at reading size and in full ink: the manual's soft secondary
+   text is right for reference, wrong for a page read top to bottom. */
+.dd-article-body :is(.dd-p, .dd-list li) {
+    color: var(--dd-text);
+    font-size: 18px;
+    line-height: 1.72;
+}
+
+.dd-article-body .dd-p {
+    margin-bottom: 22px;
+}
+
+.dd-article-body .dd-heading {
+    margin: 56px 0 14px;
+    font-size: clamp(24px, 2.4vw, 28px);
+    line-height: 1.2;
+}
+
+/* Notes and steps are a manual's widgets; in an article they are set as
+   prose. A note is a paragraph that opens with its label in bold, and steps
+   are a plain numbered list whose items open with their titles. */
+.dd-article-body .dd-callout {
+    display: block;
+    margin: 0 0 22px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+}
+
+.dd-article-body .dd-callout > .dd-icon {
+    display: none;
+}
+
+.dd-article-body .dd-callout-label {
+    display: inline;
+    margin: 0 0.3em 0 0;
+    font: inherit;
+    font-weight: 700;
+}
+
+.dd-article-body .dd-callout-label::after {
+    content: ":";
+}
+
+.dd-article-body .dd-steps {
+    margin: 0 0 22px;
+    padding-left: 1.5em;
+    list-style: decimal;
+}
+
+.dd-article-body .dd-step {
+    display: list-item;
+    padding: 0 0 12px 0.2em;
+}
+
+.dd-article-body .dd-step::before,
+.dd-article-body .dd-step::after {
+    content: none;
+}
+
+.dd-article-body .dd-step::marker {
+    color: var(--dd-muted);
+    font-weight: 600;
+}
+
+.dd-article-body :is(.dd-step-body, .dd-step-title, .dd-step-text) {
+    display: inline;
+}
+
+.dd-article-body .dd-step-title::after {
+    content: ".";
+}
+
+.dd-article-body .dd-step-title {
+    margin-right: 0.3em;
+    padding: 0;
+}
+
+.dd-article-body :is(.dd-callout p, .dd-step-title, .dd-step-text) {
+    color: var(--dd-text);
+    font-size: 18.5px;
+    line-height: 1.72;
+}
+
+/* A quote in an article is a pull quote: large, set apart, no box. */
+.dd-article-body .dd-quote {
+    margin: 48px 0;
+    padding: 4px 0 4px 28px;
+    border-left-width: 4px;
+    background: none;
+}
+
+.dd-article-body .dd-quote p {
+    font: var(--dd-heading-weight, 650) clamp(22px, 2.4vw, 27px)/1.35 var(--dd-display, var(--dd-sans));
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+}
+
+.dd-article-body .dd-quote figcaption {
+    margin-top: 14px;
+    font-size: 14px;
+}
+
+/* --- more articles ------------------------------------------------------- */
+
+.dd-article-more {
+    max-width: 1160px;
+    margin: 96px auto 0;
+    padding-top: 48px;
+    border-top: 1px solid var(--dd-line);
+}
+
+.dd-article-more-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.dd-article-more-title {
+    margin: 0;
+    font: var(--dd-heading-weight, 700) 26px/1.2 var(--dd-display, var(--dd-sans));
+    letter-spacing: var(--dd-display-track, -0.02em);
+}
+
+.dd-article-all {
+    color: var(--dd-accent);
+    font: 600 15px/1 var(--dd-ui, var(--dd-sans));
+    text-decoration: none;
+}
+
+.dd-article-all:is(:hover, :focus-visible) {
+    text-decoration: underline;
+}
+
+/* --- the index and the cards --------------------------------------------- */
+
+.dd-articles-head {
+    max-width: 1160px;
+    margin: 0 auto 56px;
+}
+
+.dd-articles-head .dd-title {
+    margin-bottom: 12px;
+    font-size: clamp(38px, 5vw, 56px);
+}
+
+.dd-articles-head .dd-lead {
+    margin: 0;
+    color: var(--dd-text-soft);
+    font-size: clamp(18px, 1.8vw, 20px);
+}
+
+.dd-articles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dd-articles--index {
+    max-width: 1160px;
+    margin-inline: auto;
+}
+
+.dd-articles--more {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dd-article-card {
+    display: grid;
+    gap: 16px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.dd-article-card-text {
+    display: grid;
+    gap: 8px;
+}
+
+.dd-article-card .dd-article-question {
+    margin: 0;
+    font-size: clamp(20px, 2vw, 24px);
+    line-height: 1.2;
+}
+
+.dd-articles--more .dd-article-card .dd-article-question {
+    font-size: 19px;
+}
+
+.dd-article-card .dd-article-answer {
+    color: var(--dd-text-soft);
+    font-size: 16px;
+    line-height: 1.55;
+}
+
+.dd-article-card-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius);
+    aspect-ratio: 16 / 10;
+    background: var(--dd-panel);
+    object-fit: cover;
+    object-position: top left;
+    transition: transform var(--dd-duration, 200ms) var(--dd-ease, ease);
+}
+
+/* A drawn cover is shown whole; a screenshot is cropped from its top left. */
+.dd-article-card picture {
+    display: block;
+}
+
+.dd-article-card-image--drawing {
+    padding: 4%;
+    box-sizing: border-box;
+    object-fit: contain;
+}
+
+.dd-article-card:is(:hover, :focus-visible) .dd-article-card-image {
+    transform: translateY(-3px);
+}
+
+.dd-article-card:is(:hover, :focus-visible) .dd-article-question {
+    text-decoration: underline 2px var(--dd-accent);
+    text-underline-offset: 5px;
+}
+
+/* The newest article leads the index: full width, picture beside the words. */
+.dd-articles--index > .dd-article-item:first-child {
+    grid-column: 1 / -1;
+}
+
+.dd-articles--index > .dd-article-item:first-child .dd-article-card {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 40px;
+}
+
+.dd-articles--index > .dd-article-item:first-child .dd-article-question {
+    font-size: clamp(24px, 2.6vw, 34px);
+}
+
+.dd-articles--index > .dd-article-item--text:first-child .dd-article-card {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* --- narrow windows ------------------------------------------------------ */
+
+@media (max-width: 1000px) {
+    .dd-articles--more {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .dd-static .dd-page--article {
+        padding-top: 40px;
+    }
+
+    .dd-article-cover {
+        margin-top: 32px;
+    }
+
+    .dd-article .dd-figure > :is(.dd-media, picture, .dd-media-link) {
+        width: calc(100% - 28px);
+        margin: 14px;
+    }
+
+    .dd-articles,
+    .dd-articles--more,
+    .dd-articles--index > .dd-article-item:first-child .dd-article-card {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dd-article-card-image,
+    .dd-heading-link {
+        transition: none;
+    }
+}

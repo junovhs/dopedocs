@@ -1132,7 +1132,88 @@ describe("articles (DEC-18)", () => {
         expect(html).toContain("it is free");
         expect(html).toContain('href="/docs/export/"');
         expect(html).not.toContain('class="dd-nav"');
-        expect(built["articles/newer/index.html"]).toContain("Updated <time datetime=\"2026-07-01\">July 1, 2026</time> · By Spencer Nunamaker");
+        const newer = built["articles/newer/index.html"]!;
+        expect(newer).toContain('<span class="dd-byline-name">By Spencer Nunamaker</span>');
+        expect(newer).toContain("Updated <time datetime=\"2026-07-01\">July 1, 2026</time> · 1 min read");
+        expect(newer).toContain('<span class="dd-avatar" aria-hidden="true">S</span>');
+        // The question is the headline and the answer is the standfirst, in that order.
+        expect(html.indexOf('<h1 class="dd-article-question">')).toBeLessThan(html.indexOf('class="dd-article-lede"'));
+    });
+
+    it("leads with a cover, card and structured-data image when one is given", () => {
+        const covered = buildStatic(defineDocs({
+            ...withArticles,
+            articles: [{ ...withArticles.articles![1]!, cover: { src: "/shots/plans.webp", alt: "The plans view", width: 1800, height: 1175 } }],
+        }), { now });
+        const page = covered["articles/newer/index.html"]!;
+        expect(page).toContain('<div class="dd-article-cover">');
+        expect(page).toContain('src="/shots/plans.webp" alt="The plans view" width="1800" height="1175" loading="eager" fetchpriority="high"');
+        expect(nodeOf(page, "Article").image).toBe("https://noceremony.app/shots/plans.webp");
+        expect(covered["articles/index.html"]).toContain('<img class="dd-article-card-image" src="/shots/plans.webp" alt="" width="1800" height="1175" loading="lazy"');
+        const blankAlt = { ...withArticles.articles![1]!, cover: { src: "/x.webp", alt: " " } };
+        expect(validate(defineDocs({ ...docs, articles: [blankAlt] })).map((f) => f.code)).toContain("empty-image-alt");
+    });
+
+    it("lists two or more headings as \"In this article\" ahead of the body", () => {
+        const sectioned = {
+            ...withArticles.articles![0]!,
+            blocks: [
+                { kind: "heading" as const, text: "Why it **breaks**" },
+                { kind: "p" as const, text: "Because." },
+                { kind: "heading" as const, text: "The fix", id: "fix" },
+            ],
+        };
+        const html = buildStatic(defineDocs({ ...docs, articles: [sectioned] }), { now })["articles/older/index.html"]!;
+        expect(html).toContain('<h2 class="dd-heading" id="why-it-breaks">');
+        expect(html).toContain('<h2 class="dd-heading" id="fix">The fix<a class="dd-heading-link" href="#fix" aria-label="Link to this section">#</a></h2>');
+        expect(html).toContain('<li><a href="#why-it-breaks">Why it <strong>breaks</strong></a></li><li><a href="#fix">The fix</a></li>');
+        // An open native disclosure: foldable with no script, and readable with none.
+        expect(html).toContain('<details class="dd-article-toc" open><summary class="dd-article-toc-title">In this article</summary>');
+        expect(html.indexOf('class="dd-article-toc"')).toBeLessThan(html.indexOf('<h2 class="dd-heading"'));
+        expect(built["articles/older/index.html"]).not.toContain("dd-article-toc");
+    });
+
+    it("lets an article figure run wider than the text", () => {
+        const wide = {
+            ...withArticles.articles![0]!,
+            blocks: [{ kind: "image" as const, wide: true, src: "/d.svg", alt: "A diagram", width: 920, height: 400 }],
+        };
+        const html = buildStatic(defineDocs({ ...docs, articles: [wide] }), { now })["articles/older/index.html"]!;
+        expect(html).toContain('<figure class="dd-figure dd-figure--wide"><img class="dd-media dd-media--center" src="/d.svg" alt="A diagram" width="920" height="400"');
+    });
+
+    it("shows a drawing without a frame and keeps a cover's dark rendition on its card", () => {
+        const cover = {
+            src: "/art/hero-light.webp",
+            sources: [{ srcset: "/art/hero-dark.webp", media: "(prefers-color-scheme: dark)", type: "image/webp" }],
+            alt: "An animated diagram",
+            width: 920,
+            height: 400,
+            drawing: true,
+        };
+        const built = buildStatic(defineDocs({ ...docs, articles: [{ ...withArticles.articles![0]!, cover }] }), { now });
+        expect(built["articles/older/index.html"]).toContain('<img class="dd-media dd-media--center dd-media--drawing" src="/art/hero-light.webp"');
+        expect(built["articles/index.html"]).toContain(
+            '<picture><source srcset="/art/hero-dark.webp" media="(prefers-color-scheme: dark)" type="image/webp">' +
+            '<img class="dd-article-card-image dd-article-card-image--drawing" src="/art/hero-light.webp" alt=""',
+        );
+    });
+
+    it("ends each article with the other articles, newest first, and a link to all", () => {
+        const older = built["articles/older/index.html"]!;
+        expect(older).toContain('<h2 class="dd-article-more-title" id="dd-article-more-title">More articles</h2>');
+        expect(older).toContain('<a class="dd-article-all" href="/articles/">All articles</a>');
+        expect(older).toContain('<a class="dd-article-card" href="/articles/newer/">');
+        expect(older).toContain('<h3 class="dd-article-question">');
+        expect(older).not.toContain('href="/articles/older/"');
+        const alone = buildStatic(defineDocs({ ...docs, articles: [withArticles.articles![0]!] }), { now })["articles/older/index.html"]!;
+        expect(alone).not.toContain("dd-article-more-title");
+        expect(alone).toContain('<a class="dd-article-all" href="/articles/">All articles</a>');
+    });
+
+    it("rounds reading time up from the rendered words", () => {
+        const long = { ...withArticles.articles![0]!, blocks: [{ kind: "p" as const, text: "word ".repeat(231) }] };
+        expect(buildStatic(defineDocs({ ...docs, articles: [long] }), { now })["articles/older/index.html"]).toContain("2 min read");
     });
 
     it("publishes an RSS feed, newest first, dated by publication", () => {

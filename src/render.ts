@@ -12,7 +12,7 @@
 import { icon } from "./icons.js";
 import type { FactMap } from "./facts.js";
 import { stripLinks } from "./links.js";
-import { anchorHref, escapeHtml, inline, type SectionHref } from "./inline.js";
+import { anchorHref, escapeHtml, headingId, inline, type SectionHref } from "./inline.js";
 export { UnknownFactError, escapeHtml, inline, type SectionHref } from "./inline.js";
 import { CODE_TONES, isGroup, type DocBlock, type DocIdentity, type DocImage, type DocPage, type DocSection, type DocSet } from "./schema.js";
 
@@ -58,6 +58,13 @@ export function renderBlock(
         }
         case "p":
             return `<p class="dd-p">${text(block.text)}</p>`;
+
+        case "heading":
+        {
+            // The trailing "#" is the heading's own link, for sharing a place in a long page.
+            const id = escapeHtml(headingId(block));
+            return `<h2 class="dd-heading" id="${id}">${text(block.text)}<a class="dd-heading-link" href="#${id}" aria-label="Link to this section">#</a></h2>`;
+        }
 
         case "list": {
             const tag = block.ordered ? "ol" : "ul";
@@ -194,7 +201,7 @@ export function renderBlock(
         }
 
         case "image":
-            return imageFigure(block, text);
+            return imageFigure(block, text, block.wide ? "dd-figure dd-figure--wide" : undefined);
 
         case "gallery":
             return (
@@ -354,7 +361,7 @@ function imageFigure(
         ` loading="${image.loading ?? "lazy"}"` +
         (image.fetchPriority ? ` fetchpriority="${image.fetchPriority}"` : "") +
         ` decoding="async"`;
-    const img = `<img class="dd-media dd-media--${image.position ?? "center"}" src="${escapeHtml(
+    const img = `<img class="dd-media dd-media--${image.position ?? "center"}${image.drawing ? " dd-media--drawing" : ""}" src="${escapeHtml(
         image.src,
     )}" alt="${escapeHtml(stripLinks(image.alt))}"${attrs}>`;
     const picture = image.sources?.length

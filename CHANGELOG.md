@@ -13,7 +13,21 @@
   build emits `/articles/<id>/`, an `/articles/` index newest first and an
   `/articles/feed.xml` RSS feed, and lists articles in the sitemap, `llms.txt`
   and `questions.json` with their dates. Docs without articles build exactly
-  as before. The articles' styling is still basic.
+  as before.
+- **Articles look like articles:** each article is set like a long-form
+  essay: a quiet header (headline, the answer as the standfirst, a byline),
+  an optional `cover` shown as a wide illustration, an "In this article" list
+  that folds away with no script, then the writing in one column. Pictures
+  and diagrams sit in panels with their caption along the bottom, and an
+  image block with `wide: true` runs wider than the text. In an article, notes
+  and steps read as plain prose. An image with `drawing: true` (a diagram,
+  not a screenshot) shows without a frame; a cover's `sources` carry onto its
+  card, so a dark rendition shows in dark mode there too. The newest other articles close the page,
+  and the index shows picture cards with the newest one featured.
+- **Headings inside a page:** a new `{ kind: "heading", text }` block adds a
+  subheading with an anchor (`id` optional, else a slug of the text) and a
+  "#" link that shows on hover. Articles with two or more list them as
+  "In this article".
 
 ## 0.6.1 - 2026-10-26
 
