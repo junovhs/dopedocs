@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 - 2026-10-27
 
 - **Real dates:** pages accept optional `published` and `updated` dates
   (`YYYY-MM-DD`). They become the page's `datePublished`/`dateModified` and its
