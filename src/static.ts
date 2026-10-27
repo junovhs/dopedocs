@@ -351,7 +351,11 @@ export function buildStatic(
     const pathFor = (id: string) => `${homePath}${prefix}${id}/`;
     /** The one canonical URL a section owns (DEC-04). */
     const urlFor = (id: string) => `${origin}/${prefix}${id}/`;
-    const lastmod = now.toISOString().slice(0, 10);
+    /**
+     * The build date. It dates only the generated data files, which really
+     * were generated now; a page's dates come from its author (DEC-19).
+     */
+    const generated = now.toISOString().slice(0, 10);
     const facts = docs.facts;
 
     const all = flatten(docs.sections);
@@ -361,7 +365,14 @@ export function buildStatic(
         url: urlFor(section.id),
         question: plain(section.question, facts, `section "${section.id}"`),
         answer: plain(section.answer, facts, `section "${section.id}"`),
+        modified: section.updated ?? section.published,
     }));
+    /** The index changes when any page does, so it carries the newest page date. */
+    const newest = entries
+        .map((e) => e.modified)
+        .filter((date): date is string => date !== undefined)
+        .sort()
+        .at(-1);
 
     /* --- chrome (DEC-07) ------------------------------------------------
        The bar and rail are derived, never configured: the site root comes from
@@ -535,7 +546,8 @@ export function buildStatic(
                         url,
                         headline: section.title,
                         description: entry.answer,
-                        dateModified: lastmod,
+                        ...(section.published ? { datePublished: section.published } : {}),
+                        ...(entry.modified ? { dateModified: entry.modified } : {}),
                         about: { "@id": entityId },
                         publisher: { "@id": entityId },
                         isPartOf: { "@id": `${indexUrl}#page` },
@@ -564,11 +576,12 @@ export function buildStatic(
     out["sitemap.xml"] =
         `<?xml version="1.0" encoding="UTF-8"?>\n` +
         `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-        [indexUrl, ...entries.map((e) => e.url)]
+        [{ url: indexUrl, modified: newest }, ...entries]
             .map(
-                (loc) =>
-                    `  <url>\n    <loc>${escapeHtml(loc)}</loc>\n` +
-                    `    <lastmod>${lastmod}</lastmod>\n  </url>`,
+                ({ url, modified }) =>
+                    `  <url>\n    <loc>${escapeHtml(url)}</loc>\n` +
+                    (modified ? `    <lastmod>${modified}</lastmod>\n` : "") +
+                    `  </url>`,
             )
             .join("\n") +
         `\n</urlset>\n`;
@@ -616,7 +629,7 @@ export function buildStatic(
         JSON.stringify(
             {
                 entity: docs.entity.name,
-                generated: lastmod,
+                generated,
                 questions: entries.map((e) => ({
                     id: e.id,
                     question: e.question,
@@ -638,7 +651,7 @@ export function buildStatic(
         JSON.stringify(
             {
                 entity: docs.entity.name,
-                generated: lastmod,
+                generated,
                 facts: Object.fromEntries(
                     Object.entries(facts).map(([key, fact]) => [
                         key,

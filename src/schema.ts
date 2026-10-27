@@ -152,6 +152,14 @@ export interface DocPage {
     answer: string;
     /** Optional retrieval vocabulary; never rendered as prose. */
     keywords?: string[];
+    /**
+     * When the page was first published, as ISO `YYYY-MM-DD`. Machine-readable
+     * dates come only from here and `updated`; an undated page claims none
+     * (DEC-19).
+     */
+    published?: string;
+    /** When the page's content last changed, as ISO `YYYY-MM-DD`. */
+    updated?: string;
     blocks: DocBlock[];
 }
 
@@ -375,6 +383,8 @@ export type FindingCode =
     | "group-with-content"
     | "unknown-fact-reference"
     | "invalid-review-date"
+    | "invalid-page-date"
+    | "updated-before-published"
     | "stale-fact"
     | "empty-image-alt"
     | "invalid-image-dimensions"
@@ -443,6 +453,13 @@ const firstWord = (text: string): string =>
     (text.trim().match(/^[a-zA-Z]+/)?.[0] ?? "").toLowerCase();
 
 const DAY_MS = 86_400_000;
+
+/** True for an ISO `YYYY-MM-DD` string naming a real calendar day. */
+function isCalendarDate(value: string): boolean {
+    const time = Date.parse(`${value}T00:00:00Z`);
+    return ISO_DATE.test(value) && Number.isFinite(time) &&
+        new Date(time).toISOString().slice(0, 10) === value;
+}
 
 /**
  * Walks a section tree in reading order, reporting each entry's depth. Typed
@@ -637,6 +654,28 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             }
         }
 
+        // DEC-19: these dates are published to machines as-is, so a wrong
+        // one is a false claim, not a typo.
+        const dates = [["published", section.published], ["updated", section.updated]] as const;
+        for (const [field, value] of dates) {
+            if (value !== undefined && !isCalendarDate(value)) {
+                findings.push({
+                    code: "invalid-page-date",
+                    severity: "fatal",
+                    sectionId: id,
+                    message: `Section "${id}" has ${field} date "${value}"; it must be a real ISO YYYY-MM-DD calendar date.`,
+                });
+            }
+        }
+        if (section.published && section.updated && section.updated < section.published) {
+            findings.push({
+                code: "updated-before-published",
+                severity: "fatal",
+                sectionId: id,
+                message: `Section "${id}" was updated on ${section.updated}, before it was published on ${section.published}.`,
+            });
+        }
+
         if (!section.question.trim()) {
             findings.push({
                 code: "empty-question",
@@ -712,8 +751,7 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
 
     for (const [key, fact] of Object.entries(docs.facts)) {
         const reviewedTime = Date.parse(`${fact.reviewed}T00:00:00Z`);
-        if (!ISO_DATE.test(fact.reviewed) || !Number.isFinite(reviewedTime) ||
-            new Date(reviewedTime).toISOString().slice(0, 10) !== fact.reviewed) {
+        if (!isCalendarDate(fact.reviewed)) {
             findings.push({
                 code: "invalid-review-date",
                 severity: "fatal",

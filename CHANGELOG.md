@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- **Real dates:** pages accept optional `published` and `updated` dates
+  (`YYYY-MM-DD`). They become the page's `datePublished`/`dateModified` and its
+  sitemap `lastmod`. Pages without dates no longer claim the build date as
+  their modified date, since that told search and answer engines every page
+  changed on every deploy. Add dates to pages you want shown as current.
+
 ## 0.6.1 - 2026-10-26
 
 - Fix docs served at the site root (`basePath: "/"`): links, canonical URLs,

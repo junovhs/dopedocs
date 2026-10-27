@@ -1003,3 +1003,65 @@ describe("literal link examples in inline code", () => {
         expect(() => buildStatic(example(text), { now })).toThrow(/unknown-section-link|unsupported-link/);
     });
 });
+
+describe("dates (DEC-19)", () => {
+    const dated = defineDocs({
+        ...docs,
+        sections: [
+            { ...docs.sections[0]!, published: "2026-01-02", updated: "2026-03-04" } as DocSet["sections"][number],
+            ...docs.sections.slice(1),
+        ],
+    });
+    // A build date nobody wrote, so any page claiming it is lying.
+    const later = buildStatic(dated, { now: new Date("2030-01-01T00:00:00Z") });
+    const articleOf = (path: string) => nodeOf(later[path]!, "TechArticle");
+    const urlsOf = (sitemap: string) =>
+        sitemap.split("<url>").slice(1).map((block) => ({
+            loc: block.match(/<loc>([^<]+)<\/loc>/)![1],
+            lastmod: block.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1],
+        }));
+
+    it("publishes a dated page's own dates, not the build date", () => {
+        const article = articleOf("docs/what-it-is/index.html");
+        expect(article.datePublished).toBe("2026-01-02");
+        expect(article.dateModified).toBe("2026-03-04");
+    });
+
+    it("claims no date for an undated page", () => {
+        const article = articleOf("docs/data/index.html");
+        expect(article).not.toHaveProperty("dateModified");
+        expect(article).not.toHaveProperty("datePublished");
+    });
+
+    it("gives the sitemap real lastmods, the index the newest, and undated pages none", () => {
+        expect(urlsOf(later["sitemap.xml"]!)).toEqual([
+            { loc: "https://noceremony.app/docs/", lastmod: "2026-03-04" },
+            { loc: "https://noceremony.app/docs/what-it-is/", lastmod: "2026-03-04" },
+            { loc: "https://noceremony.app/docs/data/", lastmod: undefined },
+            { loc: "https://noceremony.app/docs/export/", lastmod: undefined },
+        ]);
+        expect(urlsOf(out["sitemap.xml"]!).every((u) => u.lastmod === undefined)).toBe(true);
+    });
+
+    it("keeps the build date only on the generated data files", () => {
+        for (const [path, body] of Object.entries(later)) {
+            if (path === "questions.json" || path === "facts.json") {
+                expect(body, path).toContain("2030-01-01");
+            } else {
+                expect(body, path).not.toContain("2030-01-01");
+            }
+        }
+    });
+
+    it("refuses a date that is not a real day, and an update before publication", () => {
+        const withDates = (published?: string, updated?: string) =>
+            validate(defineDocs({
+                ...docs,
+                sections: [{ ...docs.sections[0]!, published, updated } as DocSet["sections"][number]],
+            })).map((f) => f.code);
+        expect(withDates("2026-02-30")).toContain("invalid-page-date");
+        expect(withDates("2026-01-02", "26-3-4")).toContain("invalid-page-date");
+        expect(withDates("2026-03-04", "2026-01-02")).toContain("updated-before-published");
+        expect(withDates("2026-01-02", "2026-01-02")).not.toContain("updated-before-published");
+    });
+});
