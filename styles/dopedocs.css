@@ -2454,3 +2454,8 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-copy-button:hover { border-color: var(--dd-accent); }
 .dd-copy-button:focus-visible { outline: 2px solid var(--dd-accent); outline-offset: 3px; }
 @media print { .dd-copy { display: none; } }
+
+/* Optional rail filter, mounted only with JavaScript. */
+.dd-rail-filter { margin-block-end: 20px; font-size: 12px; }
+.dd-rail-filter label { display: grid; gap: 6px; color: var(--dd-muted, #8b8b93); }
+.dd-rail-filter p:empty { display: none; }

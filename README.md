@@ -90,6 +90,12 @@ emits the bundled stylesheet; the second entry is a theme file you supply in
 `public/`. Use `search: true` to add local search to the static pages. The
 in-app panel includes search by default.
 
+Set `railFilter: true` on `mountPanel`, `buildStatic`, or the Vite/Astro integration
+to filter sidebar titles independently of full-text search. `/` focuses the field;
+`railFilter: { shortcut: "f" }` changes that key. Escape clears the filter.
+Matching ignores case and accents and keeps ancestor group labels visible.
+Without JavaScript the field is absent and the full navigation remains available.
+
 Set `copyPage: true` on `mountPanel` and on the Vite/Astro integration (or
 `buildStatic`) to offer a “Copy page” action on manual sections. It copies the
 resolved section text and canonical URL, including labelled tab alternatives and

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add opt-in `railFilter` on the panel and static pages: title matching ignores
+  case and accents, preserves group labels, and clears on Escape. `/` focuses
+  the field, with a configurable shortcut. No JavaScript keeps the full rail.
+
 - Add typed `tabs` with labelled panes, keyboard navigation and synchronized
   choices by group, plus native `disclosure` blocks containing other blocks.
   Static pages show every labelled pane without JavaScript; the optional

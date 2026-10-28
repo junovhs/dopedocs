@@ -1,3 +1,4 @@
+import { railFilterScript } from "./rail-filter.js";
 import { copyScript } from "./copy.js";
 import { tabsScript } from "./tabs.js";
 import { walkBlocks } from "./blocks.js";
@@ -63,6 +64,8 @@ const ROBOTS_META: Record<Indexing, string> = {
 export interface BuildStaticOptions {
     /** Enable local search enhancement; true adds a self-hosted search script. Default false. */
     search?: boolean;
+    /** Filter rail titles; true uses the `/` focus shortcut. Default false. */
+    railFilter?: boolean | { shortcut?: string };
     /** Offer a copy action on manual section pages. Default false. */
     copyPage?: boolean;
     /** Where the docs are served. Defaults to the document's own, else `/docs`. */
@@ -657,7 +660,9 @@ export function buildStatic(
         (options.search !== true ? "" : renderSearch(createSearchIndex(docs, pathFor)) + `<script src="${escapeHtml(indexPath)}search.js" defer></script>`) +
         `<ul class="dd-nav-list">` +
         docs.sections.map((s) => railItem(s, currentId)).join("") +
-        `</ul></nav>`;
+        `</ul>` +
+        (options.railFilter ? `<script src="${escapeHtml(indexPath)}rail-filter.js" data-key="${escapeHtml(typeof options.railFilter === "object" ? options.railFilter.shortcut ?? "/" : "/")}" defer></script>` : "") +
+        `</nav>`;
 
     const out: Record<string, string> = {};
     // Native fragment navigation remains available without this enhancement.
@@ -666,6 +671,7 @@ export function buildStatic(
         .some(page => [...walkBlocks(page.blocks)].some(block => block.kind === "tabs"))) {
         out[`${prefix}tabs.js`] = tabsScript();
     }
+    if (options.railFilter) out[`${prefix}rail-filter.js`] = railFilterScript();
     if (options.copyPage === true) out[`${prefix}copy.js`] = copyScript();
     if (options.search === true) out[`${prefix}search.js`] = searchScript();
     const entityJson = {

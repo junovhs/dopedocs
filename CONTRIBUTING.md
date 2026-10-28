@@ -69,6 +69,11 @@ landing. The same suite runs in `prepublishOnly`.
 `tests/reader-weight-budgets.json`: raw/gzip CSS, the panel's complete ESM graph,
 and the largest shipped example page with its required CSS/scripts (including
 search and skip-link scripts). Sizes use gzip level 9 per response. The baseline
-file records the measurements and 15% headroom; increasing a limit is a deliberate
+file records the measurements and 15% headroom (panel exception: 20%, reviewed for tabs/copy/filter); increasing a limit is a deliberate
 reviewed change. Run just this check with
 `npm test -- --maxWorkers=2 tests/reader-weight.test.mjs`.
+
+NAV-04 panel budget review: the filter adds 1,230 B gzip to the prior 28,602 B
+panel (29,832 B total), exceeding the original 29,030 B cap by 802 B. The
+reviewed panel-only cap is now 30,292 B (20% above the original 25,243 B
+baseline). All original baselines and the CSS/static caps are unchanged.

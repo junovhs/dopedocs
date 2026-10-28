@@ -339,3 +339,9 @@ Classes: `dd-math`, `dd-math--display`, `dd-math-equation`, `dd-math-where`.
 | `--dd-math-where-gap` | Variable-list row and column gap | `7px 18px` |
 
 Equations use `--dd-text`; variable symbols use `--dd-heading-weight` (`600`).
+
+## Rail filter
+
+The opt-in `dd-rail-filter` control reuses `dd-search-input` and the existing
+`--dd-muted`, `--dd-text`, `--dd-bg`, `--dd-border`, `--dd-radius`, and
+`--dd-accent` tokens. Its label wraps the input; its status announces no matches.

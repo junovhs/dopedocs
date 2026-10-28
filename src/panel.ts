@@ -1,3 +1,4 @@
+import { mountRailFilter } from "./rail-filter.js";
 import { mountCopy } from "./copy.js";
 import { mountTabs } from "./tabs.js";
 import { createSearchIndex, renderSearch, mountSearch } from "./search.js";
@@ -35,6 +36,8 @@ export interface PanelOptions {
     navLabel?: string;
     /** Enable local full-text manual search. Default true. */
     search?: boolean;
+    /** Filter rail titles; true uses the `/` focus shortcut. Default false. */
+    railFilter?: boolean | { shortcut?: string };
     /** Offer a copy action for each resolved section. Default false. */
     copyPage?: boolean;
     /** Label on the close control. Default "Back". */
@@ -199,6 +202,7 @@ export function mountPanel(
     target.appendChild(root);
     const themeStyle = getComputedStyle(root);
     root.classList.add(...structuralClasses(Object.fromEntries(Object.keys(structuralKeywords).map(token => [token, themeStyle.getPropertyValue(token)]))));
+    const destroyFilter = options.railFilter ? mountRailFilter(root.querySelector(".dd-nav")!, typeof options.railFilter === "object" ? options.railFilter.shortcut : undefined) : () => {};
     const destroySearch = mountSearch(root);
     const destroyTabs = mountTabs(root);
     const destroyCopy = options.copyPage === true
@@ -484,6 +488,7 @@ export function mountPanel(
             document.removeEventListener("keydown", onKeydown);
             window.removeEventListener("popstate", onPopState);
             for (const group of groups) group.removeEventListener("toggle", onToggleGroup);
+            destroyFilter();
             destroySearch();
             destroyTabs();
             destroyCopy();
