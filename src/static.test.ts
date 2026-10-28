@@ -668,6 +668,23 @@ describe("static page chrome", () => {
         expect(section).toContain('<span class="dd-bar-page">How No Ceremony works</span>');
     });
 
+    it("shows one entity home link when the docs are the site", () => {
+        for (const basePath of ["/", ""]) {
+            for (const url of ["https://docs.example", "https://docs.example/product/"]) {
+                const rootDocs = { ...docs, basePath, entity: { ...docs.entity, url } };
+                const pages = buildStatic(rootDocs, { now });
+                const home = new URL(url).pathname;
+                for (const path of ["index.html", "what-it-is/index.html", "data/index.html"]) {
+                    const bar = pages[path]!.match(/<div class="dd-bar">([\s\S]*?)<\/div>/)![1]!;
+                    expect(bar.match(/No Ceremony/g), path).toHaveLength(1);
+                    expect(bar, path).toContain(`<a class="dd-bar-page" href="${home}">No Ceremony</a>`);
+                    expect(bar, path).not.toContain("dd-back");
+                    expect(bar, path).not.toContain("<svg");
+                }
+            }
+        }
+    });
+
     it("lists every page in the rail, a group as a foldable label over its pages", () => {
         for (const id of ["what-it-is", "data", "export"]) {
             expect(section).toContain(`href="/docs/${id}/"`);

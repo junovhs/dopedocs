@@ -614,9 +614,11 @@ export function buildStatic(
 
     const bar =
         `<div class="dd-bar">` +
-        `<a class="dd-back" href="${escapeHtml(homePath)}">` +
-        `${BACK_ARROW}${escapeHtml(docs.entity.name)}</a>` +
-        `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>` +
+        (basePath
+            ? `<a class="dd-back" href="${escapeHtml(homePath)}">` +
+              `${BACK_ARROW}${escapeHtml(docs.entity.name)}</a>` +
+              `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>`
+            : `<a class="dd-bar-page" href="${escapeHtml(homePath)}">${escapeHtml(docs.entity.name)}</a>`) +
         `</div>`;
 
     /** One rail link, marked when it is the page being read. */
