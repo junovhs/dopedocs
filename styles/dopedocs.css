@@ -2430,3 +2430,27 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     content-visibility: visible;
 }
 }
+
+/* Copy is progressively mounted beside the section title. */
+.dd-copy {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block: 8px;
+    font: 13px var(--dd-sans);
+    color: var(--dd-muted);
+}
+.dd-copy-button {
+    min-height: 36px;
+    padding: 4px 10px;
+    border: 1px solid var(--dd-line);
+    border-radius: var(--dd-radius-xs);
+    background: var(--dd-panel);
+    color: var(--dd-text);
+    font: inherit;
+    cursor: pointer;
+}
+.dd-copy-button:hover { border-color: var(--dd-accent); }
+.dd-copy-button:focus-visible { outline: 2px solid var(--dd-accent); outline-offset: 3px; }
+@media print { .dd-copy { display: none; } }

@@ -90,6 +90,13 @@ emits the bundled stylesheet; the second entry is a theme file you supply in
 `public/`. Use `search: true` to add local search to the static pages. The
 in-app panel includes search by default.
 
+Set `copyPage: true` on `mountPanel` and on the Vite/Astro integration (or
+`buildStatic`) to offer a “Copy page” action on manual sections. It copies the
+resolved section text and canonical URL, including labelled tab alternatives and
+closed disclosure content. Static pages use a self-hosted `copy.js` enhancement;
+without JavaScript the complete content remains readable. Clipboard access needs
+a secure context and a reader click; a denied request shows a manual-copy hint.
+
 ### Docs-only Vite site
 
 To let documentation own the whole site, set `basePath: "/"` on the document

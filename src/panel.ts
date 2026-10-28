@@ -1,3 +1,4 @@
+import { mountCopy } from "./copy.js";
 import { mountTabs } from "./tabs.js";
 import { createSearchIndex, renderSearch, mountSearch } from "./search.js";
 /**
@@ -34,6 +35,8 @@ export interface PanelOptions {
     navLabel?: string;
     /** Enable local full-text manual search. Default true. */
     search?: boolean;
+    /** Offer a copy action for each resolved section. Default false. */
+    copyPage?: boolean;
     /** Label on the close control. Default "Back". */
     backLabel?: string;
     /** Called after the panel opens or closes. */
@@ -198,6 +201,9 @@ export function mountPanel(
     root.classList.add(...structuralClasses(Object.fromEntries(Object.keys(structuralKeywords).map(token => [token, themeStyle.getPropertyValue(token)]))));
     const destroySearch = mountSearch(root);
     const destroyTabs = mountTabs(root);
+    const destroyCopy = options.copyPage === true
+        ? mountCopy(root, id => `${docs.entity.url.replace(/\/+$/, "")}${basePath}/${id}/`)
+        : () => {};
 
     const body = root.querySelector<HTMLElement>(".dd-body")!;
     const skip = root.querySelector<HTMLAnchorElement>(".dd-skip")!;
@@ -480,6 +486,7 @@ export function mountPanel(
             for (const group of groups) group.removeEventListener("toggle", onToggleGroup);
             destroySearch();
             destroyTabs();
+            destroyCopy();
             root.remove();
         },
         get isOpen() {
