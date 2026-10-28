@@ -77,6 +77,7 @@ describe("the written tree", () => {
             "docs/data/index.html",
             "docs/export/index.html",
             "docs/index.html",
+            "docs/skip.js",
             "docs/what-it-is/index.html",
             "facts.json",
             "llms.txt",
@@ -128,7 +129,7 @@ describe("a section page", () => {
     it("carries its heading and prose in the served HTML, with no JavaScript", () => {
         expect(html).toContain("<h1 class=\"dd-section-title\">What this is</h1>");
         expect(html).toContain("Storage tools keep work; this one orders it.");
-        expect(html).not.toContain("<script src");
+        expect(html).toContain('<script src="/docs/skip.js" defer></script>');
     });
 
     it("declares its own canonical URL", () => {
@@ -657,7 +658,7 @@ describe("static page chrome", () => {
             expect(html).toContain('<body class="dd-static">');
             expect(html).toContain('<div class="dd-bar">');
             expect(html).toContain('<nav class="dd-nav" aria-label="Contents">');
-            expect(html).toContain('<main class="dd-page');
+            expect(html).toMatch(/<main\b[^>]*class="dd-page/);
         }
     });
 
@@ -708,8 +709,8 @@ describe("static page chrome", () => {
     it("is complete without JavaScript", () => {
         // Every chrome affordance is a link or plain markup: a reader with
         // scripting off, and a crawler, get the whole page and every route out
-        // of it. A <script> here would be a regression of the crawler view.
-        expect(section).not.toMatch(/<script(?![^>]*application\/ld\+json)/);
+        // of it. The skip enhancement only avoids adding a URL fragment.
+        expect(section.replace('<script src="/docs/skip.js" defer></script>', "")).not.toMatch(/<script(?![^>]*application\/ld\+json)/);
         expect(section).not.toContain("onclick");
         const routesOut = section.match(/<a class="dd-(back|nav-link)[^"]*"/g) ?? [];
         expect(routesOut.length).toBeGreaterThanOrEqual(4);
@@ -752,7 +753,7 @@ describe("page landmarks", () => {
     it("titles a section page with its own section, as the h1", () => {
         const html = out["docs/what-it-is/index.html"]!;
         expect(html).toContain('<h1 class="dd-section-title">What this is</h1>');
-        expect(html).toContain('<main class="dd-page dd-page--section">');
+        expect(html).toMatch(/<main\b[^>]*class="dd-page dd-page--section"/);
     });
 
     it("gives a page in a group its own page, alone, with its title as the h1", () => {
@@ -838,10 +839,10 @@ describe("link form", () => {
     const section = out["docs/what-it-is/index.html"]!;
 
     it("navigates by path so a local or preview build stays where it is", () => {
-        // Every href a reader can follow is root-relative.
+        // Page navigation is root-relative; the skip link stays on this page.
         const hrefs = [...section.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1]!);
         expect(hrefs.length).toBeGreaterThan(4);
-        for (const href of hrefs) expect(href.startsWith("/")).toBe(true);
+        for (const href of hrefs) expect(href.startsWith("/") || href === "#dd-content").toBe(true);
     });
 
     it("keeps machine-read addresses absolute", () => {

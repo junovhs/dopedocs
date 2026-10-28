@@ -232,6 +232,7 @@ interface PageInput {
     stylesheet?: string | string[];
     /** The bar and rail wrapped around the article (DEC-07). */
     chrome: { bar: string; rail: string };
+    skipScriptPath: string;
     /** Marks a single section's page, whose own title is the page's h1. */
     section?: boolean;
     /** Marks an article or the articles index: one centred column, no rail. */
@@ -252,11 +253,15 @@ interface PageInput {
 function page(input: PageInput): string {
     const { title, description, canonical, body, graph, entity, chrome } = input;
     const esc = escapeHtml;
+    // Authored section/block ids share the page's namespace.
+    let contentId = "dd-content";
+    while (body.includes(`id="${contentId}"`)) contentId += "-main";
     return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="${esc(input.skipScriptPath)}" defer></script>
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="${ROBOTS_META[input.indexing]}">
@@ -277,9 +282,10 @@ ${jsonLd(graph)}
 </script>
 </head>
 <body class="dd-static">
+<a class="dd-skip" href="#${contentId}">Skip to content</a>
 ${chrome.bar}
 <div class="dd-body">
-<main class="dd-page${input.section ? " dd-page--section" : ""}${input.article ? " dd-page--article" : ""}">
+<main id="${contentId}" tabindex="-1" class="dd-page${input.section ? " dd-page--section" : ""}${input.article ? " dd-page--article" : ""}">
 <article>
 ${body}
 </article>
@@ -652,6 +658,8 @@ export function buildStatic(
         `</ul></nav>`;
 
     const out: Record<string, string> = {};
+    // Native fragment navigation remains available without this enhancement.
+    out[`${prefix}skip.js`] = `document.querySelector('.dd-skip').addEventListener('click', function(event) { event.preventDefault(); document.getElementById(this.hash.slice(1)).focus(); });`;
     if (options.search === true) out[`${prefix}search.js`] = searchScript();
     const entityJson = {
         ...entityNode(docs.entity, entityType, entityId),
@@ -703,6 +711,7 @@ export function buildStatic(
         stylesheet: options.stylesheet,
         indexing,
         chrome: { bar, rail: railFor() },
+        skipScriptPath: `${indexPath}skip.js`,
         body: renderLead(docs, links) + indexNote + renderBody(docs, links),
         graph: {
             "@context": "https://schema.org",
@@ -766,6 +775,7 @@ export function buildStatic(
             stylesheet: options.stylesheet,
             indexing,
             chrome: { bar, rail: railFor(section.id) },
+            skipScriptPath: `${indexPath}skip.js`,
             section: true,
             whole: { url: indexUrl, title: `${docs.title}, complete on one page` },
             // The section is the page, so its title is the page's one h1 — the
@@ -846,6 +856,7 @@ export function buildStatic(
                 indexing,
                 feed,
                 chrome: { bar: articlesBar, rail: "" },
+                skipScriptPath: `${indexPath}skip.js`,
                 section: true,
                 article: true,
                 body: articleBody(entry, facts, pathFor, {
@@ -905,6 +916,7 @@ export function buildStatic(
             indexing,
             feed,
             chrome: { bar: articlesBar, rail: "" },
+            skipScriptPath: `${indexPath}skip.js`,
             article: true,
             body:
                 `<header class="dd-articles-head"><h1 class="dd-title">Articles</h1>` +

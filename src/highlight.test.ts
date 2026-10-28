@@ -48,6 +48,7 @@ describe("ahead-of-time highlighting", () => {
         expect(html).toContain('a\r\nb\r\n');
         expect(html).toContain('**literal**');
         expect(html).not.toContain('style="color:');
-        expect(html).not.toContain('<script src');
+        // Highlighting adds no client script; only the shared skip link does.
+        expect(html.replace('<script src="/docs/skip.js" defer></script>', '')).not.toContain('<script src');
     });
 });

@@ -1067,6 +1067,24 @@ a.dd-card:focus-visible,
    Keyboard and high-contrast access
    ========================================================================== */
 
+.dd-skip {
+    position: absolute;
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    z-index: 3;
+    padding: 8px 16px;
+    border-radius: var(--dd-radius);
+    background: var(--dd-bg);
+    color: var(--dd-text);
+    font: 600 14px/1.5 var(--dd-sans);
+    transform: translateY(calc(-100% - 16px));
+}
+.dd-skip:focus {
+    transform: none;
+    outline: 2px solid var(--dd-accent);
+    outline-offset: 3px;
+}
+
 .dd-back:focus-visible,
 .dd-nav-link:focus-visible,
 .dd-nav-group > summary:focus-visible,

@@ -162,7 +162,7 @@ breaking change.
 
 **Panel chrome** -
 `dd-overlay` (with `is-open`), `dd-shell`,
-`dd-bar`, `dd-back`, `dd-bar-page`, `dd-esc`,
+`dd-bar`, `dd-back`, `dd-bar-page`, `dd-esc`, `dd-skip` (visible on focus),
 `dd-body`, `dd-nav`, `dd-nav-label`, `dd-nav-list`,
 `dd-nav-link` (with `is-active`), `dd-nav-group`, `dd-main`.
 

@@ -56,6 +56,8 @@ const READ_LINE = 0.25;
 /** Slack in pixels when deciding the scroll container is at its end. */
 const END_SLACK = 2;
 
+let panelSequence = 0;
+
 const trimSlashes = (s: string) => s.replace(/^\/+|\/+$/g, "");
 
 /** Every page in reading order; groups are labels, not places to be. */
@@ -122,6 +124,10 @@ export function mountPanel(
     const basePath = trimmedBase ? `/${trimmedBase}` : "";
     const ordered = flatten(docs.sections);
     const knownIds = new Set(ordered.map((s) => s.id));
+    const content = renderLead(docs) + renderBody(docs);
+    let contentId: string;
+    do { contentId = `dd-content-${++panelSequence}`; }
+    while (content.includes(`id="${contentId}"`) || document.getElementById(contentId));
 
     let open = false;
     let activeId: string | null = null;
@@ -174,6 +180,7 @@ export function mountPanel(
     root.setAttribute("aria-label", docs.title);
     root.innerHTML =
         `<div class="dd-shell">` +
+        `<a class="dd-skip" href="#${contentId}">Skip to content</a>` +
         `<div class="dd-bar">` +
         `<button type="button" class="dd-back" data-dd-close>${icon("arrow-left")}${escapeHtml(backLabel)}</button>` +
         `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>` +
@@ -187,7 +194,7 @@ export function mountPanel(
         `<nav class="dd-panel-pager" aria-label="Continue reading"></nav>` +
         `<ul class="dd-nav-list">${docs.sections.map(railItem).join("")}</ul>` +
         `</nav>` +
-        `<main class="dd-main">${renderLead(docs)}${renderBody(docs)}</main>` +
+        `<main class="dd-main" id="${contentId}" tabindex="-1">${content}</main>` +
         `</div></div>`;
     target.appendChild(root);
     const themeStyle = getComputedStyle(root);
@@ -195,7 +202,8 @@ export function mountPanel(
     const destroySearch = mountSearch(root);
 
     const body = root.querySelector<HTMLElement>(".dd-body")!;
-    const back = root.querySelector<HTMLButtonElement>(".dd-back")!;
+    const skip = root.querySelector<HTMLAnchorElement>(".dd-skip")!;
+    const main = root.querySelector<HTMLElement>(".dd-main")!;
     const sectionEls = [...root.querySelectorAll<HTMLElement>(".dd-section[id]")];
     const navLinks = [...root.querySelectorAll<HTMLElement>("[data-dd-link]")];
     const groups = [...root.querySelectorAll<HTMLDetailsElement>("[data-dd-group]")];
@@ -328,7 +336,9 @@ export function mountPanel(
         // closed the panel in between.
         requestAnimationFrame(() =>
             requestAnimationFrame(() => {
-                if (open) back.focus();
+                // Native autofocus may already have worked. Do not steal a
+                // reader's focus if they have started tabbing through chrome.
+                if (open && document.activeElement === root) skip.focus();
             }),
         );
         onToggle?.(true);
@@ -354,6 +364,13 @@ export function mountPanel(
     /** Handles the close control, a scrim click, and rail navigation. */
     const onClick = (event: MouseEvent) => {
         const el = event.target as HTMLElement;
+        if (el.closest(".dd-skip")) {
+            event.preventDefault();
+            // Preserve the section being read and its canonical URL: focusing
+            // the start of main must not scroll and trigger scrollspy.
+            main.focus({ preventScroll: true });
+            return;
+        }
         if (el.closest("[data-dd-close]")) {
             event.preventDefault();
             doClose();

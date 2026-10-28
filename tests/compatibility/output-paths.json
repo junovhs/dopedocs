@@ -5,6 +5,7 @@
       "docs/focus/index.html",
       "docs/index.html",
       "docs/light/index.html",
+      "docs/skip.js",
       "facts.json",
       "llms.txt",
       "questions.json",
@@ -12,6 +13,7 @@
       "sitemap.xml"
     ],
     "urls": [
+      "href=\"#dd-content\"",
       "href=\"/\"",
       "href=\"/docs/\"",
       "href=\"/docs/clean/\"",
@@ -23,6 +25,7 @@
       "href=\"https://lumen-desk.example/docs/focus/\"",
       "href=\"https://lumen-desk.example/docs/light/\"",
       "href=\"https://lumen-desk.example/start\"",
+      "src=\"/docs/skip.js\"",
       "src=\"/manual-assets/dial.webm\"",
       "src=\"/manual-assets/lamp-compact.svg\"",
       "src=\"/manual-assets/lamp.svg\""
@@ -32,6 +35,7 @@
     "files": [
       "docs/index.html",
       "docs/join/index.html",
+      "docs/skip.js",
       "docs/visit/index.html",
       "facts.json",
       "llms.txt",
@@ -40,6 +44,7 @@
       "sitemap.xml"
     ],
     "urls": [
+      "href=\"#dd-content\"",
       "href=\"/\"",
       "href=\"/docs-theme.css\"",
       "href=\"/docs/\"",
@@ -48,7 +53,8 @@
       "href=\"/docs/visit/\"",
       "href=\"https://field-guide.example/docs/\"",
       "href=\"https://field-guide.example/docs/join/\"",
-      "href=\"https://field-guide.example/docs/visit/\""
+      "href=\"https://field-guide.example/docs/visit/\"",
+      "src=\"/docs/skip.js\""
     ]
   }
 }
