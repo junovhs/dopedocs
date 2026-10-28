@@ -1,8 +1,9 @@
-import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
+import { build, createServer } from "vite";
 
 import { defineDocs } from "./schema.js";
 import { dopedocs } from "./vite.js";
@@ -104,4 +105,100 @@ describe("Vite stylesheet basePath", () => {
         expect(await readFile(join(root, "dist/help/dopedocs.css"), "utf8")).toContain('--dd-bg');
         await expect(access(join(root, "dist/docs/dopedocs.css"))).rejects.toThrow();
     });
+});
+
+
+describe("docs-only Vite sites", () => {
+    it.each(["plugin", "document"])("builds and serves root docs with the %s basePath and no index.html", async (source) => {
+        const root = await temporaryDirectory("dopedocs-only-");
+        const config = {
+            root,
+            configFile: false as const,
+            logLevel: "silent" as const,
+            plugins: [dopedocs(source === "plugin"
+                ? { docs, basePath: "/", stylesheet: true }
+                : { docs: { ...docs, basePath: "/" }, stylesheet: true })],
+        };
+
+        await expect(access(join(root, "index.html"))).rejects.toThrow();
+        await build(config);
+        const html = await readFile(join(root, "dist/index.html"), "utf8");
+        expect(html).toContain("Example manual");
+        expect(html).toContain('href="/start/"');
+        expect(html).toContain('href="/dopedocs.css"');
+        expect(await readFile(join(root, "dist/start/index.html"), "utf8"))
+            .toContain("Do the first thing.");
+
+        const server = await createServer({ ...config, server: { host: "127.0.0.1", port: 0 } });
+        try {
+            await server.listen();
+            const address = server.httpServer!.address();
+            if (!address || typeof address === "string") throw new Error("Missing server port");
+            const origin = `http://127.0.0.1:${address.port}`;
+            for (const path of ["/", "/start/"]) {
+                const response = await fetch(origin + path);
+                expect(response.status).toBe(200);
+                expect(await response.text()).toContain("Example manual");
+            }
+            expect((await fetch(`${origin}/dopedocs.css`)).status).toBe(200);
+        } finally {
+            await server.close();
+        }
+    });
+
+    it("retains the host index and non-root docs setup", async () => {
+        const root = await temporaryDirectory("dopedocs-host-");
+        await writeFile(join(root, "index.html"), "<h1>Host application</h1>");
+        await build({ root, configFile: false, logLevel: "silent", plugins: [dopedocs({ docs })] });
+        expect(await readFile(join(root, "dist/index.html"), "utf8")).toContain("Host application");
+        expect(await readFile(join(root, "dist/docs/index.html"), "utf8")).toContain("Example manual");
+    });
+
+    it("keeps an explicit build input for a root docs site", async () => {
+        const root = await temporaryDirectory("dopedocs-input-");
+        await writeFile(join(root, "worker.js"), 'console.log("Host worker");');
+        await build({
+            root,
+            configFile: false,
+            logLevel: "silent",
+            plugins: [dopedocs({ docs: { ...docs, basePath: "/" } })],
+            build: { rollupOptions: { input: join(root, "worker.js"), output: { entryFileNames: "worker.js" } } },
+        });
+        expect(await readFile(join(root, "dist/worker.js"), "utf8")).toContain("Host worker");
+        expect(await readFile(join(root, "dist/index.html"), "utf8")).toContain("Example manual");
+    });
+});
+
+
+it("still bundles an existing host index when docs own the root", async () => {
+    const root = await temporaryDirectory("dopedocs-root-host-");
+    await writeFile(join(root, "index.html"), '<script type="module" src="/main.js"></script>');
+    await writeFile(join(root, "main.js"), 'console.log("Host entry");');
+    await build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [dopedocs({ docs, basePath: "/" })],
+        build: { rollupOptions: { output: { entryFileNames: "host.js" } } },
+    });
+    expect(await readFile(join(root, "dist/host.js"), "utf8")).toContain("Host entry");
+    expect(await readFile(join(root, "dist/index.html"), "utf8")).toContain("Example manual");
+});
+
+
+it.each(["library", "ssr"])("preserves a %s entry without host HTML", async (mode) => {
+    const root = await temporaryDirectory("dopedocs-special-build-");
+    const entry = join(root, "entry.js");
+    await writeFile(entry, 'export const hostValue = "Host export";');
+    await build({
+        root,
+        configFile: false,
+        logLevel: "silent",
+        plugins: [dopedocs({ docs, basePath: "/" })],
+        build: {
+            ...(mode === "library" ? { lib: { entry, formats: ["es" as const] } } : { ssr: entry }),
+            rollupOptions: { output: { entryFileNames: "host.mjs" } },
+        },
+    });
+    expect(await readFile(join(root, "dist/host.mjs"), "utf8")).toContain("Host export");
 });

@@ -90,6 +90,15 @@ emits the bundled stylesheet; the second entry is a theme file you supply in
 `public/`. Use `search: true` to add local search to the static pages. The
 in-app panel includes search by default.
 
+### Docs-only Vite site
+
+To let documentation own the whole site, set `basePath: "/"` on the document
+or pass it to `dopedocs({ docs, basePath: "/", stylesheet: true })` in your
+Vite config. Run `npx vite` to serve it locally and `npx vite build` to generate
+`dist/index.html` and a page at `dist/<id>/index.html` for each section.
+No placeholder `index.html`, browser entry or panel mount is needed. Existing
+host HTML and explicit `build.rollupOptions.input` entries continue to build.
+
 ### 3. Use your design tokens
 
 Serve this as `public/docs-theme.css`, and link it from the app shell after the

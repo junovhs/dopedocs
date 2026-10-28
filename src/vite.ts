@@ -13,6 +13,7 @@
  * outDirs of its own, so this plugin's `closeBundle` writes to the wrong place.
  */
 
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { createHost, type DevServerLike, type DopedocsHostOptions } from "./host.js";
@@ -20,12 +21,19 @@ import { createHost, type DevServerLike, type DopedocsHostOptions } from "./host
 export { mergeCrawlerFile } from "./host.js";
 
 interface ResolvedConfigLike {
-    build?: { outDir?: string };
+    build?: {
+        outDir?: string;
+        lib?: unknown;
+        ssr?: boolean | string;
+        rollupOptions?: { input?: string | string[] | Record<string, string> };
+    };
     root?: string;
     publicDir?: string | false;
     /** "build" or "serve"; anything but a real build must write nothing. */
     command?: string;
 }
+
+const DOCS_ONLY_ENTRY = "\0dopedocs:docs-only";
 
 /** Everything the plugin accepts: a document, plus the static build's options. */
 export type DopedocsPluginOptions = DopedocsHostOptions;
@@ -53,6 +61,32 @@ export function dopedocs(options: DopedocsPluginOptions) {
             host.setRoot(root, config.publicDir || undefined);
             publicDir = config.publicDir;
             command = config.command;
+
+            // Vite otherwise defaults to index.html even when the generated
+            // docs own that URL. Preserve existing host entries and explicit
+            // Rollup inputs; only supply an entry for the docs-only case.
+            const basePath = options.basePath ?? options.docs.basePath ?? "docs";
+            if (
+                command === "build" &&
+                !basePath.replace(/^\/+|\/+$/g, "") &&
+                !existsSync(resolve(root, "index.html")) &&
+                config.build &&
+                !config.build.lib &&
+                !config.build.ssr &&
+                config.build.rollupOptions?.input === undefined
+            ) {
+                config.build.rollupOptions ??= {};
+                config.build.rollupOptions.input = DOCS_ONLY_ENTRY;
+            }
+        },
+
+        resolveId(id: string) {
+            return id === DOCS_ONLY_ENTRY ? DOCS_ONLY_ENTRY : undefined;
+        },
+
+        load(id: string) {
+            // The static host writes the real pages after Vite finishes.
+            return id === DOCS_ONLY_ENTRY ? "" : undefined;
         },
 
         configureServer(server: DevServerLike) {
