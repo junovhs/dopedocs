@@ -1,0 +1,8 @@
+{
+  "measurement": "Fresh npm tarball; gzip level 9 per response; panel ESM import closure; largest shipped example HTML plus linked CSS/JS, search enabled, fixed 2026-10-18 build date. Host media and optional theme fonts excluded.",
+  "headroom": "15% above each 2026-10-27 baseline, rounded up to the next byte. This permits modest reader features and compression variation while requiring review for substantial growth. Future content features do not receive speculative extra allowance. Raising a limit requires a deliberate reviewed edit here; tests never update budgets automatically.",
+  "readerCssRaw": { "baselineBytes": 62719, "limitBytes": 72127 },
+  "readerCssGzip": { "baselineBytes": 13563, "limitBytes": 15598 },
+  "panelGzip": { "baselineBytes": 25243, "limitBytes": 29030 },
+  "staticPageGzip": { "baselineBytes": 20087, "limitBytes": 23101 }
+}

@@ -64,3 +64,11 @@ in `tests/compatibility/`. A baseline update is a compatibility review, not a
 way to bypass one: removals and renames need the aliases or automatic migration
 required by DEC-14. Run `npm test -- --maxWorkers=3` again without `-u` before
 landing. The same suite runs in `prepublishOnly`.
+
+`npm test` also packs a fresh build and checks reader weight against
+`tests/reader-weight-budgets.json`: raw/gzip CSS, the panel's complete ESM graph,
+and the largest shipped example page with its required CSS/scripts (including
+search and skip-link scripts). Sizes use gzip level 9 per response. The baseline
+file records the measurements and 15% headroom; increasing a limit is a deliberate
+reviewed change. Run just this check with
+`npm test -- --maxWorkers=2 tests/reader-weight.test.mjs`.
