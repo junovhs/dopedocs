@@ -297,11 +297,7 @@ export function renderPage(
     );
 }
 
-/**
- * Renders a page, or a group as a quiet chapter label followed by its pages.
- * The label is not a section: it has no id to scroll to, no answer, no body,
- * and nothing in it needs reading before the pages below it make sense.
- */
+/** Renders a page, or a chapter with its optional overview before its children. */
 export function renderSection(
     section: DocSection,
     facts: FactMap,
@@ -311,6 +307,7 @@ export function renderSection(
     return (
         `<div class="dd-group" data-dd-group-label="${escapeHtml(section.id)}">` +
         `<p class="dd-group-label">${escapeHtml(section.title)}</p>` +
+        (section.landing ? renderPage(section.landing, facts, options) : "") +
         section.children.map((child) => renderSection(child, facts, options)).join("") +
         `</div>`
     );

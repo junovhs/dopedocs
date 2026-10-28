@@ -60,7 +60,7 @@ let panelSequence = 0;
 
 const trimSlashes = (s: string) => s.replace(/^\/+|\/+$/g, "");
 
-/** Every page in reading order; groups are labels, not places to be. */
+/** Every page in reading order, including chapter landings. */
 function flatten(sections: DocSection[]): DocPage[] {
     return pagesOf(sections).map(({ page }) => page);
 }
@@ -158,16 +158,12 @@ export function mountPanel(
             s.id,
         )}/" data-dd-link="${escapeHtml(s.id)}">${escapeHtml(s.title)}</a>`;
 
-    /**
-     * A rail entry: a page link, or a group that folds its pages away. The
-     * summary only folds and unfolds. A group is a label, not a page, so
-     * opening it goes nowhere and there is nothing of its own to read.
-     */
+    /** A folding chapter; its optional landing is linked from the label. */
     const railItem = (s: DocSection): string => {
         if (!isGroup(s)) return `<li>${link(s)}</li>`;
         return (
             `<li><details class="dd-nav-group" data-dd-group="${escapeHtml(s.id)}">` +
-            `<summary>${icon("chevron-right")}${escapeHtml(s.title)}</summary>` +
+            `<summary>${icon("chevron-right")}${s.landing ? link({ ...s.landing, title: s.title }) : escapeHtml(s.title)}</summary>` +
             `<ul class="dd-nav-list">${s.children.map(railItem).join("")}</ul>` +
             `</details></li>`
         );

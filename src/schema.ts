@@ -202,19 +202,15 @@ export interface DocArticle extends DocPage {
     cover?: DocImage;
 }
 
-/**
- * A chapter: a labelled, collapsible bucket of pages and nothing else.
- *
- * A group has no body, no answer and no page of its own. Anything a chapter
- * would say belongs on one of its pages, so a reader never has to read a
- * chapter "in concert" with the pages beneath it to get the whole story. The
- * rail folds it; its id keys the fold and is never a URL.
- */
+/** A chapter: a collapsible set of pages, optionally introduced by a landing page. */
 export interface DocGroup {
-    /** A slug identifying the group. Not a URL: groups have no page. */
+    /** A slug identifying the group and its fold state. */
     id: string;
     /** The chapter's label in the rail. */
     title: string;
+    /** Optional overview, linked from the label and read before the children.
+     * Its id is its canonical URL and must be unique across the document. */
+    landing?: DocPage;
     /** Up to three nested groups; canonical URLs still belong only to pages. */
     children: DocSection[];
 }
@@ -232,7 +228,9 @@ export function pagesOf(sections: DocSection[]): { page: DocPage; group?: DocGro
     function visit(items: DocSection[], ancestors: DocGroup[]): void {
         for (const item of items) {
             if (isGroup(item)) {
-                if (ancestors.length < 4) visit(item.children, [...ancestors, item]);
+                const path = [...ancestors, item];
+                if (item.landing) result.push({ page: item.landing, group: item, ancestors: path });
+                if (ancestors.length < 4) visit(item.children, path);
             } else result.push({ page: item, group: ancestors.at(-1), ancestors });
         }
     }
@@ -517,6 +515,7 @@ function* walk(
 ): Generator<{ section: DocSection; depth: number }> {
     for (const section of sections as DocSection[]) {
         yield { section, depth };
+        if (isGroup(section) && section.landing) yield { section: section.landing, depth };
         const children = (section as { children?: unknown }).children;
         if (Array.isArray(children) && depth < 4) yield* walk(children, depth + 1);
     }
@@ -591,7 +590,7 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     const findings: Finding[] = [];
     const seen = new Set<string>();
     const factKeys = new Set(Object.keys(docs.facts));
-    // Only pages can be linked to: a group has no anchor and no page.
+    // Links target pages, including group landings, rather than fold ids.
     const pageIds = new Set(pagesOf(docs.sections).map(({ page }) => page.id));
 
     /** Reports each link in `text` that leads nowhere, or somewhere it must not. */
@@ -671,7 +670,7 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         }
 
         if (isGroup(section)) {
-            if (section.children.length === 0) {
+            if (section.children.length === 0 && !section.landing) {
                 findings.push({
                     code: "empty-group",
                     severity: "fatal",

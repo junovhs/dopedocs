@@ -24,7 +24,7 @@ export function prepareMath<F extends FactMap>(docs: DocSet<F>): DocSet<F> {
     };
     const page = <P extends DocPage>(item: P): P => ({ ...item, blocks: item.blocks.map(block) });
     const visit = (items: DocSection[]): DocSection[] => items.map(item => isGroup(item)
-        ? { ...item, children: visit(item.children) } : page(item));
+        ? { ...item, ...(item.landing ? { landing: page(item.landing) } : {}), children: visit(item.children) } : page(item));
     return { ...docs, sections: visit(docs.sections),
         ...(docs.articles ? { articles: docs.articles.map(page) } : {}) };
 }

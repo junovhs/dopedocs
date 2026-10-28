@@ -56,7 +56,7 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
         const visit = async (items: DocSection[]): Promise<DocSection[]> => {
             const result: DocSection[] = [];
             for (const item of items) result.push(isGroup(item)
-                ? { ...item, children: await visit(item.children) } : await page(item));
+                ? { ...item, ...(item.landing ? { landing: await page(item.landing) } : {}), children: await visit(item.children) } : await page(item));
             return result;
         };
         const sections = await visit(docs.sections);

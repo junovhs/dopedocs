@@ -78,7 +78,8 @@ A section is a **page** or a **group**.
 | --- | --- |
 | `id` | Required. A slug that keys the fold; not a URL, since a group has no page. |
 | `title` | Required. The chapter label. |
-| `children` | Required. At least one page or subgroup, with no more than three nested groups. |
+| `landing` | Optional `DocPage` overview (id, title, question, answer and blocks), linked from the chapter label and read before its children. Its id must be unique across groups, pages and articles. |
+| `children` | Required. Pages or subgroups, with no more than three nested groups. May be empty when the group has a landing page. |
 
 ---
 
@@ -515,7 +516,7 @@ Early. The API is not stable.
 
 ### Multi-chapter manuals
 
-Groups may contain pages or other groups, up to three nested groups. Each group uses a native keyboard-accessible disclosure in both navigation rails. Pages keep their `/docs/<id>/` URLs regardless of chapter placement. The panel expands the active page's ancestors; readers can also fold them manually. Chapter context and page progress appear while reading, and static section pages include previous/next destinations. Group labels have no URL or content of their own.
+Groups may contain pages or other groups, up to three nested groups. Each group uses a native keyboard-accessible disclosure in both navigation rails. Pages keep their `/docs/<id>/` URLs regardless of chapter placement. The panel expands the active page's ancestors; readers can also fold them manually. Chapter context and page progress appear while reading, and static section pages include previous/next destinations. A group may own a `landing: { id, title, question, answer, blocks }` page: its label links to the landing URL, and the overview appears once before its children in reading order, search and machine outputs. Previous/next links include the overview, and descendant breadcrumbs link to it. Without `landing`, the group remains a label with no URL or content of its own.
 
 ### Search within a manual
 

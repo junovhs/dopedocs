@@ -634,15 +634,11 @@ export function buildStatic(
         (s.id === currentId ? ` aria-current="page"` : "") +
         `>${escapeHtml(s.title)}</a>`;
 
-    // A group is a native <details>, open by default: it folds without any
-    // script, and nothing is hidden from a crawler, which reads closed
-    // <details> content anyway. Its summary is a label, not a link: a group
-    // has no page.
-    /** A rail entry: a page link, or a group label with its pages beneath. */
+    /** Native disclosures work without script; a landing links the chapter label. */
     const railItem = (s: DocSection, currentId?: string): string =>
         isGroup(s)
             ? `<li><details class="dd-nav-group" open>` +
-              `<summary>${icon("chevron-right")}${escapeHtml(s.title)}</summary>` +
+              `<summary>${icon("chevron-right")}${s.landing ? navLink({ ...s.landing, title: s.title }, currentId) : escapeHtml(s.title)}</summary>` +
               `<ul class="dd-nav-list">` +
               s.children.map((child) => railItem(child, currentId)).join("") +
               `</ul></details></li>`
@@ -760,10 +756,12 @@ export function buildStatic(
             (next ? destination("next", next) : "") +
             `</nav>`;
 
-        // A group has no URL, so it is not a crumb: a breadcrumb step must
-        // lead somewhere.
+        // Only chapters with a real landing destination become breadcrumbs.
         const crumbs = [
             { name: docs.title, item: indexUrl },
+            ...pagesOf(docs.sections)[index]!.ancestors
+                .filter((group) => group.landing && group.landing.id !== section.id)
+                .map((group) => ({ name: group.title, item: urlFor(group.landing!.id) })),
             { name: section.title, item: url },
         ];
 
