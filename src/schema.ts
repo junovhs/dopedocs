@@ -59,6 +59,18 @@ export interface CodeToken { text: string; tone?: CodeTone; }
 
 export type DocBlock =
     | { kind: "code"; code: string; language?: string; caption?: string; tokens?: CodeToken[] }
+    | {
+          kind: "math";
+          /** TeX without dollar delimiters. Run prepareMath at build time. */
+          tex: string;
+          /** Display equation by default; false uses inline math layout. */
+          display?: boolean;
+          /** Optional spoken description, otherwise native MathML semantics apply. */
+          label?: string;
+          where?: { symbol: string; text: string }[];
+          /** Generated trusted MathML from dopedocs/math, never user input. */
+          prepared?: { tex: string; display: boolean; mathml: string };
+      }
     | { kind: "p"; text: string }
     | {
           kind: "heading";
@@ -416,6 +428,7 @@ export type FindingCode =
     | "updated-before-published"
     | "article-without-date"
     | "stale-fact"
+    | "empty-math"
     | "empty-image-alt"
     | "invalid-image-dimensions"
     | "table-row-width"
@@ -512,6 +525,8 @@ function* walk(
 /** Every string in a block that inline marks and fact references apply to. */
 function proseOf(block: DocBlock): string[] {
     switch (block.kind) {
+        case "math":
+            return block.where?.map(({ text }) => text) ?? [];
         case "p":
         case "heading":
             return [block.text];
@@ -677,6 +692,10 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         }
 
         for (const block of section.blocks ?? []) {
+            if (block.kind === "math" && !block.tex.trim()) {
+                findings.push({ code: "empty-math", severity: "fatal", sectionId: id,
+                    message: `A math block in "${id}" has blank TeX; write an equation or remove the block.` });
+            }
             if (block.kind === "table") {
                 block.rows.forEach((row, index) => {
                     if (row.length !== block.head.length) {

@@ -160,6 +160,44 @@ changes. Keep `prepareCode` and the source document out of the browser's import
 graph: the generated data needs no Shiki engine, language loaders or inline
 styles. Token colours use the [CSS contract](../styles/TOKENS.md#optional-code-highlighting).
 
+## Math
+
+Install `katex@^0.19.1` as a development dependency and use `prepareMath` from
+`dopedocs/math` in the same build-time preparation step described above:
+
+```ts
+import { prepareMath } from "dopedocs/math";
+const prepared = prepareMath(docs);
+```
+
+```ts
+{ kind: "math", tex: String.raw`V = \frac{D \times P}{T \times E}`,
+  label: "Value equals demand times price divided by time times effort",
+  where: [
+    { symbol: "D", text: "Demand." },
+    { symbol: "P", text: "Price." },
+    { symbol: "T", text: "Time spent, in **hours**." },
+    { symbol: "E", text: "Effort." },
+  ] }
+{ kind: "math", tex: "x^2", display: false }
+```
+
+TeX has no dollar delimiters. Display equations are the default; `display: false`
+uses inline math layout within the block's place in the content flow (it does
+not add math syntax to prose strings). `label` optionally supplies a spoken
+explanation; otherwise assistive technology can use the native MathML semantics
+and TeX annotation. The optional `where` list appears below the equation;
+`symbol` is literal text and `text` supports normal inline marks and facts.
+
+Preparation returns a new serializable document, including nested pages and
+articles. It fails on blank, invalid or unsupported TeX. Pass the same generated
+data to the panel and static build, and rerun preparation after edits. Keep the
+adapter and KaTeX outside browser imports, as in the highlighting example.
+Native MathML needs no KaTeX CSS, fonts or reader scripts. Without preparation
+(or after source/mode changes), the renderer shows escaped TeX. The `prepared`
+field is trusted build output, like inline SVG marks: never fill it with user
+input or arbitrary HTML. Blank equations are also fatal document findings.
+
 ## Widgets for manuals and walkthroughs
 
 These blocks are for product tours, setup guides, handbooks and user manuals,

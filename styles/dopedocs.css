@@ -2322,3 +2322,18 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
         transition: none;
     }
 }
+
+/* Native MathML: no third-party fonts, stylesheet or runtime. */
+.dd-math--display {
+    margin: var(--dd-math-margin, 20px) 0;
+    overflow-x: auto;
+}
+.dd-math-equation { color: var(--dd-text, #18181b); }
+.dd-math-where {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--dd-math-where-gap, 7px 18px);
+    margin: var(--dd-math-margin, 20px) 0 0;
+}
+.dd-math-where dt { font-weight: var(--dd-heading-weight, 600); }
+.dd-math-where dd { margin: 0; }

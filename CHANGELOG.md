@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add display/inline `math` blocks and optional variable definitions. The optional
+  `dopedocs/math` build-time KaTeX adapter emits accessible native MathML for the
+  panel and static pages, with no new reader script, stylesheet or font assets.
+
 ## 0.7.0 - 2026-10-27
 
 - **Real dates:** pages accept optional `published` and `updated` dates

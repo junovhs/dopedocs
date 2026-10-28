@@ -56,6 +56,19 @@ export function renderBlock(
                 block.caption, text, "dd-code-block",
             );
         }
+        case "math": {
+            const display = block.display !== false;
+            const valid = block.prepared?.tex === block.tex && block.prepared.display === display;
+            // Like inline SVG marks, prepared MathML is trusted build output.
+            const equation = valid ? block.prepared!.mathml : escapeHtml(block.tex);
+            const label = block.label ? ` role="math" aria-label="${escapeHtml(block.label)}"` : "";
+            const tag = display || block.where?.length ? "div" : "span";
+            const definitions = block.where?.length
+                ? `<dl class="dd-math-where">${block.where.map(({ symbol, text: body }) =>
+                    `<dt>${escapeHtml(symbol)}</dt><dd>${text(body)}</dd>`).join("")}</dl>` : "";
+            return `<${tag} class="dd-math${display ? " dd-math--display" : ""}">` +
+                `<span class="dd-math-equation"${label}>${equation}</span>${definitions}</${tag}>`;
+        }
         case "p":
             return `<p class="dd-p">${text(block.text)}</p>`;
 

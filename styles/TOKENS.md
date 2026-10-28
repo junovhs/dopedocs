@@ -325,3 +325,15 @@ first matching local face; features may differ in other weights/subsets.
 font-variation-settings, e.g. `"wght" 550, "wdth" 95`. Reading roles default to
 the generic `--dd-features`/`--dd-variations`; interface defaults to normal.
 Each toggle or axis can be reset independently without erasing other settings.
+
+## Math
+
+Native MathML inherits the host's math fonts and needs no KaTeX stylesheet.
+Classes: `dd-math`, `dd-math--display`, `dd-math-equation`, `dd-math-where`.
+
+| Token | Purpose | Fallback |
+| --- | --- | --- |
+| `--dd-math-margin` | Display equation and variable-list spacing | `20px` |
+| `--dd-math-where-gap` | Variable-list row and column gap | `7px 18px` |
+
+Equations use `--dd-text`; variable symbols use `--dd-heading-weight` (`600`).
