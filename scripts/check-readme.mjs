@@ -2,6 +2,8 @@ import { mkdtemp, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
+import { decompress } from 'wawoff2';
 import { spawnCommand } from './run-command.mjs';
 import assert from 'node:assert/strict';
 const root = resolve(import.meta.dirname, '..');
@@ -21,8 +23,27 @@ try {
   let shell = '', count = 0;
   for (const [, language, code] of fences) {
     if (language === 'sh') {
-      assert.equal(code.trim(), 'npm install dopedocs');
-      run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', join(scratch, packed.filename)], app);
+      if (code.trim() === 'npm install dopedocs') {
+        run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', join(scratch, packed.filename)], app);
+      } else {
+        // Supply the reader-owned local font and licence used in the example.
+        if (code.includes('./MyFont.ttf')) {
+          const require = createRequire(import.meta.url);
+          const font = dirname(require.resolve('@fontsource/fraunces/package.json'));
+          await writeFile(join(app, 'MyFont.ttf'), await decompress(await readFile(join(font, 'files/fraunces-latin-400-normal.woff2'))));
+          await writeFile(join(app, 'OFL.txt'), await readFile(join(font, 'LICENSE')));
+        }
+        for (const line of code.trim().split('\n')) {
+          // README examples use simple words or quoted arguments; never invoke a shell.
+          assert.match(line, /^npx dopedocs (?:theme|fonts) /, `Unsupported README command: ${line}`);
+          const args = line.match(/'[^']*'|"[^"]*"|[^\s'"]+/g).slice(2)
+            .map(arg => /^['"]/.test(arg) ? arg.slice(1, -1) : arg);
+          const output = run(process.execPath, [join(app, 'node_modules/dopedocs/dist/cli.js'), ...args], app, true);
+          if (args[0] === 'theme' && args[1] === 'get') assert.equal(output.trim(), '#ff6a2b');
+          if (args[0] === 'theme' && args[1] === 'list') assert(output.includes('--dd-accent: #ff6a2b'));
+          if (args[0] === 'fonts' && args[1] === 'list') assert(output.includes('Fraunces'));
+        }
+      }
     } else {
       const filename = code.match(/^(?:\/\/|\/\*|<!--) ([\w./-]+)/)?.[1];
       assert(filename, `Every code fence must name its destination: ${language}`);
@@ -54,5 +75,5 @@ try {
     if (name === 'service-docs') assert(tree['docs/fees/index.html'].includes('Harbor Visits charges no booking fee.'));
   }
   for (const [, target] of markdown.matchAll(/\]\(\.\/([^#)]+)(?:#[^)]*)?\)/g)) await readFile(join(root, target));
-  console.log(`PASS all ${count} README fences extracted and used; packed-package typecheck, Vite build, Astro build, both document builds; no application warnings`);
+  console.log(`PASS all ${count} README fences extracted and used; packed-package CLI examples, typecheck, Vite build, Astro build, both document builds; no application warnings`);
 } finally { await rm(scratch, { recursive: true, force: true }); }

@@ -1,19 +1,37 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 - 2026-10-28
 
-- Add opt-in `railFilter` on the panel and static pages: title matching ignores
-  case and accents, preserves group labels, and clears on Escape. `/` focuses
-  the field, with a configurable shortcut. No JavaScript keeps the full rail.
+- **Docs-only Vite sites:** serve and build a complete documentation site with
+  `basePath: "/"`, without a placeholder `index.html` or browser entry. Root
+  pages now show one entity-name home link in the header.
+- **Chapter overviews:** groups accept an optional `landing` page. The chapter
+  label links to it, and navigation, search and machine-readable output include
+  it before the chapter's children.
+- **Richer content:** tables support any number of columns and validate row
+  widths. New typed `tabs` support keyboard navigation and synchronized choices
+  by group; `disclosure` blocks contain other blocks. Static pages show every
+  labelled tab pane without JavaScript, and existing `details` blocks still work.
+- **Math:** display and inline `math` blocks support optional variable definitions.
+  The optional `dopedocs/math` build-time KaTeX adapter emits accessible native
+  MathML, with no new reader script, stylesheet or font assets.
+- **Copy page:** opt-in `copyPage` controls copy resolved section text and its
+  canonical URL, including all tab alternatives and closed disclosure content.
+  Clipboard failures show a manual-copy hint.
+- **Sidebar filter:** opt-in `railFilter` matches titles regardless of case or
+  accents and keeps ancestor group labels visible. `/` focuses the field (the
+  shortcut is configurable), and Escape clears it. Without JavaScript, static
+  pages retain the full navigation.
+- **Keyboard access:** visible-on-focus skip links jump to the reading surface
+  in the panel and static pages. Static pages include a self-hosted `skip.js`
+  enhancement to preserve the address; without JavaScript the native link adds
+  a fragment, while canonical metadata stays unchanged.
+- **Reader weight checks:** the packed package is checked against reviewed
+  raw/gzip budgets for CSS, the panel and the largest shipped example page,
+  including its required assets.
 
-- Add typed `tabs` with labelled panes, keyboard navigation and synchronized
-  choices by group, plus native `disclosure` blocks containing other blocks.
-  Static pages show every labelled pane without JavaScript; the optional
-  interaction uses a self-hosted script. Existing `details` blocks still work.
-
-- Add display/inline `math` blocks and optional variable definitions. The optional
-  `dopedocs/math` build-time KaTeX adapter emits accessible native MathML for the
-  panel and static pages, with no new reader script, stylesheet or font assets.
+All changes are additive. Static content remains readable without JavaScript;
+tabs, copy and filtering use self-hosted enhancements when enabled.
 
 ## 0.7.0 - 2026-10-27
 
