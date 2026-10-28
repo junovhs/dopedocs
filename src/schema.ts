@@ -108,7 +108,7 @@ export type DocBlock =
           after: { title: string; text: string };
       }
     | { kind: "keys"; rows: [keys: string, does: string][] }
-    | { kind: "table"; head: [string, string]; rows: [string, string][] }
+    | { kind: "table"; head: string[]; rows: string[][] }
     | {
           kind: "facts";
           title?: string;
@@ -418,6 +418,7 @@ export type FindingCode =
     | "stale-fact"
     | "empty-image-alt"
     | "invalid-image-dimensions"
+    | "table-row-width"
     | "reserved-schema-property"
     | "unknown-section-link"
     | "unsupported-link"
@@ -676,6 +677,18 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         }
 
         for (const block of section.blocks ?? []) {
+            if (block.kind === "table") {
+                block.rows.forEach((row, index) => {
+                    if (row.length !== block.head.length) {
+                        findings.push({
+                            code: "table-row-width",
+                            severity: "fatal",
+                            sectionId: id,
+                            message: `Table row ${index + 1} in "${id}" has ${row.length} cells; its head has ${block.head.length}. Every row must match the head's cell count.`,
+                        });
+                    }
+                });
+            }
             const images =
                 block.kind === "image"
                     ? [block]

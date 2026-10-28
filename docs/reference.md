@@ -98,7 +98,7 @@ A section is a **page** or a **group**.
 | `metrics` | `{ kind: "metrics", items: { value, label, detail? }[] }` |
 | `compare` | `{ kind: "compare", before: { title, text }, after: { title, text } }` |
 | `keys` | `{ kind: "keys", rows: [keys, does][] }` |
-| `table` | `{ kind: "table", head: [a, b], rows: [a, b][] }` |
+| `table` | `{ kind: "table", head: string[], rows: string[][] }` — any number of columns; every row must have the same cell count as `head` |
 | `facts` | `{ kind: "facts", title?, mark?, href?, rows: [label, value][] }` — `href` links the head (mark and title) and shows the address; an http(s) URL opens in a new tab. |
 | `image` | `{ kind: "image", src, alt, caption?, width?, height?, srcset?, sizes?, sources?, loading?, fetchPriority?, position?, href? }` |
 | `gallery` | `{ kind: "gallery", images, columns?: 2 \| 3, label? }` |

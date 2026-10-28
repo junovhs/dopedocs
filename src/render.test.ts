@@ -207,9 +207,7 @@ describe("block markup", () => {
 
     it("renders a table inside its own scroll container", () => {
         const html = out({ kind: "table", head: ["A", "B"], rows: [["1", "2"]] });
-        expect(html).toContain('<div class="dd-table-scroll">');
-        expect(html).toContain("<th>A</th><th>B</th>");
-        expect(html).toContain("<td>1</td><td>2</td>");
+        expect(html).toBe('<div class="dd-table-scroll"><table class="dd-table"><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table></div>');
     });
 
     it("renders a facts card, with the title only when given", () => {

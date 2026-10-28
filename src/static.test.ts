@@ -1280,3 +1280,25 @@ describe("articles (DEC-18)", () => {
         expect(() => buildStatic(withArticles, { now, basePath: "articles" })).toThrow(/articles would overwrite/);
     });
 });
+
+
+describe("arbitrary-column tables on public static pages", () => {
+    const tableDocs = (rows: string[][]): DocSet => defineDocs({
+        ...docs,
+        sections: [{ id: "table", title: "Table", question: "What is listed?",
+            answer: "Example lists three columns.",
+            blocks: [{ kind: "table", head: ["First", "Second", "Third"], rows }],
+        }],
+    });
+
+    it("renders every cell on the full document and section page", () => {
+        const output = buildStatic(tableDocs([["one", "two", "**three**"], ["a", "b", "<c>"]]), { now });
+        for (const path of ["docs/index.html", "docs/table/index.html"]) {
+            expect(output[path]).toContain('<thead><tr><th>First</th><th>Second</th><th>Third</th></tr></thead><tbody><tr><td>one</td><td>two</td><td><strong>three</strong></td></tr><tr><td>a</td><td>b</td><td>&lt;c&gt;</td></tr></tbody>');
+        }
+    });
+
+    it("rejects a document with a row whose width differs from its head", () => {
+        expect(() => buildStatic(tableDocs([["one", "two"]]), { now })).toThrow(InvalidDocumentError);
+    });
+});

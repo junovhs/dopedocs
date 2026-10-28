@@ -412,3 +412,23 @@ describe("image alt", () => {
         expect(findings.filter((f) => f.code === "invalid-image-dimensions")).toHaveLength(2);
     });
 });
+
+
+describe("table column counts", () => {
+    const document = (head: string[], rows: string[][]): DocSet =>
+        withSections([section({ blocks: [{ kind: "table", head, rows }] })]);
+
+    it.each([1, 2, 3, 8])("accepts matching %i-column rows", (count) => {
+        const cells = Array.from({ length: count }, (_, i) => `Cell ${i}`);
+        expect(validate(document(cells, [cells, cells]), { today: new Date("2026-09-02") })).toEqual([]);
+    });
+
+    it("reports each short or long row as fatal with its location", () => {
+        const findings = validate(document(["A", "B", "C"], [["one"], ["1", "2", "3", "4"]]));
+        expect(findings.filter(({ code }) => code === "table-row-width")).toEqual([
+            expect.objectContaining({ severity: "fatal", sectionId: "ok", message: expect.stringContaining("row 1") }),
+            expect.objectContaining({ severity: "fatal", sectionId: "ok", message: expect.stringContaining("row 2") }),
+        ]);
+        expect(hasFatal(findings)).toBe(true);
+    });
+});

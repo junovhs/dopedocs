@@ -174,7 +174,7 @@ export function renderBlock(
             return `<div class="dd-table-scroll"><table class="dd-table"><thead><tr>${block.head
                 .map((h) => `<th>${text(h)}</th>`)
                 .join("")}</tr></thead><tbody>${block.rows
-                .map(([a, b]) => `<tr><td>${text(a)}</td><td>${text(b)}</td></tr>`)
+                .map((row) => `<tr>${row.map((cell) => `<td>${text(cell)}</td>`).join("")}</tr>`)
                 .join("")}</tbody></table></div>`;
 
         case "facts": {
