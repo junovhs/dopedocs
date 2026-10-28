@@ -1,3 +1,5 @@
+import { tabsScript } from "./tabs.js";
+import { walkBlocks } from "./blocks.js";
 import { generateApiSamples } from "./api.js";
 import { createSearchIndex, renderSearch, searchScript } from "./search.js";
 /**
@@ -262,7 +264,7 @@ function page(input: PageInput): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="${esc(input.skipScriptPath)}" defer></script>
-<title>${esc(title)}</title>
+${body.includes('class="dd-tabs" data-dd-tabs') ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "tabs.js"))}" defer></script>\n` : ""}<title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="${ROBOTS_META[input.indexing]}">
 <link rel="canonical" href="${esc(canonical)}">
@@ -656,6 +658,10 @@ export function buildStatic(
     const out: Record<string, string> = {};
     // Native fragment navigation remains available without this enhancement.
     out[`${prefix}skip.js`] = `document.querySelector('.dd-skip').addEventListener('click', function(event) { event.preventDefault(); document.getElementById(this.hash.slice(1)).focus(); });`;
+    if ([...pagesOf(docs.sections).map(({ page }) => page), ...(docs.articles ?? [])]
+        .some(page => [...walkBlocks(page.blocks)].some(block => block.kind === "tabs"))) {
+        out[`${prefix}tabs.js`] = tabsScript();
+    }
     if (options.search === true) out[`${prefix}search.js`] = searchScript();
     const entityJson = {
         ...entityNode(docs.entity, entityType, entityId),

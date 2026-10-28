@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add typed `tabs` with labelled panes, keyboard navigation and synchronized
+  choices by group, plus native `disclosure` blocks containing other blocks.
+  Static pages show every labelled pane without JavaScript; the optional
+  interaction uses a self-hosted script. Existing `details` blocks still work.
+
 - Add display/inline `math` blocks and optional variable definitions. The optional
   `dopedocs/math` build-time KaTeX adapter emits accessible native MathML for the
   panel and static pages, with no new reader script, stylesheet or font assets.

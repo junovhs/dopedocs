@@ -10,6 +10,7 @@
  * easiest to skip.
  */
 
+import { walkBlocks } from "./blocks.js";
 import { validateApi } from "./api.js";
 import type { ApiMethod } from "./api.js";
 import { plainText } from "./inline.js";
@@ -58,6 +59,20 @@ export type CodeTone = (typeof CODE_TONES)[number];
 export interface CodeToken { text: string; tone?: CodeTone; }
 
 export type DocBlock =
+    | {
+          kind: "tabs";
+          /** Accessible name for this set of choices. */
+          label: string;
+          /** Matching group keys synchronize pane keys within the reading surface. */
+          group?: string;
+          panes: { key: string; label: string; blocks: DocBlock[] }[];
+      }
+    | {
+          kind: "disclosure";
+          summary: string;
+          blocks: DocBlock[];
+          open?: boolean;
+      }
     | { kind: "code"; code: string; language?: string; caption?: string; tokens?: CodeToken[] }
     | {
           kind: "math";
@@ -426,6 +441,8 @@ export type FindingCode =
     | "updated-before-published"
     | "article-without-date"
     | "stale-fact"
+    | "invalid-tabs"
+    | "empty-disclosure-summary"
     | "empty-math"
     | "empty-image-alt"
     | "invalid-image-dimensions"
@@ -524,6 +541,10 @@ function* walk(
 /** Every string in a block that inline marks and fact references apply to. */
 function proseOf(block: DocBlock): string[] {
     switch (block.kind) {
+        case "tabs":
+            return [block.label, ...block.panes.map(pane => pane.label)];
+        case "disclosure":
+            return [block.summary];
         case "math":
             return block.where?.map(({ text }) => text) ?? [];
         case "p":
@@ -690,7 +711,19 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
             continue;
         }
 
-        for (const block of section.blocks ?? []) {
+        for (const block of walkBlocks(section.blocks ?? [])) {
+            if (block.kind === "tabs") {
+                const keys = block.panes.map(pane => pane.key);
+                if (!block.label.trim() || !keys.length || new Set(keys).size !== keys.length ||
+                    block.panes.some(pane => !pane.key.trim() || !pane.label.trim())) {
+                    findings.push({ code: "invalid-tabs", severity: "fatal", sectionId: id,
+                        message: `Tabs in "${id}" need a label and panes with unique non-empty keys and labels.` });
+                }
+            }
+            if (block.kind === "disclosure" && !block.summary.trim()) {
+                findings.push({ code: "empty-disclosure-summary", severity: "fatal", sectionId: id,
+                    message: `A disclosure in "${id}" needs a summary.` });
+            }
             if (block.kind === "math" && !block.tex.trim()) {
                 findings.push({ code: "empty-math", severity: "fatal", sectionId: id,
                     message: `A math block in "${id}" has blank TeX; write an equation or remove the block.` });
@@ -803,7 +836,7 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         const prose = [
             section.question,
             section.answer,
-            ...section.blocks.flatMap(proseOf),
+            ...[...walkBlocks(section.blocks)].flatMap(proseOf),
         ];
         for (const text of prose) {
             checkLinks(text, `Section "${id}"`, id);

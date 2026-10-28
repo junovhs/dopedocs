@@ -40,7 +40,17 @@ export function renderBlock(
     /** Renders one authored string of this block, bound to its registry and origin. */
     const text = (raw: string) => inline(raw, facts, where, sectionHref);
 
+    const children = (blocks: DocBlock[]) => blocks.map(child => renderBlock(child, facts, where, sectionHref)).join("");
     switch (block.kind) {
+        case "tabs":
+            return `<div class="dd-tabs" data-dd-tabs${block.group ? ` data-dd-tab-group="${escapeHtml(block.group)}"` : ""}>` +
+                `<p class="dd-tabs-label">${text(block.label)}</p>` +
+                block.panes.map(pane => `<div class="dd-tab-pane" data-dd-pane="${escapeHtml(pane.key)}">` +
+                    `<p class="dd-tab-label">${text(pane.label)}</p>${children(pane.blocks)}</div>`).join("") + `</div>`;
+        case "disclosure":
+            return `<details class="dd-disclosure"${block.open ? " open" : ""}>` +
+                `<summary>${text(block.summary)}</summary><div class="dd-disclosure-body">${children(block.blocks)}</div></details>`;
+
         case "code": {
             // Prepared metadata may be stale; it must never replace the source.
             const valid = block.tokens?.map((token) => token.text).join("") === block.code;

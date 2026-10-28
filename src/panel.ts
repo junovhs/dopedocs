@@ -1,3 +1,4 @@
+import { mountTabs } from "./tabs.js";
 import { createSearchIndex, renderSearch, mountSearch } from "./search.js";
 /**
  * The in-app documentation panel.
@@ -196,6 +197,7 @@ export function mountPanel(
     const themeStyle = getComputedStyle(root);
     root.classList.add(...structuralClasses(Object.fromEntries(Object.keys(structuralKeywords).map(token => [token, themeStyle.getPropertyValue(token)]))));
     const destroySearch = mountSearch(root);
+    const destroyTabs = mountTabs(root);
 
     const body = root.querySelector<HTMLElement>(".dd-body")!;
     const skip = root.querySelector<HTMLAnchorElement>(".dd-skip")!;
@@ -477,6 +479,7 @@ export function mountPanel(
             window.removeEventListener("popstate", onPopState);
             for (const group of groups) group.removeEventListener("toggle", onToggleGroup);
             destroySearch();
+            destroyTabs();
             root.remove();
         },
         get isOpen() {

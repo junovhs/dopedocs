@@ -29,6 +29,12 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
     const highlighter = await createHighlighter({ themes: [theme], langs: [] });
     const cache = new Map<string, CodeToken[]>();
     const block = async (item: DocBlock): Promise<DocBlock> => {
+        if (item.kind === "tabs") {
+            const panes = [];
+            for (const pane of item.panes) panes.push({ ...pane, blocks: await prepareBlocks(pane.blocks) });
+            return { ...item, panes };
+        }
+        if (item.kind === "disclosure") return { ...item, blocks: await prepareBlocks(item.blocks) };
         if (item.kind !== "code") return item;
         const language = item.language;
         if (!language || !Object.hasOwn(bundledLanguages, language)) return { ...item, tokens: undefined };
@@ -47,11 +53,12 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
         // normalized them. Rendering independently checks this invariant too.
         return { ...item, tokens: tokens.map((token) => token.text).join("") === item.code ? tokens : undefined };
     };
-    const page = async (item: DocPage): Promise<DocPage> => {
+    const prepareBlocks = async (items: DocBlock[]): Promise<DocBlock[]> => {
         const blocks = [];
-        for (const itemBlock of item.blocks) blocks.push(await block(itemBlock));
-        return { ...item, blocks };
+        for (const item of items) blocks.push(await block(item));
+        return blocks;
     };
+    const page = async <P extends DocPage>(item: P): Promise<P> => ({ ...item, blocks: await prepareBlocks(item.blocks) });
     try {
         const visit = async (items: DocSection[]): Promise<DocSection[]> => {
             const result: DocSection[] = [];
@@ -60,6 +67,6 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
             return result;
         };
         const sections = await visit(docs.sections);
-        return { ...docs, sections };
+        return { ...docs, sections, ...(docs.articles ? { articles: await Promise.all(docs.articles.map(page)) } : {}) };
     } finally { highlighter.dispose(); }
 }

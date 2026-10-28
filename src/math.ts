@@ -8,6 +8,8 @@ import { isGroup, type DocBlock, type DocPage, type DocSection, type DocSet } fr
  * Run only at build time; bundle/serialize the returned document for readers. */
 export function prepareMath<F extends FactMap>(docs: DocSet<F>): DocSet<F> {
     const block = (item: DocBlock): DocBlock => {
+        if (item.kind === "tabs") return { ...item, panes: item.panes.map(pane => ({ ...pane, blocks: pane.blocks.map(block) })) };
+        if (item.kind === "disclosure") return { ...item, blocks: item.blocks.map(block) };
         if (item.kind !== "math") return item;
         if (!item.tex.trim()) throw new Error("A math block needs non-empty TeX.");
         const display = item.display !== false;

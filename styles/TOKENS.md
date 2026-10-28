@@ -150,6 +150,8 @@ breaking change.
 `dd-steps`, `dd-step`, `dd-step-body`, `dd-step-title`, `dd-step-text`,
 `dd-checklist`, `dd-check` (with `is-checked`), `dd-check-icon`,
 `dd-details`, `dd-details-body`,
+`dd-tabs` (with `dd-tabs--enhanced`), `dd-tabs-label`, `dd-tab-list`,
+`dd-tab`, `dd-tab-pane`, `dd-tab-label`, `dd-disclosure`, `dd-disclosure-body`,
 `dd-cards`, `dd-card`, `dd-card-title`, `dd-card-text`, `dd-card-label`,
 `dd-quote`, `dd-metrics`, `dd-metric`, `dd-metric-value`, `dd-metric-detail`,
 `dd-compare`, `dd-compare-item` with `dd-compare-item--before` /

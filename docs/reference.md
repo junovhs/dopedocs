@@ -93,6 +93,8 @@ A section is a **page** or a **group**.
 | `callout` | `{ kind: "callout", text, tone?: "note" \| "warn" }` |
 | `steps` | `{ kind: "steps", items: { title, text }[] }` |
 | `checklist` | `{ kind: "checklist", items: { text, checked? }[] }` |
+| `tabs` | `{ kind: "tabs", label, group?, panes: { key, label, blocks: DocBlock[] }[] }` |
+| `disclosure` | `{ kind: "disclosure", summary, blocks: DocBlock[], open? }` |
 | `details` | `{ kind: "details", summary, text, open? }` |
 | `cards` | `{ kind: "cards", items: { title, text, href?, label? }[] }` |
 | `quote` | `{ kind: "quote", text, attribution?, cite? }` |
@@ -104,6 +106,28 @@ A section is a **page** or a **group**.
 | `image` | `{ kind: "image", src, alt, caption?, width?, height?, srcset?, sizes?, sources?, loading?, fetchPriority?, position?, href? }` |
 | `gallery` | `{ kind: "gallery", images, columns?: 2 \| 3, label? }` |
 | `video` | `{ kind: "video", src, poster?, caption? }` |
+
+Tabs accept an accessible `label` and panes with unique non-empty `key` and
+`label` values. Panes and disclosures can contain any blocks, including other
+containers. Tabs with the same `group` synchronize matching pane keys within a
+static page or mounted panel; separate panels keep independent choices. Arrow
+Left/Right, Home and End select tabs, and Tab moves into the selected pane.
+Without JavaScript, every pane appears in order under its label. Static builds
+emit a self-hosted `tabs.js` only when the document uses tabs; allow self-hosted
+scripts in your CSP to enable the interaction.
+
+`disclosure` uses native `details` and `summary` and works without JavaScript.
+The existing prose-only `details` block remains available unchanged.
+
+```ts
+{ kind: "tabs", label: "Package manager", group: "package-manager", panes: [
+    { key: "npm", label: "npm", blocks: [{ kind: "code", code: "npm install example" }] },
+    { key: "pnpm", label: "pnpm", blocks: [{ kind: "code", code: "pnpm add example" }] },
+] }
+{ kind: "disclosure", summary: "Troubleshooting", blocks: [
+    { kind: "p", text: "Check your connection, then try again." },
+] }
+```
 
 Prose carries three inline marks - `` `code` ``, `**strong**` and
 `[text](href)` - plus `{fact:key}` references. Anything richer becomes a new
