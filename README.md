@@ -1,20 +1,22 @@
 # dopedocs
 
-**Documentation for a website you already have.**
+**The documentation layer for your app or site. Built in from day one.**
 
-Write one typed document and give readers an in-app panel plus crawlable pages
-at `/docs/<id>/`. Both render the same content and use your design tokens, so
-the documentation looks like your product. Add it to your existing site and
-build rather than maintaining a separate documentation project.
+Write manuals, technical docs or help content in one typed source. Give readers
+an in-app panel and crawlable pages at `/docs/<id>/`, styled with your host's own
+design tokens. Your docs share your product's look and build, with no separate
+documentation project to maintain.
 
-The panel includes nested chapters, scrollspy, local search and reading
-progress. Static pages include the same navigation, previous/next destinations
-and a complete manual on one page. They remain readable without JavaScript;
-local search is an optional enhancement.
+Make finding an answer fast and reading a pleasure: nested chapters, scrollspy,
+local search and reading progress keep people oriented. Static pages share the
+navigation, include previous/next links and offer the complete manual on one
+page. They remain readable without JavaScript; local search progressively
+enhances them.
 
-Machine-readable output is a bonus: JSON-LD, a sitemap, `robots.txt`,
-`llms.txt`, `questions.json` and `facts.json` are generated from the same
-content. Write documentation once; rebuild when a fact changes.
+**For AI and search, too.** The same source generates JSON-LD, a sitemap,
+`robots.txt`, `llms.txt`, `questions.json` and `facts.json`, giving crawlers
+structured entities, direct answers and shared facts in formats they can read.
+Write documentation once; rebuild when a fact changes.
 
 ## Add it to your site
 

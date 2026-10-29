@@ -1,0 +1,3 @@
+DOCS-04 — Documentation for people, AI and search
+
+Rewrote only the README opening to present dopedocs as a documentation layer that shares a host's design tokens and build. Manuals, technical documentation and help content are named explicitly. AI and search now receive headline treatment alongside reader navigation, local search and no-JavaScript content. Checked the generated machine-readable outputs against the implementation and ran check:readme. The package description still uses the older typed-engine positioning; changing package metadata remains outside this issue's scope.
