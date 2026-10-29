@@ -146,3 +146,31 @@ export function renderControl(spec: ControlSpec): string {
         text: (item: ControlSpec) => `<input data-token="${item.token}" aria-label="${item.label}" spellcheck="false">` };
     return `<div class="control" data-control="${spec.token}"><div class="control-heading"><label>${escapeHtml(spec.label)}<small>${spec.token}</small></label><button data-reset="${spec.token}" aria-label="Reset ${escapeHtml(spec.label)}" disabled>Reset</button></div>${renderers[spec.kind](spec)}<small class="default-value" data-default="${spec.token}">Default: ${escapeHtml(spec.default)}</small></div>`;
 }
+
+for (const [token, label, value] of [
+    ['panel', 'Raised surface', '#ffffff'], ['panel-muted', 'Inset surface', '#f4f4f5'],
+    ['ink', 'Header and callout surface', '#18181b'], ['muted', 'Labels and captions', '#8b8b93'],
+    ['on-ink', 'Header text', '#f4f4f5'], ['on-ink-strong', 'Strong header text', '#ffffff'],
+    ['on-accent', 'Accent foreground', '#ffffff'], ['line-soft', 'Subtle borders', '#efeff1'],
+    ['edge', 'Strong borders', '#b8b8c0'], ['border', 'Search field border', '#dddddd'],
+    ['scrim', 'Panel backdrop', 'rgb(9 9 11 / 0.72)'],
+    ['code-keyword', 'Code keywords', '#18181b'], ['code-string', 'Code strings', '#52525b'],
+    ['code-number', 'Code numbers', '#18181b'], ['code-comment', 'Code comments', '#8b8b93'],
+    ['code-function', 'Code functions', '#18181b'], ['code-type', 'Code types', '#18181b'],
+    ['code-punctuation', 'Code punctuation', '#52525b'],
+]) {
+    studioControls.push({ token: '--dd-' + token, label, tab: 'Style', kind: 'color', default: value, advanced: true });
+}
+studioControls.push(
+    { ...number('Small corners', 'radius-sm', 'Style', '3px', 0, 20), advanced: true },
+    { ...number('Control corners', 'radius-xs', 'Style', '2px', 0, 16), advanced: true },
+    { ...number('Transition duration', 'duration', 'Layout', '0.24s', 0, 1, 0.02, 's'), advanced: true },
+    { ...number('Equation spacing', 'math-margin', 'Layout', '20px', 0, 60), advanced: true },
+    { token: '--dd-ease', label: 'Transition easing', tab: 'Layout', kind: 'text', default: 'cubic-bezier(0.22, 1, 0.36, 1)', advanced: true },
+    { token: '--dd-spring', label: 'Spring easing', tab: 'Layout', kind: 'text', default: 'cubic-bezier(0.34, 1.4, 0.64, 1)', advanced: true },
+    { token: '--dd-shadow-lift', label: 'Panel shadow', tab: 'Style', kind: 'text', default: '0 22px 70px rgb(9 9 11 / 0.2)', advanced: true },
+    { token: '--dd-math-where-gap', label: 'Equation variable spacing', tab: 'Layout', kind: 'text', default: '7px 18px', advanced: true },
+);
+
+/** No visual tokens are exempt. Any future nonvisual exception must explain why. */
+export const studioTokenExceptions: Record<string, string> = {};

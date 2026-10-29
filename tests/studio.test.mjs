@@ -6,7 +6,7 @@ import {writeFileSync,readFileSync,mkdtempSync,rmSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';import {join} from 'node:path';import {pathToFileURL} from 'node:url';
 import {buildPackage} from './built-package.mjs';
 import { docs } from '../examples/theme/docs.ts';
-import { studioControls } from '../src/studio-controls.ts';
+import { studioControls, studioTokenExceptions } from '../src/studio-controls.ts';
 const { chromium } = await import('playwright').catch(() => ({}));
 let pkg,root,server,url,host;
 beforeAll(async()=>{
@@ -67,6 +67,19 @@ test('every documented typography token has a Type control; new tokens fail cove
     }
     expect(missing(text)).toEqual([]);
     expect(missing(text.replace('### Basic typography', '### Basic typography\n| `--dd-new-typography` | added | 1 |'))).toEqual(['--dd-new-typography']);
+});
+
+test('every documented theme token has a rendered control or an explained nonvisual exception', async () => {
+    const text = readFileSync(new URL('../styles/TOKENS.md', import.meta.url), 'utf8');
+    const controls = new Set(studioControls.map(spec => spec.token));
+    const exceptions = new Set(Object.keys(studioTokenExceptions));
+    const missing = source => [...new Set(source.match(/--dd-[a-z0-9-]+/g))].filter(token => !controls.has(token) && !exceptions.has(token));
+    expect(missing(text)).toEqual([]);
+    expect(missing(text + '\n| `--dd-unreachable-token` | new | default |')).toEqual(['--dd-unreachable-token']);
+    expect(controls.size).toBe(studioControls.length);
+    expect(Object.values(studioTokenExceptions).every(reason => reason.trim().length > 20)).toBe(true);
+    const html = await (await fetch(url + '/__dopedocs/studio')).text();
+    for (const token of controls) expect(html).toContain(`data-control="${token}"`);
 });
 
 test.skipIf(!chromium)('slider input previews without a request; release and a palette each save once', async () => {

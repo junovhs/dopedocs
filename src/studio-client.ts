@@ -17,6 +17,15 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
     function currentValue(token: string): string {
         return (temporary.has(token) ? temporary.get(token) : state.tokens[token]) ?? defaultValue(token);
     }
+    function colorHex(value: string): string {
+        const doc = frame.contentDocument ?? document;
+        const probe = doc.createElement('span');
+        probe.style.color = value;
+        doc.body.append(probe);
+        const rgb = doc.defaultView!.getComputedStyle(probe).color.match(/[\d.]+/g);
+        probe.remove();
+        return rgb && rgb.length >= 3 ? '#' + rgb.slice(0, 3).map(channel => Math.round(Number(channel)).toString(16).padStart(2, '0')).join('') : '#000000';
+    }
     function defaultValue(token: string): string {
         const skin = ($('#skin') as HTMLSelectElement).value;
         const mode = ($('#mode') as HTMLSelectElement).value;
@@ -65,7 +74,7 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         document.querySelectorAll<HTMLInputElement>('[data-color], [data-range]').forEach(input => {
             const token = input.dataset.color ?? input.dataset.range!;
             const value = currentValue(token);
-            input.value = input.type === 'range' ? String(parseFloat(value)) : /^#[0-9a-f]{6}$/i.test(value) ? value : defaultValue(token);
+            input.value = input.type === 'range' ? String(parseFloat(value)) : colorHex(value);
         });
         document.querySelectorAll<HTMLElement>('[data-output]').forEach(output => {
             const token = output.dataset.output!;

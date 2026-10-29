@@ -1,0 +1,3 @@
+STU-08 — Documented token coverage
+
+The studio now has a control specification for all 119 documented theme tokens, including density and motion. Added advanced surface, foreground, border and syntax colors; motion tuning; small radii; panel shadows; and math spacing. RGB colors retain exact text entry alongside a native picker. The coverage test checks both specifications and rendered controls, rejects duplicate specs, and demonstrates failure when a new documented token is unreachable. The explicit nonvisual exception map is empty. Typecheck and ten studio/font checks pass.
