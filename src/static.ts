@@ -330,12 +330,15 @@ function mobileContentsScript(): string {
             main.inert = true;
             document.body.classList.add('dd-menu-open');
         } else if (focus) summary.focus({ preventScroll: true });
-        if (reduced.matches || !nav.animate) { motion?.cancel(); motion = undefined; settle(); return; }
+        const style = getComputedStyle(menu);
+        const timing = style.getPropertyValue('--dd-duration').trim();
+        const duration = parseFloat(timing) * (timing.endsWith('ms') ? 1 : 1000);
+        if (reduced.matches || duration === 0 || !nav.animate) { motion?.cancel(); motion = undefined; settle(); return; }
         if (!motion) {
             motion = nav.animate([{ transform: 'translateY(-100%)' }, { transform: 'translateY(0)' }],
-                { duration: 240, easing: 'ease-in-out', fill: 'both' });
+                { duration: duration || 240, easing: style.getPropertyValue('--dd-ease').trim() || 'ease-in-out', fill: 'both' });
             motion.pause();
-            motion.currentTime = value ? 0 : 240;
+            motion.currentTime = value ? 0 : (duration || 240);
             motion.onfinish = settle;
         }
         motion.playbackRate = value ? 1 : -1;

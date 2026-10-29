@@ -1,0 +1,3 @@
+MOT-01 — Motion presets and reduced motion
+
+Registered --dd-motion as a structural keyword with calm, snappy and none presets. Reader transitions now use shared timing instead of scattered durations; none and prefers-reduced-motion disable transitions, animation and smooth CSS scrolling. The mobile sheet reads the same duration and easing, including an immediate no-motion path. Browser tests verify computed durations on the panel and static pages; existing mobile interaction tests pass. Documented presets and custom-timing compatibility. Raw CSS cap adjusted explicitly; compressed reader and runtime budgets remain unchanged.

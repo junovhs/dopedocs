@@ -5,6 +5,7 @@ export const structuralKeywords = {
     '--dd-header': ['glass', 'solid', 'minimal'],
     '--dd-current': ['pill', 'line', 'bold', 'solid'],
     '--dd-card': ['raised', 'outline', 'flat', 'tint'],
+    '--dd-motion': ['calm', 'snappy', 'none'],
 } as const;
 
 export function structuralClasses(values: Record<string, string>, warn: (message: string) => void = console.warn): string[] {

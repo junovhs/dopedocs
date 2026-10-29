@@ -121,9 +121,12 @@ palette for dark mode, these are the two most likely to need attention.
 | `--dd-ease` | Standard easing | `cubic-bezier(0.22, 1, 0.36, 1)` |
 | `--dd-spring` | Overshoot, on the panel's arrival | `cubic-bezier(0.34, 1.4, 0.64, 1)` |
 | `--dd-duration` | Panel transition | `0.24s` |
+| `--dd-motion` | Preset: calm (0.32s), snappy (0.14s), none (0s) | Unset preserves custom timing |
 
-Under `prefers-reduced-motion: reduce` nothing travels or springs; the panel
-still fades, because appearing and disappearing is what makes it usable.
+Motion is a structural keyword, resolved from the theme file like the layout
+keywords below. Custom duration and easing remain available when it is unset.
+Under `prefers-reduced-motion: reduce` transitions and animation are disabled,
+regardless of the chosen preset. The mobile contents sheet follows these rules.
 
 ### Layout
 
@@ -299,6 +302,7 @@ a rebuild/reload. These values are keywords, not CSS expressions or aliases.
 | `--dd-header` | glass, solid, minimal | dd-header- |
 | `--dd-current` | pill, line, bold, solid | dd-current- |
 | `--dd-card` | raised, outline, flat, tint | dd-card- |
+| `--dd-motion` | calm, snappy, none | dd-motion- |
 
 The outline refers to the generated contents on the whole-manual page.
 On small screens side outlines return to normal flow and navigation stays above

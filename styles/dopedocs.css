@@ -103,7 +103,7 @@
     inset: 0;
     background: var(--dd-scrim);
     opacity: 0;
-    transition: opacity var(--dd-duration) ease;
+    transition: opacity var(--dd-duration) var(--dd-ease);
 }
 
 .dd-overlay.is-open {
@@ -135,7 +135,7 @@
     box-shadow: var(--dd-shadow-lift);
     opacity: 0;
     transform: translateY(16px) scale(0.985);
-    transition: opacity 0.2s ease, transform var(--dd-duration) ease;
+    transition: opacity var(--dd-duration) var(--dd-ease), transform var(--dd-duration) var(--dd-ease);
 }
 
 .dd-overlay.is-open .dd-shell {
@@ -143,7 +143,7 @@
     transform: none;
     transition:
         opacity var(--dd-duration) var(--dd-ease),
-        transform 0.42s var(--dd-spring);
+        transform var(--dd-duration) var(--dd-spring);
 }
 
 /* --- bar ------------------------------------------------------------------ */
@@ -173,7 +173,7 @@
     letter-spacing: var(--dd-caps-track, 0.11em);
     text-transform: uppercase;
     cursor: pointer;
-    transition: 0.16s var(--dd-ease);
+    transition: var(--dd-duration) var(--dd-ease);
 }
 
 .dd-back:hover {
@@ -281,7 +281,7 @@
     font-size: 13px;
     line-height: 1.4;
     text-decoration: none;
-    transition: color 0.14s, background 0.14s;
+    transition: color var(--dd-duration) var(--dd-ease), background var(--dd-duration) var(--dd-ease);
 }
 
 .dd-nav-link:hover {
@@ -312,7 +312,7 @@
     line-height: 1.5;
     list-style: none;
     cursor: pointer;
-    transition: background 0.14s;
+    transition: background var(--dd-duration) var(--dd-ease);
 }
 
 .dd-nav-group > summary::-webkit-details-marker {
@@ -325,7 +325,7 @@
 
 .dd-nav-group > summary > .dd-icon {
     color: var(--dd-muted);
-    transition: transform 0.18s var(--dd-ease);
+    transition: transform var(--dd-duration) var(--dd-ease);
 }
 
 .dd-nav-group[open] > summary > .dd-icon {
@@ -349,8 +349,8 @@
     block-size: 0;
     overflow: hidden;
     transition:
-        block-size 0.26s var(--dd-ease),
-        content-visibility 0.26s allow-discrete;
+        block-size var(--dd-duration) var(--dd-ease),
+        content-visibility var(--dd-duration) allow-discrete;
 }
 
 .dd-nav-group[open]::details-content {
@@ -677,7 +677,7 @@ h3.dd-section-title,
 }
 
 a.dd-card {
-    transition: border-color 0.14s, background 0.14s, transform 0.14s var(--dd-ease);
+    transition: border-color var(--dd-duration) var(--dd-ease), background var(--dd-duration) var(--dd-ease), transform var(--dd-duration) var(--dd-ease);
 }
 
 a.dd-card:hover {
@@ -1450,8 +1450,8 @@ a.dd-card:focus-visible,
     text-decoration-color: var(--dd-edge);
     text-underline-offset: 3px;
     transition:
-        color 0.16s var(--dd-ease),
-        text-decoration-color 0.16s var(--dd-ease);
+        color var(--dd-duration) var(--dd-ease),
+        text-decoration-color var(--dd-duration) var(--dd-ease);
 }
 
 .dd-identity-maker:hover {
@@ -2505,3 +2505,22 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-rail-filter { margin-block-end: calc(20px * var(--dd-density)); font-size: 12px; }
 .dd-rail-filter label { display: grid; gap: calc(6px * var(--dd-density)); color: var(--dd-muted, #8b8b93); }
 .dd-rail-filter p:empty { display: none; }
+
+/* Motion keywords are resolved by the host and panel from the theme file. */
+.dd-motion-calm { --dd-duration: 0.32s; --dd-ease: cubic-bezier(0.22, 1, 0.36, 1); --dd-spring: var(--dd-ease); }
+.dd-motion-snappy { --dd-duration: 0.14s; --dd-ease: cubic-bezier(0.2, 0.8, 0.2, 1); --dd-spring: var(--dd-ease); }
+.dd-motion-none { --dd-duration: 0s; }
+.dd-motion-none, .dd-motion-none *, .dd-motion-none *::before, .dd-motion-none *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+    .dd-static, .dd-overlay { --dd-duration: 0s !important; }
+    .dd-static, .dd-overlay, .dd-static *, .dd-overlay *, .dd-static *::before, .dd-static *::after,
+    .dd-overlay *::before, .dd-overlay *::after {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}

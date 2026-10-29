@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildPackage } from './built-package.mjs';
 import { docs } from '../examples/theme/docs.ts';
+import { structuralClasses } from '../src/structure.ts';
 
 const { chromium } = await import('playwright').catch(() => ({}));
 let pkg, server, browser, url;
@@ -39,6 +40,26 @@ beforeAll(async () => {
 afterAll(async () => { await browser?.close(); if (server) await new Promise(resolve => server.close(resolve)); pkg?.cleanup(); });
 
 for (const surface of ['static', 'panel']) {
+    test.skipIf(!chromium)(`${surface}: motion keywords and reduced motion control every transition`, async () => {
+        const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+        await page.goto(url + (surface === 'panel' ? '/panel' : '/docs/'));
+        await page.locator('.dd-nav-link').first().waitFor();
+        for (const [preset, duration] of [['calm', '0.32s'], ['snappy', '0.14s'], ['none', '0s']]) {
+            await page.evaluate(classes => {
+                const root = document.querySelector('.dd-overlay') || document.body;
+                root.classList.remove('dd-motion-calm', 'dd-motion-snappy', 'dd-motion-none');
+                root.classList.add(...classes);
+            }, structuralClasses({ '--dd-motion': preset }));
+            expect(await page.locator('.dd-nav-link').first().evaluate(el => getComputedStyle(el).transitionDuration.split(',')[0])).toBe(duration);
+        }
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.evaluate(() => {
+            const root = document.querySelector('.dd-overlay') || document.body;
+            root.classList.remove('dd-motion-none'); root.classList.add('dd-motion-calm');
+        });
+        expect(await page.locator('.dd-nav-link').first().evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
+        await page.close();
+    });
     test.skipIf(!chromium)(`${surface}: density scales content spacing and measure accepts characters`, async () => {
         const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
         await page.goto(url + (surface === 'panel' ? '/panel' : '/docs/'));
