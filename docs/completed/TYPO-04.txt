@@ -1,0 +1,3 @@
+TYPO-04 — Complete typography controls
+
+Expanded the studio's Type tab to cover every documented typography token, with fonts, text size, named type scales, line spacing, paragraph spacing, measure and weight in Basic. Advanced contains heading overrides, tracking, kerning, hyphenation, paragraph and list treatment, underlines, caps, numbers, ligatures, drop caps, code/table type and per-role feature/axis values. Existing supported-font feature controls remain available there. Exact CSS entry preserves expressions and combined OpenType values. Coverage tests enumerate the documentation and prove an added undocumented control gap fails. Browser and type checks pass.

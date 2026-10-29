@@ -6,6 +6,7 @@ import {writeFileSync,readFileSync,mkdtempSync,rmSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';import {join} from 'node:path';import {pathToFileURL} from 'node:url';
 import {buildPackage} from './built-package.mjs';
 import { docs } from '../examples/theme/docs.ts';
+import { studioControls } from '../src/studio-controls.ts';
 const { chromium } = await import('playwright').catch(() => ({}));
 let pkg,root,server,url,host;
 beforeAll(async()=>{
@@ -54,6 +55,20 @@ test('a theme batch validates before one write and preserves hand-written CSS', 
     expect(readFileSync(join(root, 'theme.css'), 'utf8')).not.toContain('--dd-measure:');
 });
 
+test('every documented typography token has a Type control; new tokens fail coverage', () => {
+    const text = readFileSync(new URL('../styles/TOKENS.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+    function missing(source) {
+        const sections = [source.split('### Type\n')[1]?.split('### Shape')[0],
+            source.split('### Basic typography')[1]?.split('### Structural keywords')[0],
+            source.split('### Supported features by font role')[1]?.split('## Math')[0]].join('\n');
+        const documented = [...new Set(sections.match(/--dd-[a-z0-9-]+/g))];
+        const controls = new Set(studioControls.filter(spec => spec.tab === 'Type').map(spec => spec.token));
+        return documented.filter(token => !controls.has(token));
+    }
+    expect(missing(text)).toEqual([]);
+    expect(missing(text.replace('### Basic typography', '### Basic typography\n| `--dd-new-typography` | added | 1 |'))).toEqual(['--dd-new-typography']);
+});
+
 test.skipIf(!chromium)('slider input previews without a request; release and a palette each save once', async () => {
     const browser = await chromium.launch();
     const page = await browser.newPage();
@@ -62,7 +77,7 @@ test.skipIf(!chromium)('slider input previews without a request; release and a p
         await expect.poll(() => page.locator('#status').textContent()).toContain('Ready');
         let writes = 0;
         page.on('request', req => { if (req.method() === 'POST' && req.url().endsWith('/theme')) writes++; });
-        await page.getByRole('tab', { name: 'Layout', exact: true }).click();
+        await page.getByRole('tab', { name: 'Type', exact: true }).click();
         const slider = page.locator('[data-range="--dd-measure"]');
         await slider.evaluate(el => { el.value = '680'; el.dispatchEvent(new Event('input', { bubbles: true })); });
         expect(await page.frameLocator('#preview').locator('html').evaluate(el => el.style.getPropertyValue('--dd-measure'))).toBe('680px');
@@ -89,10 +104,11 @@ test.skipIf(!chromium)('typed controls save colors, lengths, keywords and switch
         const accent = page.locator('[data-token="--dd-accent"]');
         await accent.fill('#654321'); await accent.press('Tab');
         await expect.poll(() => readFileSync(join(root, 'theme.css'), 'utf8')).toContain('--dd-accent: #654321');
-        await page.getByRole('tab', { name: 'Layout', exact: true }).click();
+        await page.getByRole('tab', { name: 'Type', exact: true }).click();
         const measure = page.locator('[data-token="--dd-measure"]');
         await measure.fill('720px'); await measure.press('Tab');
         await expect.poll(() => readFileSync(join(root, 'theme.css'), 'utf8')).toContain('--dd-measure: 720px');
+        await page.getByRole('tab', { name: 'Layout', exact: true }).click();
         await page.locator('[data-token-choice="--dd-outline"][data-value="off"]').click();
         await expect.poll(() => readFileSync(join(root, 'theme.css'), 'utf8')).toContain('--dd-outline: off');
         await page.getByRole('tab', { name: 'Pieces', exact: true }).click();
