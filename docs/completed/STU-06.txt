@@ -1,0 +1,3 @@
+STU-06 — Studio control kit
+
+Replaced generic token fields with data-driven color pickers, sliders with exact entry and default ticks, segmented keyword choices, visibility switches, palette cards, marked defaults and per-control resets. Added Basic/Advanced grouping and a separate responsive studio stylesheet with light/dark appearances. Split font catalog, upload and feature behavior into its own client module, preserving existing font routes. Browser checks save each control kind to a real theme file and capture every tab in both appearances. Typecheck and studio/font tests pass; screenshots are available for owner review.
