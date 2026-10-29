@@ -65,6 +65,7 @@
     --dd-duration: 0.24s;
 
     /* Layout */
+    --dd-density: 1;
     --dd-measure: 660px;
     --dd-rail: 224px;
     --dd-column: 752px;
@@ -246,14 +247,14 @@
     position: sticky;
     top: 0;
     max-height: 100%;
-    padding: 44px 14px 26px 22px;
+    padding: calc(44px * var(--dd-density)) calc(14px * var(--dd-density)) calc(26px * var(--dd-density)) calc(22px * var(--dd-density));
     border-right: 1px solid var(--dd-line);
     overflow-y: auto;
     overscroll-behavior: contain;
 }
 
 .dd-nav-label {
-    margin: 0 0 11px 10px;
+    margin: 0 0 calc(11px * var(--dd-density)) calc(10px * var(--dd-density));
     color: var(--dd-muted);
     font-size: 10px;
     font-weight: 700;
@@ -273,7 +274,7 @@
 
 .dd-nav-link {
     display: block;
-    padding: 8px 10px;
+    padding: calc(8px * var(--dd-density)) calc(10px * var(--dd-density));
     border-inline-start: 2px solid transparent;
     border-radius: var(--dd-radius-xs);
     color: var(--dd-text-soft);
@@ -297,13 +298,13 @@
 
 /* Folders. Native <details> carries the keyboard and assistive behaviour, so
    only the marker and the indent are ours. */
-.dd-nav-list > li + li:has(> .dd-nav-group) { margin-top: 14px; }
+.dd-nav-list > li + li:has(> .dd-nav-group) { margin-top: calc(14px * var(--dd-density)); }
 
 .dd-nav-group > summary {
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 7px 10px;
+    gap: calc(7px * var(--dd-density));
+    padding: calc(7px * var(--dd-density)) calc(10px * var(--dd-density));
     border-radius: var(--dd-radius-xs);
     color: var(--dd-text);
     font-size: 12.5px;
@@ -332,8 +333,8 @@
 }
 
 .dd-nav-group > .dd-nav-list {
-    margin-left: 12px;
-    padding-left: 8px;
+    margin-left: calc(12px * var(--dd-density));
+    padding-left: calc(8px * var(--dd-density));
     border-left: 1px solid var(--dd-line);
 }
 
@@ -359,7 +360,7 @@
 /* A group in the body is only its label and its pages: a quiet kicker above
    the first page, never a heading of its own, never something to read. */
 .dd-group {
-    margin: 0 0 46px;
+    margin: 0 0 calc(46px * var(--dd-density));
 }
 
 .dd-group:last-child {
@@ -368,7 +369,7 @@
 
 .dd-group-label {
     max-width: var(--dd-measure);
-    margin: 0 0 10px;
+    margin: 0 0 calc(10px * var(--dd-density));
     color: var(--dd-accent);
     font: 700 11px/1.3 var(--dd-mono);
     letter-spacing: var(--dd-caps-track, 0.14em);
@@ -377,7 +378,7 @@
 
 .dd-main {
     grid-column: 3;
-    padding: 44px 46px 110px;
+    padding: calc(44px * var(--dd-density)) calc(46px * var(--dd-density)) calc(110px * var(--dd-density));
 }
 
 /* ==========================================================================
@@ -389,7 +390,7 @@
 .dd-page {
     max-width: var(--dd-column);
     margin: 0 auto;
-    padding: 56px 24px 110px;
+    padding: calc(56px * var(--dd-density)) calc(24px * var(--dd-density)) calc(110px * var(--dd-density));
     background: var(--dd-bg);
     color: var(--dd-text);
     font-family: var(--dd-body, var(--dd-sans));
@@ -401,11 +402,11 @@
 
 .dd-header {
     max-width: var(--dd-measure);
-    margin: 0 0 44px;
+    margin: 0 0 calc(44px * var(--dd-density));
 }
 
 .dd-title {
-    margin: 0 0 12px;
+    margin: 0 0 calc(12px * var(--dd-density));
     color: var(--dd-text);
     font: var(--dd-heading-weight, 700) var(--dd-h1-size, calc(clamp(28px, 3.4vw, 38px) * var(--dd-scale-ratio, 1.25) / 1.25))/var(--dd-heading-leading, 1.16) var(--dd-display, var(--dd-sans));
     letter-spacing: var(--dd-display-track, -0.025em);
@@ -420,7 +421,7 @@
 
 .dd-section {
     max-width: var(--dd-measure);
-    margin: 0 0 56px;
+    margin: 0 0 calc(56px * var(--dd-density));
     scroll-margin-top: 20px;
 }
 
@@ -429,8 +430,8 @@
 }
 
 .dd-section-title {
-    margin: 0 0 18px;
-    padding-bottom: 12px;
+    margin: 0 0 calc(18px * var(--dd-density));
+    padding-bottom: calc(12px * var(--dd-density));
     border-bottom: 1px solid var(--dd-line);
     color: var(--dd-text);
     font: var(--dd-heading-weight, 650) var(--dd-h2-size, calc(clamp(20px, 2.4vw, 24px) * var(--dd-scale-ratio, 1.25) / 1.25))/var(--dd-heading-leading, 1.3) var(--dd-display, var(--dd-sans));
@@ -445,7 +446,7 @@ h3.dd-section-title,
 /* The answer is the sentence a machine quotes. Setting it slightly ahead of the
    body reflects that it is also the sentence a person in a hurry reads. */
 .dd-answer {
-    margin: 0 0 18px;
+    margin: 0 0 calc(18px * var(--dd-density));
     color: var(--dd-text);
     font-size: var(--dd-text-size, 15.5px);
     font-weight: 500;
@@ -453,7 +454,7 @@ h3.dd-section-title,
 }
 
 .dd-p {
-    margin: 0 0 16px;
+    margin: 0 0 calc(16px * var(--dd-density));
     color: var(--dd-text-soft);
     font-size: var(--dd-text-size, 15.5px);
     line-height: var(--dd-leading, 1.75);
@@ -464,12 +465,12 @@ h3.dd-section-title,
 }
 
 .dd-list {
-    margin: 0 0 16px;
-    padding-left: 19px;
+    margin: 0 0 calc(16px * var(--dd-density));
+    padding-left: calc(19px * var(--dd-density));
 }
 
 .dd-list li {
-    margin-bottom: 8px;
+    margin-bottom: calc(8px * var(--dd-density));
     color: var(--dd-text-soft);
     font-size: var(--dd-text-size, 15.5px);
     line-height: var(--dd-leading, 1.75);
@@ -481,7 +482,7 @@ h3.dd-section-title,
 }
 
 .dd-section code {
-    padding: 1px 5px;
+    padding: 1px calc(5px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius-sm);
     background: var(--dd-panel-muted);
@@ -492,8 +493,8 @@ h3.dd-section-title,
 /* --- callout -------------------------------------------------------------- */
 
 .dd-callout {
-    margin: 22px 0;
-    padding: 16px 18px;
+    margin: calc(22px * var(--dd-density)) 0;
+    padding: calc(16px * var(--dd-density)) calc(18px * var(--dd-density));
     border: 1px solid color-mix(in srgb, var(--dd-accent) 20%, var(--dd-line));
     border-left: 2px solid var(--dd-accent);
     border-radius: var(--dd-radius);
@@ -503,7 +504,7 @@ h3.dd-section-title,
 .dd-callout p { margin: 0; color: var(--dd-text-soft); font-size: 14.5px; line-height: 1.65; }
 .dd-callout-label {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: calc(4px * var(--dd-density));
     color: var(--dd-text);
     font: 650 12px/1.4 var(--dd-sans);
 }
@@ -530,7 +531,7 @@ h3.dd-section-title,
 
 .dd-steps {
     counter-reset: dd-step;
-    margin: 22px 0;
+    margin: calc(22px * var(--dd-density)) 0;
     padding: 0;
     list-style: none;
 }
@@ -539,9 +540,9 @@ h3.dd-section-title,
     counter-increment: dd-step;
     display: grid;
     grid-template-columns: 34px minmax(0, 1fr);
-    gap: 13px;
+    gap: calc(13px * var(--dd-density));
     position: relative;
-    padding-bottom: 20px;
+    padding-bottom: calc(20px * var(--dd-density));
 }
 
 .dd-step:not(:last-child)::after {
@@ -588,8 +589,8 @@ h3.dd-section-title,
 
 .dd-checklist {
     display: grid;
-    gap: 9px;
-    margin: 18px 0;
+    gap: calc(9px * var(--dd-density));
+    margin: calc(18px * var(--dd-density)) 0;
     padding: 0;
     list-style: none;
 }
@@ -597,7 +598,7 @@ h3.dd-section-title,
 .dd-check {
     display: grid;
     grid-template-columns: 22px minmax(0, 1fr);
-    gap: 10px;
+    gap: calc(10px * var(--dd-density));
     align-items: start;
     color: var(--dd-text-soft);
     font-size: 14px;
@@ -626,14 +627,14 @@ h3.dd-section-title,
 }
 
 .dd-details {
-    margin: 18px 0;
+    margin: calc(18px * var(--dd-density)) 0;
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel);
 }
 
 .dd-details > summary {
-    padding: 13px 42px 13px 16px;
+    padding: calc(13px * var(--dd-density)) calc(42px * var(--dd-density)) calc(13px * var(--dd-density)) calc(16px * var(--dd-density));
     color: var(--dd-text);
     font-size: 14px;
     font-weight: 700;
@@ -646,7 +647,7 @@ h3.dd-section-title,
 }
 
 .dd-details-body {
-    padding: 13px 16px 15px;
+    padding: calc(13px * var(--dd-density)) calc(16px * var(--dd-density)) calc(15px * var(--dd-density));
 }
 
 .dd-details-body p {
@@ -659,15 +660,15 @@ h3.dd-section-title,
 .dd-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-    gap: 12px;
-    margin: 20px 0;
+    gap: calc(12px * var(--dd-density));
+    margin: calc(20px * var(--dd-density)) 0;
 }
 
 .dd-card {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding: 16px;
+    padding: calc(16px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel);
@@ -698,7 +699,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-card-text {
-    margin-top: 6px;
+    margin-top: calc(6px * var(--dd-density));
     color: var(--dd-text-soft);
     font-size: 13.5px;
     line-height: 1.55;
@@ -706,7 +707,7 @@ a.dd-card:focus-visible,
 
 .dd-card-label {
     margin-top: auto;
-    padding-top: 14px;
+    padding-top: calc(14px * var(--dd-density));
     color: var(--dd-accent);
     font: 700 11px/1.3 var(--dd-mono);
     letter-spacing: var(--dd-caps-track, 0.04em);
@@ -714,8 +715,8 @@ a.dd-card:focus-visible,
 }
 
 .dd-quote {
-    margin: 22px 0;
-    padding: 18px 20px;
+    margin: calc(22px * var(--dd-density)) 0;
+    padding: calc(18px * var(--dd-density)) calc(20px * var(--dd-density));
     border-left: 3px solid var(--dd-accent);
     background: var(--dd-panel-muted);
 }
@@ -733,7 +734,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-quote figcaption {
-    margin-top: 10px;
+    margin-top: calc(10px * var(--dd-density));
     color: var(--dd-muted);
     font-size: 12px;
     line-height: 1.5;
@@ -743,7 +744,7 @@ a.dd-card:focus-visible,
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 1px;
-    margin: 20px 0;
+    margin: calc(20px * var(--dd-density)) 0;
     padding: 1px;
     border-radius: var(--dd-radius);
     background: var(--dd-line);
@@ -753,9 +754,9 @@ a.dd-card:focus-visible,
 .dd-metric {
     display: flex;
     flex-direction: column-reverse;
-    gap: 6px;
+    gap: calc(6px * var(--dd-density));
     min-width: 0;
-    padding: 15px;
+    padding: calc(15px * var(--dd-density));
     background: var(--dd-panel);
 }
 
@@ -793,7 +794,7 @@ a.dd-card:focus-visible,
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1px;
-    margin: 20px 0;
+    margin: calc(20px * var(--dd-density)) 0;
     padding: 1px;
     border-radius: var(--dd-radius);
     background: var(--dd-line);
@@ -801,7 +802,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-compare-item {
-    padding: 17px;
+    padding: calc(17px * var(--dd-density));
     background: var(--dd-panel);
 }
 
@@ -824,7 +825,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-compare-text {
-    margin-top: 8px;
+    margin-top: calc(8px * var(--dd-density));
     color: var(--dd-text-soft);
     font-size: 14px;
     line-height: 1.6;
@@ -834,7 +835,7 @@ a.dd-card:focus-visible,
 
 /* Wide content scrolls inside its own container so the page body never does. */
 .dd-table-scroll {
-    margin: 18px 0;
+    margin: calc(18px * var(--dd-density)) 0;
     overflow-x: auto;
 }
 
@@ -844,7 +845,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-table th {
-    padding: 0 14px 7px 0;
+    padding: 0 calc(14px * var(--dd-density)) calc(7px * var(--dd-density)) 0;
     border-bottom: 1px solid var(--dd-line);
     color: var(--dd-muted);
     font-size: 11px;
@@ -855,7 +856,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-table td {
-    padding: 9px 14px 9px 0;
+    padding: calc(9px * var(--dd-density)) calc(14px * var(--dd-density)) calc(9px * var(--dd-density)) 0;
     border-bottom: 1px solid var(--dd-line-soft);
     color: var(--dd-text-soft);
     font-size: 14px;
@@ -874,14 +875,14 @@ a.dd-card:focus-visible,
 .dd-keys {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
-    gap: 9px 18px;
+    gap: calc(9px * var(--dd-density)) calc(18px * var(--dd-density));
     align-items: start;
     justify-items: start;
-    margin: 16px 0;
+    margin: calc(16px * var(--dd-density)) 0;
 }
 
 .dd-keys kbd {
-    padding: 3px 8px;
+    padding: 3px calc(8px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius-sm);
     background: var(--dd-panel-muted);
@@ -900,16 +901,16 @@ a.dd-card:focus-visible,
 
 .dd-facts {
     max-width: var(--dd-measure);
-    margin: 4px 0 20px;
-    padding: 17px 19px 15px;
+    margin: calc(4px * var(--dd-density)) 0 calc(20px * var(--dd-density));
+    padding: calc(17px * var(--dd-density)) calc(19px * var(--dd-density)) calc(15px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel-muted);
 }
 
 .dd-facts-title {
-    margin: 0 0 13px;
-    padding-bottom: 12px;
+    margin: 0 0 calc(13px * var(--dd-density));
+    padding-bottom: calc(12px * var(--dd-density));
     border-bottom: 1px solid var(--dd-line);
     color: var(--dd-text);
     font: 700 15px/1.25 var(--dd-sans);
@@ -921,9 +922,9 @@ a.dd-card:focus-visible,
 .dd-facts-head {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin: 0 0 13px;
-    padding-bottom: 12px;
+    gap: calc(12px * var(--dd-density));
+    margin: 0 0 calc(13px * var(--dd-density));
+    padding-bottom: calc(12px * var(--dd-density));
     border-bottom: 1px solid var(--dd-line);
 }
 
@@ -976,7 +977,7 @@ a.dd-card:focus-visible,
 .dd-facts-rows {
     display: grid;
     grid-template-columns: minmax(88px, max-content) 1fr;
-    gap: 7px 18px;
+    gap: calc(7px * var(--dd-density)) calc(18px * var(--dd-density));
     margin: 0;
 }
 
@@ -1010,17 +1011,17 @@ a.dd-card:focus-visible,
     .dd-nav {
         position: static;
         max-height: 154px;
-        padding: 16px 18px;
+        padding: calc(16px * var(--dd-density)) calc(18px * var(--dd-density));
         border-right: 0;
         border-bottom: 1px solid var(--dd-line);
     }
 
     .dd-main {
-        padding: 24px 20px 70px;
+        padding: calc(24px * var(--dd-density)) calc(20px * var(--dd-density)) calc(70px * var(--dd-density));
     }
 
     .dd-page {
-        padding: 32px 20px 70px;
+        padding: calc(32px * var(--dd-density)) calc(20px * var(--dd-density)) calc(70px * var(--dd-density));
     }
 
     .dd-title {
@@ -1211,7 +1212,7 @@ a.dd-card:focus-visible,
         .dd-details:not([open])::after {
             content: attr(data-dd-print);
             display: block;
-            padding: 13px 16px 15px;
+            padding: calc(13px * var(--dd-density)) calc(16px * var(--dd-density)) calc(15px * var(--dd-density));
             color: var(--dd-text-soft);
             font-size: 14px;
             line-height: 1.65;
@@ -1264,15 +1265,15 @@ a.dd-card:focus-visible,
 
 .dd-contents {
     max-width: var(--dd-measure);
-    margin: 0 0 44px;
-    padding: 18px 20px;
+    margin: 0 0 calc(44px * var(--dd-density));
+    padding: calc(18px * var(--dd-density)) calc(20px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel-muted);
 }
 
 .dd-contents h2 {
-    margin: 0 0 10px;
+    margin: 0 0 calc(10px * var(--dd-density));
     color: var(--dd-muted);
     font-size: 10px;
     font-weight: 700;
@@ -1282,7 +1283,7 @@ a.dd-card:focus-visible,
 
 .dd-contents .dd-list {
     margin: 0;
-    padding-left: 18px;
+    padding-left: calc(18px * var(--dd-density));
 }
 
 .dd-contents a {
@@ -1300,10 +1301,10 @@ a.dd-card:focus-visible,
 .dd-pager {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: calc(12px * var(--dd-density));
     max-width: var(--dd-measure);
-    margin-top: 44px;
-    padding-top: 24px;
+    margin-top: calc(44px * var(--dd-density));
+    padding-top: calc(24px * var(--dd-density));
     border-top: 1px solid var(--dd-line);
 }
 .dd-pager a {
@@ -1315,8 +1316,8 @@ a.dd-card:focus-visible,
 .dd-pager a[rel] {
     display: flex;
     flex-direction: column;
-    gap: 9px;
-    padding: 18px;
+    gap: calc(9px * var(--dd-density));
+    padding: calc(18px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel);
@@ -1326,9 +1327,9 @@ a.dd-card:focus-visible,
 .dd-pager a[rel="next"] { grid-column: 2; grid-row: 1; }
 .dd-pager:not(:has([rel="prev"])) a[rel="next"],
 .dd-pager:not(:has([rel="next"])) a[rel="prev"] { grid-column: 1 / -1; }
-.dd-pager-label { display: flex; align-items: center; gap: 7px; color: var(--dd-muted); font: 600 12px/1.4 var(--dd-sans); }
+.dd-pager-label { display: flex; align-items: center; gap: calc(7px * var(--dd-density)); color: var(--dd-muted); font: 600 12px/1.4 var(--dd-sans); }
 .dd-pager-title { font-size: 14px; font-weight: 600; line-height: 1.5; }
-.dd-pager .dd-pager-all { grid-column: 1 / -1; grid-row: 2; justify-self: center; padding: 8px; color: var(--dd-text-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.dd-pager .dd-pager-all { grid-column: 1 / -1; grid-row: 2; justify-self: center; padding: calc(8px * var(--dd-density)); color: var(--dd-text-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 620px) {
     .dd-pager { grid-template-columns: minmax(0, 1fr); }
     .dd-pager a[rel="prev"], .dd-pager a[rel="next"], .dd-pager .dd-pager-all { grid-column: 1; grid-row: auto; }
@@ -1339,7 +1340,7 @@ a.dd-card:focus-visible,
    It is visible on purpose; text shown only to machines would be cloaking. */
 .dd-fullnote {
     max-width: var(--dd-measure);
-    margin: 0 0 22px;
+    margin: 0 0 calc(22px * var(--dd-density));
     color: var(--dd-muted);
     font-size: 13px;
     line-height: 1.55;
@@ -1347,7 +1348,7 @@ a.dd-card:focus-visible,
 
 .dd-header + .dd-fullnote {
     margin-top: -28px;
-    margin-bottom: 40px;
+    margin-bottom: calc(40px * var(--dd-density));
 }
 
 .dd-fullnote a {
@@ -1387,10 +1388,10 @@ a.dd-card:focus-visible,
 .dd-identity {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: calc(15px * var(--dd-density));
     max-width: var(--dd-measure);
-    margin: 0 0 34px;
-    padding: 15px 18px;
+    margin: 0 0 calc(34px * var(--dd-density));
+    padding: calc(15px * var(--dd-density)) calc(18px * var(--dd-density));
     border: 2px solid var(--dd-ink);
     border-radius: var(--dd-radius);
     background: transparent;
@@ -1432,7 +1433,7 @@ a.dd-card:focus-visible,
 .dd-identity-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: calc(6px * var(--dd-density));
     margin: 3px 0 0;
     color: var(--dd-muted);
     font-size: 12px;
@@ -1515,7 +1516,7 @@ a.dd-card:focus-visible,
    keep their existing rhythm. */
 .dd-static .dd-contents ~ .dd-section,
 .dd-static .dd-contents ~ .dd-group {
-    padding-top: 20px;
+    padding-top: calc(20px * var(--dd-density));
     border-top: 1px solid var(--dd-line-soft);
 }
 
@@ -1523,7 +1524,7 @@ a.dd-card:focus-visible,
    open a folder, so nothing here is collapsed and nothing is hidden. */
 .dd-static .dd-nav-list .dd-nav-list {
     margin-top: 1px;
-    padding-left: 12px;
+    padding-left: calc(12px * var(--dd-density));
 }
 
 .dd-mobile-contents {
@@ -1577,7 +1578,7 @@ a.dd-card:focus-visible,
         position: fixed;
         inset: 52px 0 0;
         max-height: none;
-        padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+        padding: calc(24px * var(--dd-density)) calc(20px * var(--dd-density)) max(calc(24px * var(--dd-density)), env(safe-area-inset-bottom));
         background: var(--dd-bg);
         z-index: 4;
         border: 0;
@@ -1593,7 +1594,7 @@ a.dd-card:focus-visible,
 
 .dd-figure {
     max-width: var(--dd-measure);
-    margin: 4px 0 22px;
+    margin: calc(4px * var(--dd-density)) 0 calc(22px * var(--dd-density));
 }
 
 .dd-media {
@@ -1632,7 +1633,7 @@ a.dd-card:focus-visible,
 }
 
 .dd-figcaption {
-    margin: 9px 2px 0;
+    margin: calc(9px * var(--dd-density)) 2px 0;
     color: var(--dd-muted);
     font-size: 13.5px;
     line-height: 1.5;
@@ -1640,9 +1641,9 @@ a.dd-card:focus-visible,
 
 .dd-gallery {
     display: grid;
-    gap: 14px;
+    gap: calc(14px * var(--dd-density));
     max-width: var(--dd-measure);
-    margin: 6px 0 24px;
+    margin: calc(6px * var(--dd-density)) 0 calc(24px * var(--dd-density));
 }
 
 .dd-gallery--2 {
@@ -1699,15 +1700,15 @@ a.dd-card:focus-visible,
 
 /* Selected SVGs are markup in both surfaces, never initialized by a script. */
 .dd-icon { width: 16px; height: 16px; flex: 0 0 auto; vertical-align: -0.15em; }
-.dd-callout { display: flex; align-items: flex-start; gap: 10px; }
+.dd-callout { display: flex; align-items: flex-start; gap: calc(10px * var(--dd-density)); }
 .dd-callout > .dd-icon { margin-top: 2px; color: var(--dd-accent); }
 .dd-check-icon .dd-icon { width: 13px; height: 13px; }
 .dd-pager .dd-icon { margin: 0; }
 
 /* Literal code, with optional precomputed semantic token classes. */
-.dd-code-block { max-width: var(--dd-measure); margin: 20px 0; }
-.dd-code-language { padding: 10px 16px; border: 1px solid var(--dd-line); border-bottom: 0; border-radius: var(--dd-radius) var(--dd-radius) 0 0; background: var(--dd-panel-muted); color: var(--dd-muted); font: 600 11px/1.4 var(--dd-mono); overflow-wrap: anywhere; }
-.dd-code { box-sizing: border-box; max-width: 100%; margin: 0; padding: 18px; overflow-x: auto; border: 1px solid var(--dd-line); border-radius: 0 0 var(--dd-radius) var(--dd-radius); background: var(--dd-panel-muted); color: var(--dd-text); font: 400 13px/1.75 var(--dd-mono); tab-size: 4; }
+.dd-code-block { max-width: var(--dd-measure); margin: calc(20px * var(--dd-density)) 0; }
+.dd-code-language { padding: calc(10px * var(--dd-density)) calc(16px * var(--dd-density)); border: 1px solid var(--dd-line); border-bottom: 0; border-radius: var(--dd-radius) var(--dd-radius) 0 0; background: var(--dd-panel-muted); color: var(--dd-muted); font: 600 11px/1.4 var(--dd-mono); overflow-wrap: anywhere; }
+.dd-code { box-sizing: border-box; max-width: 100%; margin: 0; padding: calc(18px * var(--dd-density)); overflow-x: auto; border: 1px solid var(--dd-line); border-radius: 0 0 var(--dd-radius) var(--dd-radius); background: var(--dd-panel-muted); color: var(--dd-text); font: 400 13px/1.75 var(--dd-mono); tab-size: 4; }
 .dd-section .dd-code > code { display: block; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: inherit; white-space: pre; }
 .dd-code:focus-visible { outline: 2px solid var(--dd-accent); outline-offset: 3px; }
 .dd-code-token--keyword { color: var(--dd-code-keyword, var(--dd-accent)); font-weight: 650; }
@@ -1727,18 +1728,18 @@ a.dd-card:focus-visible,
 .dd-page { box-sizing: border-box; width: 100%; }
 
 /* Nested chapters retain native disclosure keyboard behavior. */
-.dd-nav-group .dd-nav-group { margin-inline-start: 8px; }
+.dd-nav-group .dd-nav-group { margin-inline-start: calc(8px * var(--dd-density)); }
 .dd-reading-context { font-size: 12px; color: var(--dd-muted, #666); line-height: 1.5; }
-.dd-progress { width: 100%; height: 5px; accent-color: var(--dd-accent, #5252cc); margin-block: 0 16px; }
+.dd-progress { width: 100%; height: 5px; accent-color: var(--dd-accent, #5252cc); margin-block: 0 calc(16px * var(--dd-density)); }
 
-.dd-panel-pager { display: grid; gap: 8px; margin-block-end: 16px; font-size: 12px; }
+.dd-panel-pager { display: grid; gap: calc(8px * var(--dd-density)); margin-block-end: calc(16px * var(--dd-density)); font-size: 12px; }
 
-.dd-search { margin-block-end: 20px; font-size: 12px; }
-.dd-search label { display: grid; gap: 6px; color: var(--dd-muted, #8b8b93); }
-.dd-search-input { width: 100%; box-sizing: border-box; padding: 8px; font: inherit; color: var(--dd-text, #18181b); background: var(--dd-bg, #fff); border: 1px solid var(--dd-border, #ddd); border-radius: var(--dd-radius, 6px); }
+.dd-search { margin-block-end: calc(20px * var(--dd-density)); font-size: 12px; }
+.dd-search label { display: grid; gap: calc(6px * var(--dd-density)); color: var(--dd-muted, #8b8b93); }
+.dd-search-input { width: 100%; box-sizing: border-box; padding: calc(8px * var(--dd-density)); font: inherit; color: var(--dd-text, #18181b); background: var(--dd-bg, #fff); border: 1px solid var(--dd-border, #ddd); border-radius: var(--dd-radius, 6px); }
 .dd-search-input:focus-visible { outline: 2px solid var(--dd-accent, #18181b); outline-offset: 2px; }
-.dd-search-results { padding-inline-start: 16px; max-height: 35vh; overflow: auto; }
-.dd-search-results li { margin-block: 8px; }
+.dd-search-results { padding-inline-start: calc(16px * var(--dd-density)); max-height: 35vh; overflow: auto; }
+.dd-search-results li { margin-block: calc(8px * var(--dd-density)); }
 .dd-search-status:empty { display: none; }
 
 /* FONT-01: explicitly selected UI font; existing host defaults remain unchanged. */
@@ -1777,7 +1778,7 @@ h4.dd-section-title { font-size: var(--dd-h4-size, 1rem); }
     hyphenate-limit-chars: var(--dd-hyphen-limit, auto);
     text-align: var(--dd-text-align, start);
     text-justify: var(--dd-text-justify, auto);
-    margin-block-end: var(--dd-paragraph-gap, 16px);
+    margin-block-end: var(--dd-paragraph-gap, calc(16px * var(--dd-density)));
     widows: var(--dd-widows, 2);
     orphans: var(--dd-orphans, 2);
 }
@@ -1798,11 +1799,11 @@ h4.dd-section-title { font-size: var(--dd-h4-size, 1rem); }
 .dd-link:hover {
     text-decoration-line: var(--dd-link-hover-decoration, var(--dd-link-decoration, underline));
 }
-.dd-list { padding-inline-start: var(--dd-list-indent, 19px); }
-.dd-contents .dd-list { padding-inline-start: var(--dd-list-indent, 18px); }
+.dd-list { padding-inline-start: var(--dd-list-indent, calc(19px * var(--dd-density))); }
+.dd-contents .dd-list { padding-inline-start: var(--dd-list-indent, calc(18px * var(--dd-density))); }
 ul.dd-list { list-style-type: var(--dd-bullet-style, disc); }
 ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
-.dd-list li { margin-block-end: var(--dd-list-item-gap, 8px); }
+.dd-list li { margin-block-end: var(--dd-list-item-gap, calc(8px * var(--dd-density))); }
 .dd-section { counter-reset: dd-h3; }
 .dd-section > h2.dd-section-title { counter-increment: dd-h2; }
 .dd-section > h2.dd-section-title::before { content: var(--dd-heading-number, none); }
@@ -1822,10 +1823,10 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     .dd-sidebar-side-right .dd-body { grid-template-columns: minmax(0, 1fr) minmax(0, var(--dd-column)) var(--dd-rail) minmax(0, 1fr); }
     .dd-sidebar-side-right .dd-nav { grid-column: 3; grid-row: 1; border-right: 0; border-left: 1px solid var(--dd-line); }
     .dd-sidebar-side-right .dd-main, .dd-sidebar-side-right .dd-page { grid-column: 2; grid-row: 1; }
-    .dd-outline-right .dd-contents { float: right; width: 160px; margin-inline: 24px -200px; }
-    .dd-outline-right .dd-page, .dd-outline-right .dd-main { padding-inline-end: 220px; max-width: calc(var(--dd-column) + 200px); }
-    .dd-outline-left .dd-contents { float: left; width: 160px; margin-inline: -200px 24px; }
-    .dd-outline-left .dd-page, .dd-outline-left .dd-main { padding-inline-start: 220px; max-width: calc(var(--dd-column) + 200px); }
+    .dd-outline-right .dd-contents { float: right; width: 160px; margin-inline: calc(24px * var(--dd-density)) -200px; }
+    .dd-outline-right .dd-page, .dd-outline-right .dd-main { padding-inline-end: calc(220px * var(--dd-density)); max-width: calc(var(--dd-column) + 200px); }
+    .dd-outline-left .dd-contents { float: left; width: 160px; margin-inline: -200px calc(24px * var(--dd-density)); }
+    .dd-outline-left .dd-page, .dd-outline-left .dd-main { padding-inline-start: calc(220px * var(--dd-density)); max-width: calc(var(--dd-column) + 200px); }
 }
 .dd-outline-off .dd-contents { display: none; }
 .dd-header-glass .dd-bar { background: color-mix(in srgb, var(--dd-ink) 85%, transparent); backdrop-filter: blur(16px); }
@@ -1874,7 +1875,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 /* A subheading inside a page, in the panel and on any static page. Its "#"
    link shows on hover, for sharing a place in a long page. */
 .dd-heading {
-    margin: 40px 0 12px;
+    margin: calc(40px * var(--dd-density)) 0 calc(12px * var(--dd-density));
     color: var(--dd-text);
     font: var(--dd-heading-weight, 650) 22px/1.25 var(--dd-display, var(--dd-sans));
     letter-spacing: var(--dd-display-track, -0.02em);
@@ -1901,7 +1902,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     grid-column: 1 / -1;
     width: 100%;
     max-width: none;
-    padding: 72px 24px 104px;
+    padding: calc(72px * var(--dd-density)) calc(24px * var(--dd-density)) calc(104px * var(--dd-density));
     box-sizing: border-box;
 }
 
@@ -1914,7 +1915,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 }
 
 .dd-article-crumbs {
-    margin: 0 0 20px;
+    margin: 0 0 calc(20px * var(--dd-density));
     color: var(--dd-muted);
     font: 500 14px/1 var(--dd-ui, var(--dd-sans));
 }
@@ -1929,14 +1930,14 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 }
 
 .dd-article-question {
-    margin: 0 0 18px;
+    margin: 0 0 calc(18px * var(--dd-density));
     font: var(--dd-heading-weight, 700) clamp(32px, 4.4vw, 48px)/1.1 var(--dd-display, var(--dd-sans));
     letter-spacing: var(--dd-display-track, -0.03em);
     text-wrap: balance;
 }
 
 .dd-article-lede {
-    margin: 0 0 24px;
+    margin: 0 0 calc(24px * var(--dd-density));
     color: var(--dd-text-soft);
     font-size: clamp(18px, 1.8vw, 20px);
     line-height: 1.55;
@@ -1946,7 +1947,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-byline {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: calc(10px * var(--dd-density));
 }
 
 .dd-avatar {
@@ -1979,12 +1980,12 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
    diagram is set in a technical essay. */
 .dd-article-cover {
     max-width: 960px;
-    margin: 48px auto 0;
+    margin: calc(48px * var(--dd-density)) auto 0;
 }
 
 .dd-article :is(.dd-article-cover, .dd-article-body) .dd-figure {
     max-width: none;
-    margin: 40px 0;
+    margin: calc(40px * var(--dd-density)) 0;
     overflow: hidden;
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
@@ -1997,7 +1998,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-article .dd-figure > :is(.dd-media, picture, .dd-media-link) {
     width: calc(100% - 56px);
-    margin: 28px;
+    margin: calc(28px * var(--dd-density));
 }
 
 .dd-article .dd-figure picture > .dd-media {
@@ -2014,7 +2015,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-article .dd-figure .dd-figcaption {
     margin: 0;
-    padding: 12px 18px;
+    padding: calc(12px * var(--dd-density)) calc(18px * var(--dd-density));
     border-top: 1px solid var(--dd-line);
     color: var(--dd-muted);
     font-size: 13.5px;
@@ -2023,14 +2024,14 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 /* A wide figure runs past the text on both sides, up to the cover's width. */
 .dd-article .dd-article-body .dd-figure--wide {
     width: min(960px, 100vw - 48px);
-    margin-left: calc(50% - min(480px, 50vw - 24px));
+    margin-left: calc(50% - min(calc(480px * var(--dd-density)), 50vw - calc(24px * var(--dd-density))));
 }
 
 /* --- the contents and the body ------------------------------------------- */
 
 .dd-article-toc {
-    margin: 0 0 40px;
-    padding: 16px 20px;
+    margin: 0 0 calc(40px * var(--dd-density));
+    padding: calc(16px * var(--dd-density)) calc(20px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel);
@@ -2059,8 +2060,8 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-article-toc ol {
     display: grid;
-    gap: 6px;
-    margin: 12px 0 0;
+    gap: calc(6px * var(--dd-density));
+    margin: calc(12px * var(--dd-density)) 0 0;
     padding: 0;
     list-style: none;
 }
@@ -2076,7 +2077,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 }
 
 .dd-article-body {
-    padding-top: 48px;
+    padding-top: calc(48px * var(--dd-density));
 }
 
 /* Body text at reading size and in full ink: the manual's soft secondary
@@ -2088,11 +2089,11 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 }
 
 .dd-article-body .dd-p {
-    margin-bottom: 22px;
+    margin-bottom: calc(22px * var(--dd-density));
 }
 
 .dd-article-body .dd-heading {
-    margin: 56px 0 14px;
+    margin: calc(56px * var(--dd-density)) 0 calc(14px * var(--dd-density));
     font-size: clamp(24px, 2.4vw, 28px);
     line-height: 1.2;
 }
@@ -2102,7 +2103,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
    are a plain numbered list whose items open with their titles. */
 .dd-article-body .dd-callout {
     display: block;
-    margin: 0 0 22px;
+    margin: 0 0 calc(22px * var(--dd-density));
     padding: 0;
     border: 0;
     border-radius: 0;
@@ -2125,14 +2126,14 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 }
 
 .dd-article-body .dd-steps {
-    margin: 0 0 22px;
+    margin: 0 0 calc(22px * var(--dd-density));
     padding-left: 1.5em;
     list-style: decimal;
 }
 
 .dd-article-body .dd-step {
     display: list-item;
-    padding: 0 0 12px 0.2em;
+    padding: 0 0 calc(12px * var(--dd-density)) 0.2em;
 }
 
 .dd-article-body .dd-step::before,
@@ -2166,8 +2167,8 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 /* A quote in an article is a pull quote: large, set apart, no box. */
 .dd-article-body .dd-quote {
-    margin: 48px 0;
-    padding: 4px 0 4px 28px;
+    margin: calc(48px * var(--dd-density)) 0;
+    padding: calc(4px * var(--dd-density)) 0 calc(4px * var(--dd-density)) calc(28px * var(--dd-density));
     border-left-width: 4px;
     background: none;
 }
@@ -2179,7 +2180,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 }
 
 .dd-article-body .dd-quote figcaption {
-    margin-top: 14px;
+    margin-top: calc(14px * var(--dd-density));
     font-size: 14px;
 }
 
@@ -2187,8 +2188,8 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-article-more {
     max-width: 1160px;
-    margin: 96px auto 0;
-    padding-top: 48px;
+    margin: calc(96px * var(--dd-density)) auto 0;
+    padding-top: calc(48px * var(--dd-density));
     border-top: 1px solid var(--dd-line);
 }
 
@@ -2196,8 +2197,8 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 32px;
+    gap: calc(16px * var(--dd-density));
+    margin-bottom: calc(32px * var(--dd-density));
 }
 
 .dd-article-more-title {
@@ -2220,11 +2221,11 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-articles-head {
     max-width: 1160px;
-    margin: 0 auto 56px;
+    margin: 0 auto calc(56px * var(--dd-density));
 }
 
 .dd-articles-head .dd-title {
-    margin-bottom: 12px;
+    margin-bottom: calc(12px * var(--dd-density));
     font-size: clamp(38px, 5vw, 56px);
 }
 
@@ -2237,7 +2238,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-articles {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 48px 32px;
+    gap: calc(48px * var(--dd-density)) calc(32px * var(--dd-density));
     margin: 0;
     padding: 0;
     list-style: none;
@@ -2254,14 +2255,14 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 .dd-article-card {
     display: grid;
-    gap: 16px;
+    gap: calc(16px * var(--dd-density));
     color: inherit;
     text-decoration: none;
 }
 
 .dd-article-card-text {
     display: grid;
-    gap: 8px;
+    gap: calc(8px * var(--dd-density));
 }
 
 .dd-article-card .dd-article-question {
@@ -2321,7 +2322,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-articles--index > .dd-article-item:first-child .dd-article-card {
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     align-items: center;
-    gap: 40px;
+    gap: calc(40px * var(--dd-density));
 }
 
 .dd-articles--index > .dd-article-item:first-child .dd-article-question {
@@ -2342,16 +2343,16 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 @media (max-width: 760px) {
     .dd-static .dd-page--article {
-        padding-top: 40px;
+        padding-top: calc(40px * var(--dd-density));
     }
 
     .dd-article-cover {
-        margin-top: 32px;
+        margin-top: calc(32px * var(--dd-density));
     }
 
     .dd-article .dd-figure > :is(.dd-media, picture, .dd-media-link) {
         width: calc(100% - 28px);
-        margin: 14px;
+        margin: calc(14px * var(--dd-density));
     }
 
     .dd-articles,
@@ -2370,29 +2371,29 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 
 /* Native MathML: no third-party fonts, stylesheet or runtime. */
 .dd-math--display {
-    margin: var(--dd-math-margin, 20px) 0;
+    margin: var(--dd-math-margin, calc(20px * var(--dd-density))) 0;
     overflow-x: auto;
 }
 .dd-math-equation { color: var(--dd-text, #18181b); }
 .dd-math-where {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: var(--dd-math-where-gap, 7px 18px);
-    margin: var(--dd-math-margin, 20px) 0 0;
+    gap: var(--dd-math-where-gap, calc(7px * var(--dd-density)) calc(18px * var(--dd-density)));
+    margin: var(--dd-math-margin, calc(20px * var(--dd-density))) 0 0;
 }
 .dd-math-where dt { font-weight: var(--dd-heading-weight, 600); }
 .dd-math-where dd { margin: 0; }
 
 /* Container blocks keep complete, labelled content before enhancement. */
 .dd-tabs, .dd-disclosure {
-    margin: var(--dd-paragraph-gap, 18px) 0;
+    margin: var(--dd-paragraph-gap, calc(18px * var(--dd-density))) 0;
     border: var(--dd-border-width, 1px) solid var(--dd-line);
     border-radius: var(--dd-radius);
     background: var(--dd-panel);
 }
 .dd-tabs-label, .dd-tab-label {
     margin: 0;
-    padding: calc(var(--dd-paragraph-gap, 18px) * 2 / 3) var(--dd-paragraph-gap, 16px);
+    padding: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3) var(--dd-paragraph-gap, calc(16px * var(--dd-density)));
     color: var(--dd-text);
     font-weight: var(--dd-heading-weight, 700);
 }
@@ -2403,7 +2404,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     border-top: var(--dd-border-width, 1px) solid var(--dd-line);
 }
 .dd-tab-pane {
-    padding: calc(var(--dd-paragraph-gap, 18px) * 2 / 3) var(--dd-paragraph-gap, 16px);
+    padding: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3) var(--dd-paragraph-gap, calc(16px * var(--dd-density)));
 }
 .dd-tab-pane > .dd-tab-label {
     padding-inline: 0;
@@ -2411,13 +2412,13 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-tab-list {
     display: flex;
     overflow-x: auto;
-    gap: calc(var(--dd-paragraph-gap, 16px) / 4);
-    padding-inline: calc(var(--dd-paragraph-gap, 18px) * 2 / 3);
+    gap: calc(var(--dd-paragraph-gap, calc(16px * var(--dd-density))) / 4);
+    padding-inline: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3);
     border-bottom: var(--dd-border-width, 1px) solid var(--dd-line);
 }
 .dd-tab {
     flex: none;
-    padding: calc(var(--dd-paragraph-gap, 18px) * 2 / 3);
+    padding: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3);
     border: 0;
     border-bottom: var(--dd-border-width, 1px) solid transparent;
     background: transparent;
@@ -2440,7 +2441,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     display: none;
 }
 .dd-disclosure > summary {
-    padding: calc(var(--dd-paragraph-gap, 18px) * 2 / 3) var(--dd-paragraph-gap, 16px);
+    padding: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3) var(--dd-paragraph-gap, calc(16px * var(--dd-density)));
     color: var(--dd-text);
     font-weight: var(--dd-heading-weight, 700);
     cursor: pointer;
@@ -2452,7 +2453,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 .dd-disclosure > summary::before {
     content: "›";
     display: inline-block;
-    margin-right: calc(var(--dd-paragraph-gap, 18px) * 2 / 3);
+    margin-right: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3);
 }
 .dd-disclosure[open] > summary::before {
     transform: rotate(90deg);
@@ -2461,7 +2462,7 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     border-bottom: var(--dd-border-width, 1px) solid var(--dd-line);
 }
 .dd-disclosure-body {
-    padding: calc(var(--dd-paragraph-gap, 18px) * 2 / 3) var(--dd-paragraph-gap, 16px);
+    padding: calc(var(--dd-paragraph-gap, calc(18px * var(--dd-density))) * 2 / 3) var(--dd-paragraph-gap, calc(16px * var(--dd-density)));
 }
 @media print {
     .dd-tab-list {
@@ -2481,14 +2482,14 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-block: 8px;
+    gap: calc(8px * var(--dd-density));
+    margin-block: calc(8px * var(--dd-density));
     font: 13px var(--dd-sans);
     color: var(--dd-muted);
 }
 .dd-copy-button {
     min-height: 36px;
-    padding: 4px 10px;
+    padding: calc(4px * var(--dd-density)) calc(10px * var(--dd-density));
     border: 1px solid var(--dd-line);
     border-radius: var(--dd-radius-xs);
     background: var(--dd-panel);
@@ -2501,6 +2502,6 @@ ol.dd-list { list-style-type: var(--dd-list-number-style, decimal); }
 @media print { .dd-copy { display: none; } }
 
 /* Optional rail filter, mounted only with JavaScript. */
-.dd-rail-filter { margin-block-end: 20px; font-size: 12px; }
-.dd-rail-filter label { display: grid; gap: 6px; color: var(--dd-muted, #8b8b93); }
+.dd-rail-filter { margin-block-end: calc(20px * var(--dd-density)); font-size: 12px; }
+.dd-rail-filter label { display: grid; gap: calc(6px * var(--dd-density)); color: var(--dd-muted, #8b8b93); }
 .dd-rail-filter p:empty { display: none; }

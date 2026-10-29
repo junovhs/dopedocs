@@ -132,6 +132,13 @@ still fades, because appearing and disappearing is what makes it usable.
 | `--dd-measure` | Prose measure | `660px` |
 | `--dd-rail` | Nav rail width | `224px` |
 | `--dd-column` | Reading column | `752px` |
+| `--dd-density` | Content padding, gaps and block spacing multiplier | `1` |
+
+Use `--dd-density: 0.8` for compact docs or `1.25` for a more spacious page.
+Fixed header geometry, focus outlines and small rules retain their dimensions.
+`--dd-measure` accepts any CSS length, including `65ch` for character-based line
+length. Aim for about 45–90 characters per line; the available viewport remains
+the upper limit. Increase `--dd-column` too when a longer measure needs room.
 
 ## Class names are public API
 

@@ -1,7 +1,8 @@
 {
   "measurement": "Fresh npm tarball; gzip level 9 per response; panel ESM import closure; largest shipped example HTML plus linked CSS/JS, search enabled, fixed 2026-10-18 build date. Host media and optional theme fonts excluded.",
   "headroom": "15% above each 2026-10-27 baseline, rounded up to the next byte, except the panel: reviewed 20% cap (30,292 B) for the tabs/copy/filter batch. NAV-04 adds 1,230 B (28,602 to 29,832 B), 802 B beyond the old 29,030 B panel cap. Original baselines and all other caps are retained. This permits modest reader features and compression variation while requiring review for substantial growth. Future content features do not receive speculative extra allowance. Raising a limit requires a deliberate reviewed edit here; tests never update budgets automatically.",
-  "readerCssRaw": { "baselineBytes": 62719, "limitBytes": 72127 },
+  "densityReview": "LAY-01 routes content spacing through CSS calculations: raw CSS 74,377 B, gzip 14,829 B. Raw cap raised to 75,000 B for those expressions; gzip and all other caps unchanged.",
+  "readerCssRaw": { "baselineBytes": 62719, "limitBytes": 75000 },
   "readerCssGzip": { "baselineBytes": 13563, "limitBytes": 15598 },
   "panelGzip": { "baselineBytes": 25243, "limitBytes": 30292 },
   "staticPageGzip": { "baselineBytes": 20087, "limitBytes": 23101 }

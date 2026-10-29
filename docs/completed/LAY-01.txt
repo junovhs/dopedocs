@@ -1,0 +1,3 @@
+LAY-01 — Density and character-based reading measure
+
+Added --dd-density with a default of 1 and routed content padding, margins and gaps through the multiplier across static pages and the panel. Header geometry, control hit areas, focus outlines and fine rules remain stable. Documented compact/spacious values and 45–90-character measures, including --dd-measure: 65ch. Browser tests measure spacing at 0.8, 1 and 1.25 on both surfaces using the theme example, and verify ch widths. Screenshots saved. Gzip budgets pass; raw CSS cap explicitly adjusted for the additional calculations.
