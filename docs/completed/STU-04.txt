@@ -1,0 +1,3 @@
+STU-04 — Readability warnings and fixes
+
+Added advisory checks for body/link contrast in light and dark palettes, body text below 15px, measures outside 45–90 characters, and leading below 1.3. Inline warnings offer fixes without blocking saves. Tests cover contrast boundaries, transparent colors, failing/passing settings, and browser-driven fixes against a real theme file. Refined the studio against the actual Remix mock: matching panel geometry, miniature skin previews, preset grid, tabs, dark chrome and locally hosted editor fonts. The mock-aligned screenshot and all light/dark tab screenshots are saved for review.

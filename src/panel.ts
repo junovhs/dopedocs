@@ -298,9 +298,11 @@ export function mountPanel(
     function scrollTo(id: string, smooth = false): void {
         const el = root.querySelector<HTMLElement>(`.dd-section[id="${CSS.escape(id)}"]`);
         if (!el) return;
+        const motion = getComputedStyle(root).getPropertyValue('--dd-motion').trim();
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
         body.scrollTo({
             top: offsetWithin(body, el) - 20,
-            behavior: smooth ? "smooth" : "auto",
+            behavior: smooth && motion !== 'none' && !root.classList.contains('dd-motion-none') && !reduced ? "smooth" : "auto",
         });
         pinned = id;
         setActive(id);

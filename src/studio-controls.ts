@@ -174,3 +174,12 @@ studioControls.push(
 
 /** No visual tokens are exempt. Any future nonvisual exception must explain why. */
 export const studioTokenExceptions: Record<string, string> = {};
+
+export const studioPresets: { name: string; skin: keyof typeof import('./studio-palettes.js').studioPalettes; mode: 'light' | 'dark'; tokens: Record<string, string> }[] = [
+    { name: 'Crisp', skin: 'Studio', mode: 'light', tokens: { '--dd-radius': '10px', '--dd-density': '1', '--dd-body': 'system-ui' } },
+    { name: 'Bookish', skin: 'Paper', mode: 'light', tokens: { '--dd-radius': '4px', '--dd-density': '1.1', '--dd-body': 'Georgia, serif' } },
+    { name: 'Swiss', skin: 'Swiss', mode: 'light', tokens: { '--dd-radius': '0px', '--dd-density': '1', '--dd-body': 'Arial, sans-serif' } },
+    { name: 'Night shift', skin: 'Forest', mode: 'dark', tokens: { '--dd-radius': '6px', '--dd-density': '1', '--dd-body': 'system-ui' } },
+    { name: 'Playful', skin: 'Candy', mode: 'light', tokens: { '--dd-radius': '16px', '--dd-density': '1', '--dd-body': 'system-ui' } },
+    { name: 'Calm', skin: 'Nordic', mode: 'light', tokens: { '--dd-radius': '10px', '--dd-density': '1.1', '--dd-body': 'system-ui' } },
+];

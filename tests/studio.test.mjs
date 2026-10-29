@@ -7,6 +7,7 @@ import {tmpdir} from 'node:os';import {join} from 'node:path';import {pathToFile
 import {buildPackage} from './built-package.mjs';
 import { docs } from '../examples/theme/docs.ts';
 import { studioControls, studioTokenExceptions } from '../src/studio-controls.ts';
+import { checkReadability } from '../src/studio-readability.ts';
 const { chromium } = await import('playwright').catch(() => ({}));
 let pkg,root,server,url,host;
 beforeAll(async()=>{
@@ -18,7 +19,7 @@ beforeAll(async()=>{
     server=createServer((req,res)=>{let i=0;const next=()=>middleware[i++]?.(req,res,next)??undefined;next();});
     await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));url='http://127.0.0.1:'+server.address().port;
 },30000);
-afterAll(async()=>{await new Promise(resolve=>server.close(resolve));pkg.cleanup();rmSync(root,{recursive:true,force:true});});
+afterAll(async()=>{if(server) await new Promise(resolve=>server.close(resolve));pkg?.cleanup();if(root) rmSync(root,{recursive:true,force:true});});
 test('dev editor saves/reopens the host file and never enters production output',async()=>{
     expect(await (await fetch(url+'/__dopedocs/studio')).text()).toContain('Your documentation preview');
     expect(await (await fetch(url+'/__dopedocs/preview')).text()).toContain('Real manual');
@@ -82,6 +83,54 @@ test('every documented theme token has a rendered control or an explained nonvis
     for (const token of controls) expect(html).toContain(`data-control="${token}"`);
 });
 
+test('readability checks catch both modes, alpha contrast, small type, measure and leading; every fix passes', () => {
+    const input = { size: 13, measure: 120, leading: 1.1, modes: {
+        light: { text: '#777777', link: 'rgb(240 240 240)', background: '#ffffff' },
+        dark: { text: '#333333', link: '#ffffff00', background: '#000000' },
+    } };
+    const warnings = checkReadability(input);
+    expect(warnings.map(warning => warning.id)).toEqual(['light-text-contrast', 'light-link-contrast', 'dark-text-contrast', 'dark-link-contrast', 'body-size', 'line-length', 'body-leading']);
+    for (const warning of warnings) {
+        if (warning.mode) input.modes[warning.mode][warning.token === '--dd-accent' ? 'link' : 'text'] = warning.value;
+        else if (warning.token === '--dd-text-size') input.size = parseFloat(warning.value);
+        else if (warning.token === '--dd-measure') input.measure = parseFloat(warning.value);
+        else input.leading = parseFloat(warning.value);
+    }
+    expect(checkReadability(input)).toEqual([]);
+    input.modes.light.text = '#767676';
+    expect(checkReadability(input)).toEqual([]);
+});
+
+test.skipIf(!chromium)('readability warnings never block saving and their buttons restore readable settings', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    try {
+        await fetch(url + '/__dopedocs/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tokens: {
+            '--dd-bg': '#ffffff', '--dd-text-soft': '#777777', '--dd-accent': '#eeeeee',
+            '--dd-text-size': '13px', '--dd-measure': '120ch', '--dd-leading': '1.1',
+        } }) });
+        await page.goto(url + '/__dopedocs/studio');
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Ready');
+        expect(readFileSync(join(root, 'theme.css'), 'utf8')).toContain('--dd-text-size: 13px');
+        await page.getByRole('tab', { name: 'Type', exact: true }).click();
+        for (const id of ['body-size', 'line-length', 'body-leading']) {
+            expect(await page.locator(`[data-warning="${id}"]`).isVisible()).toBe(true);
+        }
+        if (process.env.DOPEDOCS_ARTIFACTS) await page.screenshot({ path: join(process.env.DOPEDOCS_ARTIFACTS, 'studio-readability-warnings.png') });
+        for (const id of ['body-size', 'line-length', 'body-leading']) {
+            await page.getByRole('button', { name: 'Fix ' + id, exact: true }).click();
+            await expect.poll(() => page.locator(`[data-warning="${id}"]`).count()).toBe(0);
+        }
+        await page.getByRole('tab', { name: 'Style', exact: true }).click();
+        await page.getByRole('button', { name: 'Fix light-link-contrast', exact: true }).click();
+        await expect.poll(() => page.locator('[data-warning="light-link-contrast"]').count()).toBe(0);
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        const saved = readFileSync(join(root, 'theme.css'), 'utf8');
+        for (const declaration of ['--dd-text-size: 15.5px', '--dd-measure: 65ch', '--dd-leading: 1.75']) expect(saved).toContain(declaration);
+        expect(Number(await page.locator('[data-range="--dd-measure"]').inputValue())).toBeGreaterThan(300);
+    } finally { await browser.close(); }
+});
+
 test.skipIf(!chromium)('slider input previews without a request; release and a palette each save once', async () => {
     const browser = await chromium.launch();
     const page = await browser.newPage();
@@ -130,6 +179,7 @@ test.skipIf(!chromium)('typed controls save colors, lengths, keywords and switch
         await page.locator('[data-reset="--dd-show-nav"]').click();
         await expect.poll(() => page.getByRole('switch', { name: 'Navigation', exact: true }).isChecked()).toBe(true);
         for (const mode of ['light', 'dark']) {
+            if (await page.locator('body').getAttribute('data-appearance') !== mode) await page.locator('#appearance').click();
             await page.getByRole('tab', { name: 'Style', exact: true }).click();
             await page.locator(`[data-mode="${mode}"]`).click();
             await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
@@ -144,3 +194,44 @@ test.skipIf(!chromium)('typed controls save colors, lengths, keywords and switch
         expect(errors).toEqual([]);
     } finally { await browser.close(); }
 }, 30000);
+
+test.skipIf(!chromium)('Remix panel matches the prototype geometry and typography; all shell actions work', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    const external = [];
+    page.on('request', request => { if (!request.url().startsWith(url)) external.push(request.url()); });
+    try {
+        await page.goto(url + '/__dopedocs/studio');
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Ready');
+        await page.locator('[data-skin="Studio"]').click();
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        await page.locator('[data-mode="light"]').click();
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        await page.evaluate(() => document.fonts.ready);
+        expect(await page.locator('body').getAttribute('data-appearance')).toBe('dark');
+        expect(await page.locator('aside').boundingBox()).toMatchObject({ x: 1036, y: 108, width: 404, height: 892 });
+        expect((await page.locator('.skin-preview').first().boundingBox()).height).toBe(52);
+        expect((await page.locator('.presets button').first().boundingBox()).height).toBe(54);
+        expect(await page.locator('body').evaluate(el => getComputedStyle(el).fontFamily)).toContain('Inter');
+        expect(await page.locator('.panel-title h2').evaluate(el => getComputedStyle(el).fontFamily)).toContain('Bricolage');
+        expect(await page.evaluate(() => document.fonts.check('13px Inter') && document.fonts.check('19px "Bricolage Grotesque"'))).toBe(true);
+        if (process.env.DOPEDOCS_ARTIFACTS) {
+            await page.screenshot({ path: join(process.env.DOPEDOCS_ARTIFACTS, 'studio-mock-aligned.png') });
+            await page.locator('aside').screenshot({ path: join(process.env.DOPEDOCS_ARTIFACTS, 'studio-remix-panel.png') });
+        }
+        await page.locator('[data-preset="1"]').click();
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        expect(readFileSync(join(root, 'theme.css'), 'utf8')).toContain('--dd-body: Georgia, serif');
+        await page.locator('[data-toggle-panel]').first().click();
+        expect(await page.locator('aside').isVisible()).toBe(false);
+        await page.locator('[data-toggle-panel]').first().click();
+        expect(await page.locator('aside').isVisible()).toBe(true);
+        await page.locator('#appearance').click();
+        expect(await page.locator('body').getAttribute('data-appearance')).toBe('light');
+        await page.locator('#reset-theme').click();
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        expect(readFileSync(join(root, 'theme.css'), 'utf8')).toContain('.custom {color: red}');
+        expect(readFileSync(join(root, 'theme.css'), 'utf8')).not.toContain('--dd-body:');
+        expect(external).toEqual([]);
+    } finally { await browser.close(); }
+}, 15000);

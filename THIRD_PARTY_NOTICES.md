@@ -1,5 +1,15 @@
 # Third-party notices
 
+The development Studio bundles Latin variable fonts from
+`@fontsource-variable/inter` 5.3.0 and
+`@fontsource-variable/bricolage-grotesque` 5.3.0, under the SIL Open Font
+License 1.1. Their complete copyright notices and licences ship alongside the
+font files in `styles/studio-inter-OFL.txt` and
+`styles/studio-bricolage-OFL.txt`. These files style the development editor;
+generated reader pages do not load them.
+
+---
+
 Selected SVG paths in src/icons.ts are from lucide-static 1.59.0 (https://lucide.dev).
 
 ISC License

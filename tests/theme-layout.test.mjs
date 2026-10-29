@@ -58,6 +58,14 @@ for (const surface of ['static', 'panel']) {
             root.classList.remove('dd-motion-none'); root.classList.add('dd-motion-calm');
         });
         expect(await page.locator('.dd-nav-link').first().evaluate(el => getComputedStyle(el).transitionDuration)).toBe('0s');
+        if (surface === 'panel') {
+            expect(await page.evaluate(() => {
+                let behavior;
+                document.querySelector('.dd-body').scrollTo = options => { behavior = options.behavior; };
+                window.panel.open(document.querySelector('.dd-section').id);
+                return behavior;
+            })).toBe('auto');
+        }
         await page.close();
     });
     test.skipIf(!chromium)(`${surface}: density scales content spacing and measure accepts characters`, async () => {

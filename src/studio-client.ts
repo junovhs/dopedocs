@@ -1,5 +1,5 @@
 /** Browser-only editor, serialized exclusively into the development Studio. */
-export function studioClient(palettes: Record<string, Record<string, Record<string, string>>>, specs: import('./studio-controls.js').ControlSpec[], fontClient: typeof import('./studio-font-client.js').studioFontClient) {
+export function studioClient(palettes: Record<string, Record<string, Record<string, string>>>, specs: import('./studio-controls.js').ControlSpec[], fontClient: typeof import('./studio-font-client.js').studioFontClient, checkReadability: typeof import('./studio-readability.js').checkReadability, presets: typeof import('./studio-controls.js').studioPresets) {
     const $ = (selector: string) => document.querySelector(selector)!;
     const frame = $('#preview') as HTMLIFrameElement;
     let state: {
@@ -26,6 +26,82 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         probe.remove();
         return rgb && rgb.length >= 3 ? '#' + rgb.slice(0, 3).map(channel => Math.round(Number(channel)).toString(16).padStart(2, '0')).join('') : '#000000';
     }
+    function sliderValue(token: string, value: string): number | undefined {
+        const unit = controls.get(token)?.unit ?? '';
+        if (/^-?[\d.]+$/.test(value) && !unit || unit && value.endsWith(unit) && /^-?[\d.]+$/.test(value.slice(0, -unit.length))) return parseFloat(value);
+        if (unit === 's' && value.endsWith('ms')) return parseFloat(value) / 1000;
+        if (unit !== 'px') return undefined;
+        const doc = frame.contentDocument;
+        if (!doc?.body) return undefined;
+        const ruler = doc.createElement('span');
+        ruler.style.cssText = 'position:absolute;visibility:hidden;display:block';
+        ruler.style.width = value;
+        if (!ruler.style.width || value === 'auto') return undefined;
+        doc.body.append(ruler);
+        const pixels = ruler.getBoundingClientRect().width;
+        ruler.remove();
+        return pixels;
+    }
+    function readability() {
+        const doc = frame.contentDocument;
+        const body = doc?.querySelector<HTMLElement>('.dd-p');
+        if (!doc?.body || !body) return;
+        const style = doc.defaultView!.getComputedStyle(body);
+        const ruler = doc.createElement('span');
+        ruler.style.cssText = 'position:absolute;visibility:hidden;display:block';
+        ruler.style.font = style.font;
+        ruler.style.width = '1ch';
+        doc.body.append(ruler);
+        const character = ruler.getBoundingClientRect().width;
+        ruler.style.width = currentValue('--dd-measure');
+        const measure = ruler.getBoundingClientRect().width / character;
+        ruler.remove();
+        const active = ($('#mode') as HTMLSelectElement).value as 'light' | 'dark';
+        const skin = ($('#skin') as HTMLSelectElement).value;
+        const modes = {} as import('./studio-readability.js').ReadabilityInput['modes'];
+        function color(value: string): string {
+            const probe = doc!.createElement('span');
+            probe.style.color = value;
+            doc!.body.append(probe);
+            const resolved = doc!.defaultView!.getComputedStyle(probe).color;
+            probe.remove();
+            return resolved;
+        }
+        for (const mode of ['light', 'dark'] as const) {
+            const palette = selectedPalette && mode !== active ? palettes[skin]?.[mode] : undefined;
+            modes[mode] = {
+                text: color(palette?.['--dd-text-soft'] ?? currentValue('--dd-text-soft')),
+                link: color(palette?.['--dd-accent'] ?? currentValue('--dd-accent')),
+                background: color(palette?.['--dd-bg'] ?? currentValue('--dd-bg')),
+            };
+        }
+        const warnings = checkReadability({ size: parseFloat(style.fontSize), leading: parseFloat(style.lineHeight) / parseFloat(style.fontSize), measure, modes });
+        document.querySelectorAll('.readability-warning').forEach(node => node.remove());
+        for (const warning of warnings) {
+            const control = document.querySelector(`[data-control="${warning.token}"]`);
+            if (!control) continue;
+            const row = document.createElement('div');
+            row.className = 'readability-warning';
+            row.dataset.warning = warning.id;
+            row.setAttribute('role', 'status');
+            const message = document.createElement('span');
+            message.textContent = warning.message;
+            const fix = document.createElement('button');
+            fix.textContent = 'Use ' + warning.value;
+            fix.setAttribute('aria-label', 'Fix ' + warning.id);
+            fix.onclick = () => {
+                let changes: Record<string, string> = {};
+                if (warning.mode && warning.mode !== active && selectedPalette) {
+                    ($('#mode') as HTMLSelectElement).value = warning.mode;
+                    changes = palettes[skin]?.[warning.mode] ?? {};
+                    document.querySelectorAll<HTMLElement>('[data-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === warning.mode)));
+                }
+                saveTokens({ ...changes, [warning.token]: warning.value });
+            };
+            row.append(message, fix);
+            control.append(row);
+        }
+    }
     function defaultValue(token: string): string {
         const skin = ($('#skin') as HTMLSelectElement).value;
         const mode = ($('#mode') as HTMLSelectElement).value;
@@ -51,8 +127,21 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
                 doc.body.classList.add(prefix + (value ?? defaultValue(token)));
             }
         }
+        readability();
     }
     function render() {
+        const mode = ($('#mode') as HTMLSelectElement).value;
+        const skin = ($('#skin') as HTMLSelectElement).value;
+        $('#panel-subtitle').textContent = (selectedPalette ? skin + ' skin' : 'Your theme') + ' · Local fonts · Live preview';
+        document.querySelectorAll<HTMLElement>('[data-skin-preview]').forEach(card => {
+            const colors = palettes[card.dataset.skinPreview!]?.[mode];
+            if (!colors) return;
+            card.style.background = colors['--dd-bg'];
+            card.style.color = colors['--dd-text'];
+            card.querySelector<HTMLElement>('.skin-accent')!.style.background = colors['--dd-accent'];
+        });
+        document.querySelectorAll<HTMLElement>('[data-skin]').forEach(button => button.setAttribute('aria-pressed', String(selectedPalette && button.dataset.skin === skin)));
+        document.querySelectorAll<HTMLElement>('[data-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.mode === mode)));
         document.querySelectorAll<HTMLElement>('[data-default]').forEach(label => {
             const token = label.dataset.default!;
             label.textContent = 'Default: ' + defaultValue(token);
@@ -74,7 +163,11 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         document.querySelectorAll<HTMLInputElement>('[data-color], [data-range]').forEach(input => {
             const token = input.dataset.color ?? input.dataset.range!;
             const value = currentValue(token);
-            input.value = input.type === 'range' ? String(parseFloat(value)) : colorHex(value);
+            if (input.type === 'range') {
+                const number = sliderValue(token, value);
+                input.disabled = number === undefined || !Number.isFinite(number) || number < Number(input.min) || number > Number(input.max);
+                if (!input.disabled) input.value = String(number);
+            } else input.value = colorHex(value);
         });
         document.querySelectorAll<HTMLElement>('[data-output]').forEach(output => {
             const token = output.dataset.output!;
@@ -186,10 +279,36 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         button.onclick = () => {
             const mode = button.dataset.mode!;
             ($('#mode') as HTMLSelectElement).value = mode;
-            document.body.dataset.appearance = mode;
             document.querySelectorAll('[data-mode]').forEach(choice => choice.setAttribute('aria-pressed', String(choice === button)));
             palette();
         };
+    });
+    $('#appearance').addEventListener('click', () => {
+        document.body.dataset.appearance = document.body.dataset.appearance === 'dark' ? 'light' : 'dark';
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-toggle-panel]').forEach(button => {
+        button.onclick = () => {
+            const closed = document.body.classList.toggle('panel-collapsed');
+            document.querySelector('.remix-button')!.setAttribute('aria-pressed', String(!closed));
+        };
+    });
+    document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach(button => {
+        button.onclick = () => {
+            const preset = presets[Number(button.dataset.preset)];
+            selectedPalette = true;
+            ($('#skin') as HTMLSelectElement).value = preset.skin;
+            ($('#mode') as HTMLSelectElement).value = preset.mode;
+            saveTokens({ ...palettes[preset.skin][preset.mode], ...preset.tokens });
+        };
+    });
+    $('#surprise').addEventListener('click', () => {
+        const names = Object.keys(palettes);
+        ($('#skin') as HTMLSelectElement).value = names[Math.floor(Math.random() * names.length)];
+        palette();
+    });
+    $('#reset-theme').addEventListener('click', () => {
+        selectedPalette = false;
+        saveTokens(Object.fromEntries(specs.map(spec => [spec.token, null])));
     });
     const fonts = fontClient({
         frame,

@@ -2,13 +2,14 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { studioControls, renderControl } from './studio-controls.js';
+import { studioControls, studioPresets, renderControl } from './studio-controls.js';
 import { documentedThemeTokens, parseTheme, readThemeFile, writeThemeTokens } from './theme.js';
 import { structuralClasses } from './structure.js';
 import { installedFontCapabilities } from './font-features.js';
 import { fontCatalog, previewFont, installStudioFont } from './studio-fonts.js';
 import { studioPalettes } from './studio-palettes.js';
 import { studioFontClient } from './studio-font-client.js';
+import { checkReadability } from './studio-readability.js';
 import { studioClient } from './studio-client.js';
 import type { DevServerLike } from './host.js';
 const PREFIX = '/__dopedocs/';
@@ -26,25 +27,30 @@ function fontPickerHtml() {
 function studioHtml() {
     const tabs = ['Style', 'Layout', 'Type', 'Pieces'];
     function skinCards() {
-        return '<h3>Choose a starting palette</h3><div class="skin-grid">' + Object.entries(studioPalettes).map(([name, modes]) => {
-            const colors = [modes.light['--dd-bg'], modes.light['--dd-text'], modes.light['--dd-accent']];
-            return '<button class="skin-card" data-skin="' + name + '" aria-pressed="false"><span class="swatches">' + colors.map(color => '<i style="background:' + color + '"></i>').join('') + '</span>' + name + '</button>';
-        }).join('') + '</div><select id="skin" aria-label="Skin" hidden>' + Object.keys(studioPalettes).map(name => '<option>' + name + '</option>').join('') + '</select><div class="seg" role="group" aria-label="Color mode"><button data-mode="light" aria-pressed="true">Light</button><button data-mode="dark" aria-pressed="false">Dark</button></div><select id="mode" aria-label="Mode" hidden><option>light</option><option>dark</option></select>';
+        const presets = '<div class="studio-group"><h3>Presets<small>A whole look in one click</small></h3><div class="presets">' + studioPresets.map((preset, index) => {
+            const colors: Record<string, string> = studioPalettes[preset.skin][preset.mode];
+            return '<button data-preset="' + index + '"><span class="dots">' + ['--dd-bg', '--dd-accent', '--dd-text'].map(token => '<i style="background:' + colors[token] + '"></i>').join('') + '</span>' + preset.name + '</button>';
+        }).join('') + '</div></div>';
+        const skins = Object.entries(studioPalettes).map(([name, modes]) => {
+            const colors = modes.light;
+            const family = ['Paper', 'Forest', 'Sandstone'].includes(name) ? 'Georgia,serif' : name === 'Terminal' ? 'monospace' : 'Inter,system-ui,sans-serif';
+            return '<button class="skin-card" data-skin="' + name + '" aria-pressed="false"><span class="skin-preview" data-skin-preview="' + name + '" style="background:' + colors['--dd-bg'] + ';color:' + colors['--dd-text'] + '"><span class="skin-aa" style="font-family:' + family + '">Aa</span><span class="skin-lines"><i></i><i></i><i></i></span><span class="skin-accent" style="background:' + colors['--dd-accent'] + '"></span></span><span class="skin-name">' + name + '</span></button>';
+        }).join('');
+        return presets + '<div class="studio-group"><h3>Skin<small>12 skins</small></h3><div class="skin-grid">' + skins + '</div></div><select id="skin" aria-label="Skin" hidden>' + Object.keys(studioPalettes).map(name => '<option>' + name + '</option>').join('') + '</select><div class="studio-group"><h3>Mode</h3><div class="seg" role="group" aria-label="Color mode"><button data-mode="light" aria-pressed="true"><span aria-hidden="true">☼</span> Light</button><button data-mode="dark" aria-pressed="false"><span aria-hidden="true">☾</span> Dark</button></div></div><select id="mode" aria-label="Mode" hidden><option>light</option><option>dark</option></select>';
     }
     function panel(tab: string, index: number) {
         const controls = studioControls.filter(spec => spec.tab === tab);
-        const basic = controls.filter(spec => !spec.advanced).map(renderControl).join('');
-        const advanced = controls.filter(spec => spec.advanced).map(renderControl).join('');
         return '<section role="tabpanel" data-panel="' + tab + '" ' + (index ? 'hidden' : '') + '><h2>' + tab + '</h2>' +
-            (tab === 'Style' ? skinCards() : '') + '<h3>Basic</h3>' + basic +
-            '<details class="advanced"><summary>Advanced</summary><div class="controls">' + advanced + (tab === 'Type' ? fontPickerHtml() : '') + '</div></details></section>';
+            (tab === 'Style' ? skinCards() : '<h3>Basic</h3>') + controls.filter(spec => !spec.advanced).map(renderControl).join('') +
+            '<details class="advanced"><summary>Advanced</summary><div class="controls">' + controls.filter(spec => spec.advanced).map(renderControl).join('') + (tab === 'Type' ? fontPickerHtml() : '') + '</div></details></section>';
     }
     return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>dopedocs Studio</title><link rel="stylesheet" href="/__dopedocs/studio.css"></head>' +
-        '<body data-appearance="light"><header><h1>dopedocs <span>Studio</span></h1><small>Your content. Your theme.</small><span id="status" role="status">Opening…</span><button id="reload">Reload file</button></header>' +
-        '<main><iframe id="preview" title="Your documentation preview" src="/__dopedocs/preview"></iframe><aside><nav role="tablist" aria-label="Remix controls">' +
-        [...tabs, 'Export'].map((tab, index) => '<button role="tab" data-tab="' + tab + '" aria-selected="' + (index === 0) + '">' + tab + '</button>').join('') + '</nav>' +
-        tabs.map(panel).join('') + '<section role="tabpanel" data-panel="Export" hidden><h2>Your theme CSS</h2><p>Edits save automatically. Hand-written CSS stays in place.</p><pre id="export-css"></pre></section></aside></main>' +
-        '<script>(' + studioClient.toString() + ')(' + JSON.stringify(studioPalettes) + ',' + JSON.stringify(studioControls) + ',(' + studioFontClient.toString() + '));</script></body></html>';
+        '<body data-appearance="dark"><header class="studio-toolbar"><div class="wordmark"><span class="brand-mark">d</span><h1>dopedocs</h1><span>Studio</span></div><span class="toolbar-caption">Your content. Your theme.</span><div class="toolbar-actions"><button id="appearance" aria-label="Toggle editor appearance" title="Editor appearance">☼</button><button class="remix-button" data-toggle-panel aria-pressed="true">✣ Remix</button></div></header>' +
+        '<div class="studio-context"><strong>Your documentation</strong><span>Live preview of your host theme</span><span id="status" role="status">Opening…</span></div>' +
+        '<main><iframe id="preview" title="Your documentation preview" src="/__dopedocs/preview"></iframe><aside><div class="panel-head"><div class="panel-title"><h2>Remix</h2><button id="reload" aria-label="Reload file" title="Reload file">↻</button><button data-toggle-panel aria-label="Close Remix panel" title="Close Remix panel">×</button></div><p class="panel-subtitle" id="panel-subtitle">Your theme · Local fonts · Live preview</p><nav role="tablist" aria-label="Remix controls">' +
+        [...tabs, 'Export'].map((tab, index) => '<button role="tab" data-tab="' + tab + '" aria-selected="' + (index === 0) + '">' + tab + '</button>').join('') + '</nav></div><div class="panel-content">' +
+        tabs.map(panel).join('') + '<section role="tabpanel" data-panel="Export" hidden><h2>Your theme CSS</h2><h3>Your theme CSS</h3><p>Edits save automatically. Hand-written CSS stays in place.</p><pre id="export-css"></pre></section></div><footer class="panel-footer"><button id="surprise">▦ Surprise me</button><button id="reset-theme">↶ Reset</button></footer></aside></main>' +
+        '<script>(' + studioClient.toString() + ')(' + JSON.stringify(studioPalettes) + ',' + JSON.stringify(studioControls) + ',(' + studioFontClient.toString() + '),(' + checkReadability.toString() + '),' + JSON.stringify(studioPresets) + ');</script></body></html>';
 }
 export function serveStudio(server: DevServerLike, options: {
     file: string;
@@ -67,6 +73,10 @@ export function serveStudio(server: DevServerLike, options: {
         if (req.method === 'POST' && (req.headers.origin && req.headers.origin !== `http://${host}` && req.headers.origin !== `https://${host}` || !req.headers['content-type']?.startsWith('application/json')))
             return send(JSON.stringify({ error: 'Same-origin JSON required' }), 'application/json', 403);
         void (async () => {
+            if (req.method === 'GET' && /^\/__dopedocs\/studio-(inter|bricolage)\.woff2$/.test(path)) {
+                res.setHeader('Content-Type', 'font/woff2');
+                return res.end(readFileSync(new URL('../styles/' + path.slice(PREFIX.length), import.meta.url)));
+            }
             if (req.method === 'GET' && path === PREFIX + 'studio.css')
                 return send(readFileSync(new URL('../styles/studio.css', import.meta.url), 'utf8'), 'text/css');
             if (req.method === 'GET' && path === PREFIX + 'studio')
