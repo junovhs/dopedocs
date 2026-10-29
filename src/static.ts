@@ -299,11 +299,75 @@ ${chrome.bar}
 ${body}
 </article>
 </main>
-${chrome.rail}
+${chrome.rail ? `<details class="dd-mobile-contents" open><summary>Contents</summary>${chrome.rail}</details>` : ""}
 </div>
 </body>
 </html>
 `;
+}
+
+/** Keep the native disclosure usable without JS; reverse one timeline on interruption. */
+function mobileContentsScript(): string {
+    return `
+(() => {
+    const menu = document.querySelector('.dd-mobile-contents');
+    if (!menu) return;
+    const summary = menu.querySelector('summary');
+    const nav = menu.querySelector('nav');
+    const main = document.querySelector('main');
+    const narrow = matchMedia('(max-width: 860px)');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    let expanded = false, motion;
+    function unlock() { main.inert = false; document.body.classList.remove('dd-menu-open'); }
+    function settle() {
+        if (!expanded) { menu.open = false; unlock(); }
+    }
+    function setOpen(value, focus = true) {
+        expanded = value;
+        summary.setAttribute('aria-expanded', String(value));
+        if (value) {
+            menu.open = true;
+            main.inert = true;
+            document.body.classList.add('dd-menu-open');
+        } else if (focus) summary.focus({ preventScroll: true });
+        if (reduced.matches || !nav.animate) { motion?.cancel(); motion = undefined; settle(); return; }
+        if (!motion) {
+            motion = nav.animate([{ transform: 'translateY(-100%)' }, { transform: 'translateY(0)' }],
+                { duration: 240, easing: 'ease-in-out', fill: 'both' });
+            motion.pause();
+            motion.currentTime = value ? 0 : 240;
+            motion.onfinish = settle;
+        }
+        motion.playbackRate = value ? 1 : -1;
+        motion.play();
+    }
+    function resize() {
+        motion?.cancel(); motion = undefined; expanded = false; unlock();
+        menu.open = !narrow.matches;
+        if (narrow.matches) summary.setAttribute('aria-expanded', 'false');
+        else summary.removeAttribute('aria-expanded');
+    }
+    summary.addEventListener('click', event => {
+        if (!narrow.matches) return;
+        event.preventDefault(); setOpen(!expanded);
+    });
+    menu.addEventListener('keydown', event => {
+        if (!narrow.matches || !expanded) return;
+        if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setOpen(false); }
+        if (event.key === 'Tab') {
+            const items = [summary, ...nav.querySelectorAll('a[href], input:not([disabled]), button:not([disabled]), summary')]
+                .filter(el => el.getClientRects().length);
+            const first = items[0], last = items[items.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        }
+    });
+    nav.addEventListener('click', event => {
+        if (narrow.matches && event.target.closest('a[href]')) setOpen(false, false);
+    });
+    narrow.addEventListener('change', resize);
+    resize();
+})();`;
 }
 
 /* ── Chrome (DEC-07) ─────────────────────────────────────────────────────── */
@@ -666,7 +730,7 @@ export function buildStatic(
 
     const out: Record<string, string> = {};
     // Native fragment navigation remains available without this enhancement.
-    out[`${prefix}skip.js`] = `document.querySelector('.dd-skip').addEventListener('click', function(event) { event.preventDefault(); document.getElementById(this.hash.slice(1)).focus(); });`;
+    out[`${prefix}skip.js`] = `document.querySelector('.dd-skip').addEventListener('click', function(event) { event.preventDefault(); document.getElementById(this.hash.slice(1)).focus(); });` + mobileContentsScript();
     if ([...pagesOf(docs.sections).map(({ page }) => page), ...(docs.articles ?? [])]
         .some(page => [...walkBlocks(page.blocks)].some(block => block.kind === "tabs"))) {
         out[`${prefix}tabs.js`] = tabsScript();

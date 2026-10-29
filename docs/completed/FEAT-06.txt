@@ -1,0 +1,3 @@
+FEAT-06 — Mobile contents sheet
+
+Static docs now expose contents and search through a header disclosure at narrow widths. The full-height sheet reverses one animation timeline when interrupted, respects reduced motion, traps keyboard focus, and closes on Escape or navigation. Native disclosure remains usable without JavaScript; desktop navigation remains visible after resizing. Verified at 390px with screenshots, a browser trace, and interaction tests. Typecheck, build, compatibility, and reader budgets pass. Full suite: 301 passed, two skipped, three existing Windows failures reproduced on the base commit (Vite path handling and clipboard newlines).

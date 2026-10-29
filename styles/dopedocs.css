@@ -1526,18 +1526,63 @@ a.dd-card:focus-visible,
     padding-left: 12px;
 }
 
+.dd-mobile-contents {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 52px;
+    align-self: start;
+    min-width: 0;
+}
+.dd-mobile-contents > summary { display: none; }
+.dd-static .dd-mobile-contents .dd-nav { position: static; }
+
+@media (min-width: 861px) {
+    .dd-sidebar-side-right .dd-mobile-contents { grid-column: 3; }
+    /* A native disclosure closed on a phone must remain visible after resize. */
+    .dd-mobile-contents::details-content { content-visibility: visible; }
+    .dd-mobile-contents:not([open]) > .dd-nav { display: var(--dd-show-nav, block); }
+}
+
 @media (max-width: 860px) {
     .dd-static .dd-page {
         grid-column: 1;
         grid-row: 2;
     }
 
-    /* Matches the panel's narrow rail: a short scrollable strip above the
-       reading column rather than a full-height list pushing it off-screen. */
-    .dd-static .dd-nav {
-        position: static;
-        max-height: 154px;
+    .dd-mobile-contents { position: static; grid-column: 1; grid-row: 1; z-index: 5; }
+    .dd-mobile-contents > summary {
+        display: flex;
+        align-items: center;
+        position: fixed;
+        inset: 6px 12px auto auto;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid currentColor;
+        border-radius: var(--dd-radius-xs);
+        background: var(--dd-ink);
+        color: var(--dd-on-ink);
+        font: 600 13px var(--dd-ui, var(--dd-sans));
+        cursor: pointer;
+        z-index: 5;
+        list-style: none;
     }
+    .dd-mobile-contents > summary::-webkit-details-marker { display: none; }
+    .dd-mobile-contents > summary::after { content: '+'; margin-left: 12px; }
+    .dd-mobile-contents[open] > summary::after { content: '−'; }
+    .dd-mobile-contents > summary:focus-visible { outline: 2px solid var(--dd-accent); outline-offset: 2px; }
+    .dd-static:has(.dd-mobile-contents) .dd-bar { padding-right: 132px; }
+    .dd-static:has(.dd-mobile-contents) .dd-bar-page { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dd-static .dd-mobile-contents .dd-nav {
+        position: fixed;
+        inset: 52px 0 0;
+        max-height: none;
+        padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+        background: var(--dd-bg);
+        z-index: 4;
+        border: 0;
+    }
+    .dd-static:has(.dd-mobile-contents[open]), .dd-static.dd-menu-open { overflow: hidden; }
 }
 
 /* ==========================================================================
