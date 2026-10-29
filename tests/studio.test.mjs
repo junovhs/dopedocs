@@ -1,4 +1,6 @@
-import {beforeAll,afterAll,test,expect} from 'vitest';
+import {beforeAll,afterAll,test,expect,vi} from 'vitest';
+import fs from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import {createServer} from 'node:http';
 import {writeFileSync,readFileSync,mkdtempSync,rmSync,mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';import {join} from 'node:path';import {pathToFileURL} from 'node:url';
@@ -29,6 +31,52 @@ test('dev editor saves/reopens the host file and never enters production output'
     const rejected=await fetch(url+'/__dopedocs/theme',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://untrusted.example'},body:'{}'});expect(rejected.status).toBe(403);
     expect(Object.keys(host.build()).some(path=>path.includes('__dopedocs'))).toBe(false);
     expect(Object.values(host.build()).join('').includes('studioClient')).toBe(false);
+});
+
+test('a theme batch validates before one write and preserves hand-written CSS', async () => {
+    const post = data => fetch(url + '/__dopedocs/theme', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    const spy = vi.spyOn(fs, 'writeFileSync');
+    syncBuiltinESMExports();
+    try {
+        expect((await post({ tokens: { '--dd-accent': '#456789', '--dd-measure': '65ch' } })).status).toBe(200);
+        expect(spy.mock.calls.filter(([path]) => path === join(root, 'theme.css'))).toHaveLength(1);
+    } finally { spy.mockRestore(); syncBuiltinESMExports(); }
+    const saved = readFileSync(join(root, 'theme.css'), 'utf8');
+    expect(saved).toContain('.custom {color: red}');
+    expect(saved).toContain('/* keep me */');
+    expect(saved).toContain('--dd-accent: #456789');
+    expect(saved).toContain('--dd-measure: 65ch');
+    for (const tokens of [{ '--dd-accent': 'red', '--dd-measure': 'blue; color: red' }, { '--dd-missing': 'red' }, [], null]) {
+        expect((await post({ tokens })).status).toBe(400);
+        expect(readFileSync(join(root, 'theme.css'), 'utf8')).toBe(saved);
+    }
+    expect((await post({ tokens: { '--dd-measure': null } })).status).toBe(200);
+    expect(readFileSync(join(root, 'theme.css'), 'utf8')).not.toContain('--dd-measure:');
+});
+
+test.skipIf(!chromium)('slider input previews without a request; release and a palette each save once', async () => {
+    const browser = await chromium.launch();
+    const page = await browser.newPage();
+    try {
+        await page.goto(url + '/__dopedocs/studio');
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Ready');
+        let writes = 0;
+        page.on('request', req => { if (req.method() === 'POST' && req.url().endsWith('/theme')) writes++; });
+        await page.getByRole('tab', { name: 'Layout', exact: true }).click();
+        const slider = page.locator('[data-range="--dd-measure"]');
+        await slider.evaluate(el => { el.value = '680'; el.dispatchEvent(new Event('input', { bubbles: true })); });
+        expect(await page.frameLocator('#preview').locator('html').evaluate(el => el.style.getPropertyValue('--dd-measure'))).toBe('680px');
+        expect(writes).toBe(0);
+        await slider.dispatchEvent('change');
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        expect(writes).toBe(1);
+        expect(await page.frameLocator('#preview').locator('html').evaluate(el => el.style.getPropertyValue('--dd-measure'))).toBe('');
+        await page.getByRole('tab', { name: 'Style', exact: true }).click();
+        await page.locator('[data-skin="Paper"]').click();
+        await expect.poll(() => page.locator('#status').textContent()).toContain('Saved');
+        expect(writes).toBe(2);
+        expect(readFileSync(join(root, 'theme.css'), 'utf8')).toContain('.custom {color: red}');
+    } finally { await browser.close(); }
 });
 
 test.skipIf(!chromium)('typed controls save colors, lengths, keywords and switches; every tab has light/dark appearance', async () => {

@@ -1,0 +1,3 @@
+STU-07 — Live preview and batched theme saves
+
+Added the backward-compatible tokens batch form to the studio route and a theme writer that validates/composes changes before one filesystem write. Skin and mode changes now save one batch; short bursts debounce into one request. Token input updates the preview immediately, and successful saves clear only the matching temporary overrides so newer input survives in-flight responses. Tests verify exactly one file write, preservation of hand-written CSS, rejection without partial writes, zero requests while dragging, and one save on release or palette selection.

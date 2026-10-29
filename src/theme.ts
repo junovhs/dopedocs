@@ -78,8 +78,16 @@ export function readThemeFile(path: string): string {
 }
 
 export function writeThemeToken(path: string, token: string, value?: string): void {
+    writeThemeTokens(path, { [token]: value ?? null });
+}
+
+/** Validate and compose the entire batch before making one host-file write. */
+export function writeThemeTokens(path: string, tokens: Record<string, string | null>): void {
     const before = readThemeFile(path);
-    const after = updateTheme(before, token, value);
+    let after = before;
+    for (const [token, value] of Object.entries(tokens)) {
+        after = updateTheme(after, token, value ?? undefined);
+    }
     if (after === before) return;
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, after);

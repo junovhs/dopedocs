@@ -11,6 +11,12 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
     const status = (text: string) => { $('#status').textContent = text; };
     const controls = new Map(specs.map(spec => [spec.token, spec]));
     let selectedPalette = false;
+    let pending: Record<string, string | null> = {};
+    let saveTimer: ReturnType<typeof setTimeout> | undefined;
+    const temporary = new Map<string, string | null>();
+    function currentValue(token: string): string {
+        return (temporary.has(token) ? temporary.get(token) : state.tokens[token]) ?? defaultValue(token);
+    }
     function defaultValue(token: string): string {
         const skin = ($('#skin') as HTMLSelectElement).value;
         const mode = ($('#mode') as HTMLSelectElement).value;
@@ -28,6 +34,14 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         }
         style.textContent = state.css;
         doc.body.className = 'dd-static ' + state.classes.join(' ');
+        for (const [token, value] of temporary) {
+            doc.documentElement.style.setProperty(token, value ?? defaultValue(token), 'important');
+            if (['sidebar-side', 'outline', 'header', 'current', 'card', 'motion'].includes(token.slice(5))) {
+                const prefix = 'dd-' + token.slice(5) + '-';
+                for (const name of [...doc.body.classList]) if (name.startsWith(prefix)) doc.body.classList.remove(name);
+                doc.body.classList.add(prefix + (value ?? defaultValue(token)));
+            }
+        }
     }
     function render() {
         document.querySelectorAll<HTMLElement>('[data-default]').forEach(label => {
@@ -42,7 +56,7 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         });
         document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-token]').forEach(input => {
             const token = input.dataset.token!;
-            const value = state.tokens[token] ?? defaultValue(token);
+            const value = currentValue(token);
             if (input instanceof HTMLInputElement && input.type === 'checkbox')
                 input.checked = value !== 'none';
             else
@@ -50,16 +64,16 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         });
         document.querySelectorAll<HTMLInputElement>('[data-color], [data-range]').forEach(input => {
             const token = input.dataset.color ?? input.dataset.range!;
-            const value = state.tokens[token] ?? defaultValue(token);
+            const value = currentValue(token);
             input.value = input.type === 'range' ? String(parseFloat(value)) : /^#[0-9a-f]{6}$/i.test(value) ? value : defaultValue(token);
         });
         document.querySelectorAll<HTMLElement>('[data-output]').forEach(output => {
             const token = output.dataset.output!;
-            output.textContent = state.tokens[token] ?? defaultValue(token);
+            output.textContent = currentValue(token);
         });
         document.querySelectorAll<HTMLButtonElement>('[data-token-choice]').forEach(button => {
             const token = button.dataset.tokenChoice!;
-            button.setAttribute('aria-pressed', String((state.tokens[token] ?? defaultValue(token)) === button.dataset.value));
+            button.setAttribute('aria-pressed', String(currentValue(token) === button.dataset.value));
         });
         document.querySelectorAll<HTMLButtonElement>('[data-reset]').forEach(button => {
             const token = button.dataset.reset!;
@@ -77,10 +91,43 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         return result;
     }
     function save(token: string, value?: string) {
+        saveTokens({ [token]: value ?? null });
+    }
+    function saveTokens(tokens: Record<string, string | null>) {
+        for (const [token, value] of Object.entries(tokens)) temporary.set(token, value);
+        Object.assign(pending, tokens);
+        preview();
         status('Saving…');
-        queue = queue.then(async () => { state = await request('theme', { token, value }); render(); status('Saved to your theme file'); }).catch(error => status(error.message));
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+            const batch = pending;
+            pending = {};
+            queue = queue.then(async () => {
+                state = await request('theme', { tokens: batch });
+                for (const [token, value] of Object.entries(batch)) {
+                    if (temporary.get(token) === value) {
+                        temporary.delete(token);
+                        frame.contentDocument?.documentElement.style.removeProperty(token);
+                    }
+                }
+                render();
+                if (!temporary.size) status('Saved to your theme file');
+            }).catch(error => status(error.message));
+        }, 120);
+    }
+    function livePreview(token: string, value: string) {
+        temporary.set(token, value);
+        preview();
+        const output = document.querySelector<HTMLElement>(`[data-output="${token}"]`);
+        if (output) output.textContent = value;
+        const field = document.querySelector<HTMLInputElement>(`[data-token="${token}"]`);
+        if (field && field !== document.activeElement) field.value = value;
     }
     document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-token]').forEach(input => {
+        input.addEventListener('input', () => {
+            if (!(input instanceof HTMLInputElement) || input.type !== 'checkbox')
+                livePreview(input.dataset.token!, input.value);
+        });
         input.addEventListener('change', () => {
             const token = input.dataset.token!;
             const value = input instanceof HTMLInputElement && input.type === 'checkbox'
@@ -90,6 +137,10 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         });
     });
     document.querySelectorAll<HTMLInputElement>('[data-color], [data-range]').forEach(input => {
+        input.addEventListener('input', () => {
+            const token = input.dataset.color ?? input.dataset.range!;
+            livePreview(token, input.value + (input.type === 'range' ? controls.get(token)!.unit ?? '' : ''));
+        });
         input.addEventListener('change', () => {
             const token = input.dataset.color ?? input.dataset.range!;
             save(token, input.value + (input.type === 'range' ? controls.get(token)!.unit ?? '' : ''));
@@ -111,8 +162,7 @@ export function studioClient(palettes: Record<string, Record<string, Record<stri
         selectedPalette = true;
         const skin = ($('#skin') as HTMLSelectElement).value;
         const mode = ($('#mode') as HTMLSelectElement).value;
-        for (const [token, value] of Object.entries(palettes[skin]?.[mode] ?? {}))
-            save(token, value);
+        saveTokens(palettes[skin]?.[mode] ?? {});
     }
     $('#mode').addEventListener('change', palette);
     $('#skin').addEventListener('change', palette);

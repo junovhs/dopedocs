@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { resolve } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { studioControls, renderControl } from './studio-controls.js';
-import { documentedThemeTokens, parseTheme, readThemeFile, writeThemeToken } from './theme.js';
+import { documentedThemeTokens, parseTheme, readThemeFile, writeThemeTokens } from './theme.js';
 import { structuralClasses } from './structure.js';
 import { installedFontCapabilities } from './font-features.js';
 import { fontCatalog, previewFont, installStudioFont } from './studio-fonts.js';
@@ -114,13 +114,18 @@ export function serveStudio(server: DevServerLike, options: {
                     if (body.length > 65536)
                         throw new Error('Request too large');
                 }
-                const { token, value } = JSON.parse(body) as {
-                    token: string;
-                    value?: string;
-                };
-                if (!documentedThemeTokens().includes(token) || value !== undefined && typeof value !== 'string')
-                    throw new Error('Unknown token or invalid value');
-                writeThemeToken(file, token, value);
+                const data = JSON.parse(body);
+                if (!data || typeof data !== 'object' || Array.isArray(data))
+                    throw new Error('Expected a token change');
+                const tokens = 'tokens' in data ? data.tokens : { [data.token]: data.value ?? null };
+                if (!tokens || typeof tokens !== 'object' || Array.isArray(tokens) || !Object.keys(tokens).length)
+                    throw new Error('Expected a nonempty token batch');
+                const documented = new Set(documentedThemeTokens());
+                for (const [token, value] of Object.entries(tokens)) {
+                    if (!documented.has(token) || value !== null && typeof value !== 'string')
+                        throw new Error('Unknown token or invalid value');
+                }
+                writeThemeTokens(file, tokens);
                 return send(JSON.stringify(state()));
             }
             send(JSON.stringify({ error: 'Unknown Studio route' }), 'application/json', 404);
