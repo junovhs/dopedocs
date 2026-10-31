@@ -3,7 +3,8 @@
   "headroom": "15% above each 2026-10-27 baseline, rounded up to the next byte, except the panel: reviewed 20% cap (30,292 B) for the tabs/copy/filter batch. NAV-04 adds 1,230 B (28,602 to 29,832 B), 802 B beyond the old 29,030 B panel cap. Original baselines and all other caps are retained. This permits modest reader features and compression variation while requiring review for substantial growth. Future content features do not receive speculative extra allowance. Raising a limit requires a deliberate reviewed edit here; tests never update budgets automatically.",
   "densityReview": "LAY-01 routes content spacing through CSS calculations: raw CSS 74,377 B, gzip 14,829 B. Raw cap raised to 75,000 B for those expressions; gzip and all other caps unchanged.",
   "motionReview": "MOT-01 adds preset classes and unconditional reduced-motion overrides: raw CSS 75,586 B, gzip 15,000 B. Raw cap is 76,000 B; transfer-size and runtime caps remain unchanged.",
-  "readerCssRaw": { "baselineBytes": 62719, "limitBytes": 76000 },
+  "barTabsReview": "FIX-27 moves the bar's manual/reference toggle (.dd-bar-tabs, 5 rules) from reference.css into dopedocs.css, because every page of a site with a reference renders it and manual pages don't load reference.css: raw CSS 76,348 B. Raw cap is 76,500 B; reference.css shrinks by the same rules, and gzip and all other caps are unchanged.",
+  "readerCssRaw": { "baselineBytes": 62719, "limitBytes": 76500 },
   "readerCssGzip": { "baselineBytes": 13563, "limitBytes": 15598 },
   "panelGzip": { "baselineBytes": 25243, "limitBytes": 30292 },
   "staticPageGzip": { "baselineBytes": 20087, "limitBytes": 23101 }

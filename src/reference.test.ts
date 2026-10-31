@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { defineDocs, validate, type DocSet, type ReferenceEntry } from "./schema.js";
 import { buildStatic } from "./static.js";
@@ -54,6 +55,16 @@ it("renders the reference as rows of prose beside code, linked from the manual a
     expect(out["llms.txt"]).toContain("## Developer reference");
     expect(out["sitemap.xml"]).toContain("https://example.com/docs/reference/</loc>");
     expect(out["sitemap.xml"]).not.toContain("#load");
+});
+
+it("styles the bar's manual/reference toggle with the sheet every page loads", () => {
+    // The manual pages link only dopedocs.css; reference.css is for the reference page.
+    const out = buildStatic(fixture(), { stylesheet: "/docs/dopedocs.css", referenceStylesheet: ["/docs/dopedocs.css", "/docs/dopedocs-reference.css"] });
+    const manual = out["docs/guide/index.html"]!;
+    expect(manual).toContain('<nav class="dd-bar-tabs"');
+    expect(manual).not.toContain("dopedocs-reference.css");
+    const own = readFileSync(new URL("../styles/dopedocs.css", import.meta.url), "utf8");
+    for (const rule of [".dd-bar-tabs {", ".dd-bar-tab {", '.dd-bar-tab[aria-current="page"] {']) expect(own).toContain(rule);
 });
 
 it("checks reference entries like pages, and what they add", () => {

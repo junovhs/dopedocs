@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.1 - 2026-10-31
+
+- **Fix:** the bar's manual/reference toggle is styled on manual pages too. Its
+  rules moved from `reference.css` into `dopedocs.css`, since manual pages never
+  load the reference sheet and showed the toggle as plain underlined links.
+  If your theme copied these rules as a stopgap, you can remove them.
+
 ## 0.10.0 - 2026-10-31
 
 - **Coloured reference code:** `prepareCode` now also prepares the developer
