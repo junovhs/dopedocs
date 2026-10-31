@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 import { defineDocs, validate, type DocSet, type ReferenceEntry } from "./schema.js";
 import { buildStatic } from "./static.js";
+import { validateReference } from "./reference.js";
 
 const entry = (id: string, extra: Partial<ReferenceEntry> = {}): ReferenceEntry => ({
     id, title: id, question: `What does ${id} do?`, answer: `${id} loads keys.`, blocks: [], ...extra,
@@ -62,11 +63,14 @@ it("checks reference entries like pages, and what they add", () => {
     load.code![0]!.samples[1]!.label = "Python";
     docs.reference!.groups[0]!.entries[1]!.answer = "";
     docs.reference!.groups.push({ id: "empty", title: "Empty", entries: [] });
-    const codes = validate(docs).map((f) => f.code);
+    const manual = new Set(["guide"]);
+    const findings = [...validate(docs), ...validateReference(docs.reference!, manual)];
+    const codes = findings.map((f) => f.code);
     expect(codes).toContain("unknown-reference-guide");
     expect(codes).toContain("invalid-reference");
     expect(codes).toContain("empty-answer");
-    expect(validate(docs).filter((f) => f.code === "invalid-reference").map((f) => f.sectionId).sort()).toEqual(["empty", "load"]);
+    expect(() => buildStatic(docs)).toThrow(/nowhere/);
+    expect(findings.filter((f) => f.code === "invalid-reference").map((f) => f.sectionId).sort()).toEqual(["empty", "load"]);
 });
 
 it("refuses a reference id that collides with a page", () => {

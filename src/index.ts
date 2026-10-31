@@ -6,5 +6,6 @@ export * from "./render.js";
 export * from "./schema.js";
 export * from "./static.js";
 export * from "./shot-image.js";
+export { validateReference } from "./reference.js";
 export { createSearchIndex, type SearchEntry } from "./search.js";
 export { API_METHODS, generateApiSamples, type ApiMethod, type ApiSamples } from "./api.js";

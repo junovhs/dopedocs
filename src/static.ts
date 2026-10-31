@@ -4,7 +4,7 @@ import { tabsScript } from "./tabs.js";
 import { walkBlocks } from "./blocks.js";
 import { generateApiSamples } from "./api.js";
 import { createSearchIndex, renderSearch, searchScript } from "./search.js";
-import { renderReference, renderReferenceRail } from "./reference.js";
+import { renderReference, renderReferenceRail, validateReference } from "./reference.js";
 /**
  * The static build: what search engines and answer engines actually read.
  *
@@ -632,6 +632,9 @@ export function buildStatic(
         today: options.now,
         staleAfterDays: options.staleAfterDays,
     });
+    if (docs.reference) {
+        findings.push(...validateReference(docs.reference, new Set(pagesOf(docs.sections).map(({ page }) => page.id))));
+    }
     if (hasFatal(findings)) {
         throw new InvalidDocumentError(findings.filter((f) => f.severity === "fatal"));
     }

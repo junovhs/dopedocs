@@ -136,9 +136,10 @@ Entry ids share the page namespace. A manual link to an entry, `[load](#load)`,
 leads to its anchor on the reference page, and the bar switches between the
 manual and the reference. Entries are listed in `llms.txt` and
 `questions.json` with their anchor URLs; the sitemap lists the one page.
-`validate` checks entries by every page rule, plus unique group ids, non-empty
-groups, panel titles, unique sample labels, field names and descriptions, and
-that `guide` names a manual page.
+`validate` checks entries by every page rule. `buildStatic` also runs
+`validateReference`: unique group ids, non-empty groups, panel titles, unique
+sample labels, field names and descriptions, and that `guide` names a manual
+page. Those checks live outside the schema so the in-app panel stays small.
 
 The reference page links `reference.css` after dopedocs' own sheet; the Vite
 and Astro integrations emit it as `dopedocs-reference.css` when the document has

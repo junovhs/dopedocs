@@ -562,56 +562,6 @@ export interface ValidateOptions {
     today?: Date;
 }
 
-/** What a reference adds to its pages: groups, fields, code panels, guides. */
-function validateReference(reference: DocReference, manualIds: Set<string>): Finding[] {
-    const findings: Finding[] = [];
-    const bad = (sectionId: string, message: string) =>
-        findings.push({ code: "invalid-reference", severity: "fatal", sectionId, message });
-    const panels = (id: string, code: ReferenceCode[] | undefined) => {
-        for (const panel of code ?? []) {
-            if (!panel.title.trim()) bad(id, `A code panel in "${id}" has no title.`);
-            if (!panel.samples.length) bad(id, `The "${panel.title}" panel in "${id}" has no samples.`);
-            const labels = new Set<string>();
-            for (const sample of panel.samples) {
-                if (!sample.label.trim() || labels.has(sample.label)) {
-                    bad(id, `The "${panel.title}" panel in "${id}" needs a unique, non-blank label for each sample.`);
-                }
-                labels.add(sample.label);
-                if (!sample.code.trim()) bad(id, `The "${sample.label}" sample in "${id}" is empty.`);
-            }
-        }
-    };
-    panels(reference.id, reference.code);
-    const groupIds = new Set<string>();
-    for (const group of reference.groups) {
-        if (!SLUG.test(group.id) || groupIds.has(group.id)) bad(group.id, `Reference group id "${group.id}" must be a unique slug.`);
-        groupIds.add(group.id);
-        if (!group.entries.length) bad(group.id, `Reference group "${group.id}" has no entries.`);
-        for (const entry of group.entries) {
-            panels(entry.id, entry.code);
-            if (entry.badge !== undefined && !entry.badge.trim()) bad(entry.id, `Entry "${entry.id}" has a blank badge.`);
-            for (const list of entry.fields ?? []) {
-                if (!list.title.trim()) bad(entry.id, `A field list in "${entry.id}" has no title.`);
-                if (list.fields.some((field) => !field.name.trim() || !field.description.trim())) {
-                    bad(entry.id, `Every field in "${entry.id}" needs a name and a description.`);
-                }
-            }
-            if ((entry.errors ?? []).some((error) => !error.code.trim() || !error.description.trim())) {
-                bad(entry.id, `Every error in "${entry.id}" needs a code and a description.`);
-            }
-            if (entry.guide !== undefined && !manualIds.has(entry.guide)) {
-                findings.push({
-                    code: "unknown-reference-guide",
-                    severity: "fatal",
-                    sectionId: entry.id,
-                    message: `Entry "${entry.id}" names the guide "${entry.guide}", which is not a manual page.`,
-                });
-            }
-        }
-    }
-    return findings;
-}
-
 /** The longest answer that still reads as a quotable snippet. */
 export const MAX_ANSWER_LENGTH = 320;
 
@@ -746,7 +696,6 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     // Links target pages, including group landings, rather than fold ids.
     const pageIds = new Set(pagesOf(docs.sections).map(({ page }) => page.id));
     // Reference entries are link targets too: their anchor on the reference page.
-    const manualIds = new Set(pageIds);
     for (const page of referencePages(docs.reference)) pageIds.add(page.id);
 
     /** Reports each link in `text` that leads nowhere, or somewhere it must not. */
@@ -796,7 +745,6 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
 
     // DEC-20: the reference overview and its entries are pages for every rule below.
     const reference = referencePages(docs.reference).map((section) => ({ section, depth: 0 }));
-    if (docs.reference) findings.push(...validateReference(docs.reference, manualIds));
 
     for (const { section, depth } of [...walk(docs.sections), ...articles, ...reference]) {
         const { id } = section;

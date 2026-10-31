@@ -11,7 +11,7 @@ import type { FactMap } from "./facts.js";
 import { icon } from "./icons.js";
 import { anchorHref, escapeHtml, inline, type SectionHref } from "./inline.js";
 import { renderBlock } from "./render.js";
-import type { DocReference, ReferenceCode, ReferenceEntry, ReferenceFields, ReferenceGroup } from "./schema.js";
+import type { DocReference, Finding, ReferenceCode, ReferenceEntry, ReferenceFields, ReferenceGroup } from "./schema.js";
 
 /** The tabs group every panel joins, so choosing Python once shows Python everywhere. */
 const SAMPLE_GROUP = "dd-ref-sample";
@@ -128,3 +128,58 @@ export function renderReferenceRail(reference: DocReference): string {
         ).join("") +
         `</ul></nav>`;
 }
+
+/**
+ * What a reference adds to its pages: groups, fields, code panels, guides.
+ * `validate` checks entries by every page rule; `buildStatic` adds these. They
+ * live here, outside the schema, so the in-app panel doesn't carry them.
+ */
+export function validateReference(reference: DocReference, manualIds: Set<string>): Finding[] {
+    const findings: Finding[] = [];
+    const bad = (sectionId: string, message: string) =>
+        findings.push({ code: "invalid-reference", severity: "fatal", sectionId, message });
+    const panels = (id: string, code: ReferenceCode[] | undefined) => {
+        for (const panel of code ?? []) {
+            if (!panel.title.trim()) bad(id, `A code panel in "${id}" has no title.`);
+            if (!panel.samples.length) bad(id, `The "${panel.title}" panel in "${id}" has no samples.`);
+            const labels = new Set<string>();
+            for (const sample of panel.samples) {
+                if (!sample.label.trim() || labels.has(sample.label)) {
+                    bad(id, `The "${panel.title}" panel in "${id}" needs a unique, non-blank label for each sample.`);
+                }
+                labels.add(sample.label);
+                if (!sample.code.trim()) bad(id, `The "${sample.label}" sample in "${id}" is empty.`);
+            }
+        }
+    };
+    panels(reference.id, reference.code);
+    const groupIds = new Set<string>();
+    for (const group of reference.groups) {
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(group.id) || groupIds.has(group.id)) bad(group.id, `Reference group id "${group.id}" must be a unique slug.`);
+        groupIds.add(group.id);
+        if (!group.entries.length) bad(group.id, `Reference group "${group.id}" has no entries.`);
+        for (const entry of group.entries) {
+            panels(entry.id, entry.code);
+            if (entry.badge !== undefined && !entry.badge.trim()) bad(entry.id, `Entry "${entry.id}" has a blank badge.`);
+            for (const list of entry.fields ?? []) {
+                if (!list.title.trim()) bad(entry.id, `A field list in "${entry.id}" has no title.`);
+                if (list.fields.some((field) => !field.name.trim() || !field.description.trim())) {
+                    bad(entry.id, `Every field in "${entry.id}" needs a name and a description.`);
+                }
+            }
+            if ((entry.errors ?? []).some((error) => !error.code.trim() || !error.description.trim())) {
+                bad(entry.id, `Every error in "${entry.id}" needs a code and a description.`);
+            }
+            if (entry.guide !== undefined && !manualIds.has(entry.guide)) {
+                findings.push({
+                    code: "unknown-reference-guide",
+                    severity: "fatal",
+                    sectionId: entry.id,
+                    message: `Entry "${entry.id}" names the guide "${entry.guide}", which is not a manual page.`,
+                });
+            }
+        }
+    }
+    return findings;
+}
+
