@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.10.0 - 2026-10-31
+
+- **Coloured reference code:** `prepareCode` now also prepares the developer
+  reference's code panels, so every sample is coloured from the same semantic
+  tokens as code blocks. The dark panels use their own palette, tunable with
+  `--dd-ref-code-keyword`, `-string`, `-number`, `-comment`, `-function`,
+  `-type` and `-punctuation`.
+- **Copy buttons:** each reference sample gets a Copy button, revealed by a
+  small `reference.js` enhancement and shown on hover or focus. Without
+  clipboard access it says to select the code instead.
+- **Panel design:** a calmer frame, a header with pill tabs, roomier code,
+  thin scrollbars, and print and reduced-motion styles.
+
 ## 0.9.0 - 2026-10-31
 
 - **Developer reference:** add `reference` to your docs for a reference page

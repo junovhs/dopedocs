@@ -1,9 +1,10 @@
 /**
  * The developer reference page (DEC-20): one long page of rows, each with
  * prose on the left and its code on the right, the code staying in view while
- * its row scrolls. Narrow screens stack the two. It is static HTML; the only
- * script is the shared tabs enhancement, which switches samples labelled
- * alike across every panel at once.
+ * its row scrolls. Narrow screens stack the two. It is static HTML; two small
+ * enhancements add the tabs, which switch samples labelled alike across every
+ * panel at once, and a Copy button on each sample. Code is coloured from the
+ * semantic tokens `prepareCode` adds, and plain without them.
  *
  * Every class here is a stable `dd-ref-` name and public API (DEC-05).
  */
@@ -11,7 +12,7 @@ import type { FactMap } from "./facts.js";
 import { icon } from "./icons.js";
 import { anchorHref, escapeHtml, inline, type SectionHref } from "./inline.js";
 import { renderBlock } from "./render.js";
-import type { DocReference, Finding, ReferenceCode, ReferenceEntry, ReferenceFields, ReferenceGroup } from "./schema.js";
+import { CODE_TONES, type DocReference, type Finding, type ReferenceCode, type ReferenceEntry, type ReferenceFields, type ReferenceGroup, type ReferenceSample } from "./schema.js";
 
 /** The tabs group every panel joins, so choosing Python once shows Python everywhere. */
 const SAMPLE_GROUP = "dd-ref-sample";
@@ -20,20 +21,37 @@ const SAMPLE_GROUP = "dd-ref-sample";
 const sampleKey = (label: string): string =>
     label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "sample";
 
+/** Lucide "copy" (ISC), inline so the shared icon set the panel loads stays as it is. */
+const COPY_ICON = `<svg class="dd-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>`;
+
+/** A sample's source, coloured when its tokens still spell it exactly. */
+function source(sample: ReferenceSample): string {
+    const valid = sample.tokens?.map((token) => token.text).join("") === sample.code;
+    if (!valid) return escapeHtml(sample.code);
+    return sample.tokens!.map((token) => {
+        const escaped = escapeHtml(token.text);
+        return token.tone && CODE_TONES.includes(token.tone) ? `<span class="dd-code-token--${token.tone}">${escaped}</span>` : escaped;
+    }).join("");
+}
+
+/** One sample's code, with a Copy button the enhancement reveals. */
+const body = (sample: ReferenceSample): string =>
+    `<div class="dd-ref-body"><pre class="dd-ref-pre" tabindex="0"><code>${source(sample)}</code></pre>` +
+    `<button type="button" class="dd-ref-copy" hidden>${COPY_ICON}<span>Copy</span></button></div>`;
+
 function panel(code: ReferenceCode, text: (raw: string) => string): string {
-    const pre = (raw: string) => `<pre class="dd-ref-pre" tabindex="0"><code>${escapeHtml(raw)}</code></pre>`;
     if (code.samples.length === 1) {
         const [sample] = code.samples;
         return `<div class="dd-ref-panel">` +
-            `<p class="dd-ref-panel-title">${text(code.title)}<span class="dd-ref-panel-lang">${escapeHtml(sample!.label)}</span></p>` +
-            pre(sample!.code) + `</div>`;
+            `<p class="dd-ref-panel-title"><span class="dd-ref-panel-name">${text(code.title)}</span><span class="dd-ref-panel-lang">${escapeHtml(sample!.label)}</span></p>` +
+            body(sample!) + `</div>`;
     }
     // The shared tabs markup: without script every sample shows under its label.
     return `<div class="dd-ref-panel dd-tabs" data-dd-tabs data-dd-tab-group="${SAMPLE_GROUP}">` +
-        `<p class="dd-tabs-label dd-ref-panel-title">${text(code.title)}</p>` +
+        `<p class="dd-tabs-label dd-ref-panel-title"><span class="dd-ref-panel-name">${text(code.title)}</span></p>` +
         code.samples.map((sample) =>
             `<div class="dd-tab-pane" data-dd-pane="${escapeHtml(sampleKey(sample.label))}">` +
-            `<p class="dd-tab-label">${escapeHtml(sample.label)}</p>${pre(sample.code)}</div>`,
+            `<p class="dd-tab-label">${escapeHtml(sample.label)}</p>${body(sample)}</div>`,
         ).join("") +
         `</div>`;
 }
@@ -183,3 +201,32 @@ export function validateReference(reference: DocReference, manualIds: Set<string
     return findings;
 }
 
+
+/**
+ * The Copy enhancement, as a self-contained script for the reference page:
+ * each button copies its sample's exact source. Without script, or without
+ * clipboard access, the code stays selectable and the button stays hidden or
+ * says how to copy by hand.
+ */
+export function mountReferenceCopy(root: ParentNode): void {
+    for (const button of root.querySelectorAll<HTMLButtonElement>(".dd-ref-copy")) {
+        const label = button.querySelector("span")!;
+        const code = button.parentElement!.querySelector("code")!;
+        button.hidden = false;
+        button.setAttribute("aria-label", "Copy code");
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        button.addEventListener("click", async () => {
+            clearTimeout(timer);
+            try {
+                await navigator.clipboard.writeText(code.textContent ?? "");
+                label.textContent = "Copied";
+                button.classList.add("is-done");
+            } catch {
+                label.textContent = "Select to copy";
+            }
+            timer = setTimeout(() => { label.textContent = "Copy"; button.classList.remove("is-done"); }, 1600);
+        });
+    }
+}
+
+export const referenceScript = (): string => `(${mountReferenceCopy.toString()})(document);`;

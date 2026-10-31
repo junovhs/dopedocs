@@ -141,6 +141,12 @@ manual and the reference. Entries are listed in `llms.txt` and
 sample labels, field names and descriptions, and that `guide` names a manual
 page. Those checks live outside the schema so the in-app panel stays small.
 
+`prepareCode` from `dopedocs/highlight` colours the reference's samples too.
+The dark panels use their own palette; set `--dd-ref-code-keyword`, `-string`,
+`-number`, `-comment`, `-function`, `-type` or `-punctuation` to retune it.
+Each sample gets a Copy button from a small self-hosted `reference.js`
+enhancement; without script the code stays selectable.
+
 The reference page links `reference.css` after dopedocs' own sheet; the Vite
 and Astro integrations emit it as `dopedocs-reference.css` when the document has
 a reference, so other pages never load it. It uses the same `--dd-*` tokens,

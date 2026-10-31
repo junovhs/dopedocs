@@ -1,7 +1,7 @@
 /** Optional ahead-of-time highlighting. Never imported by the core renderer. */
 import { bundledLanguages, createHighlighter, type BundledLanguage, type ThemeRegistration } from "shiki";
 import type { FactMap } from "./facts.js";
-import { isGroup, type CodeTone, type CodeToken, type DocBlock, type DocPage, type DocSection, type DocSet } from "./schema.js";
+import { isGroup, type CodeTone, type CodeToken, type DocBlock, type DocPage, type DocSection, type DocSet, type ReferenceCode } from "./schema.js";
 
 // Marker colors classify tokens; no Shiki palette or HTML enters the renderer.
 const tones: Record<string, CodeTone> = {
@@ -36,13 +36,16 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
         }
         if (item.kind === "disclosure") return { ...item, blocks: await prepareBlocks(item.blocks) };
         if (item.kind !== "code") return item;
-        const language = item.language;
-        if (!language || !Object.hasOwn(bundledLanguages, language)) return { ...item, tokens: undefined };
-        const key = `${language}\0${item.code}`;
+        return { ...item, tokens: await tokenize(item.language, item.code) };
+    };
+    /** Tokens for one sample, or undefined for a missing or unsupported language. */
+    const tokenize = async (language: string | undefined, code: string): Promise<CodeToken[] | undefined> => {
+        if (!language || !Object.hasOwn(bundledLanguages, language)) return undefined;
+        const key = `${language}\0${code}`;
         let tokens = cache.get(key);
         if (!tokens) {
             await highlighter.loadLanguage(language as BundledLanguage);
-            const lines = highlighter.codeToTokens(item.code, { lang: language as BundledLanguage, theme: theme.name! }).tokens;
+            const lines = highlighter.codeToTokens(code, { lang: language as BundledLanguage, theme: theme.name! }).tokens;
             tokens = lines.flatMap((line, index) => [
                 ...(index ? [{ text: "\n" }] : []),
                 ...line.map((token) => ({ text: token.content, ...(tones[token.color?.toLowerCase() ?? ""] ? { tone: tones[token.color!.toLowerCase()] } : {}) })),
@@ -51,7 +54,18 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
         }
         // Preserve unusual line endings exactly, falling back if tokenization
         // normalized them. Rendering independently checks this invariant too.
-        return { ...item, tokens: tokens.map((token) => token.text).join("") === item.code ? tokens : undefined };
+        return tokens.map((token) => token.text).join("") === code ? tokens : undefined;
+    };
+    /** A reference's code panels, every sample tokenized (DEC-20). */
+    const panels = async (code: ReferenceCode[] | undefined): Promise<ReferenceCode[] | undefined> => {
+        if (!code) return code;
+        const out: ReferenceCode[] = [];
+        for (const panel of code) {
+            const samples = [];
+            for (const sample of panel.samples) samples.push({ ...sample, tokens: await tokenize(sample.language, sample.code) });
+            out.push({ ...panel, samples });
+        }
+        return out;
     };
     const prepareBlocks = async (items: DocBlock[]): Promise<DocBlock[]> => {
         const blocks = [];
@@ -67,6 +81,22 @@ export async function prepareCode<F extends FactMap>(docs: DocSet<F>): Promise<D
             return result;
         };
         const sections = await visit(docs.sections);
-        return { ...docs, sections, ...(docs.articles ? { articles: await Promise.all(docs.articles.map(page)) } : {}) };
+        const reference = docs.reference && {
+            ...(await page(docs.reference)),
+            code: await panels(docs.reference.code),
+            groups: await Promise.all(docs.reference.groups.map(async (group) => ({
+                ...group,
+                entries: await Promise.all(group.entries.map(async (entry) => ({
+                    ...entry,
+                    ...(entry.blocks ? { blocks: await prepareBlocks(entry.blocks) } : {}),
+                    code: await panels(entry.code),
+                }))),
+            }))),
+        };
+        return {
+            ...docs, sections,
+            ...(docs.articles ? { articles: await Promise.all(docs.articles.map(page)) } : {}),
+            ...(reference ? { reference } : {}),
+        };
     } finally { highlighter.dispose(); }
 }

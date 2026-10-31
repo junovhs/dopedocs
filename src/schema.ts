@@ -421,6 +421,8 @@ export interface ReferenceSample {
     label: string;
     language?: string;
     code: string;
+    /** Semantic tokens from `prepareCode`; stale tokens never replace `code`. */
+    tokens?: CodeToken[];
 }
 
 /** A panel in the code column, such as "Example" or "Reply". */

@@ -4,7 +4,7 @@ import { tabsScript } from "./tabs.js";
 import { walkBlocks } from "./blocks.js";
 import { generateApiSamples } from "./api.js";
 import { createSearchIndex, renderSearch, searchScript } from "./search.js";
-import { renderReference, renderReferenceRail, validateReference } from "./reference.js";
+import { referenceScript, renderReference, renderReferenceRail, validateReference } from "./reference.js";
 /**
  * The static build: what search engines and answer engines actually read.
  *
@@ -281,7 +281,7 @@ function page(input: PageInput): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="${esc(input.skipScriptPath)}" defer></script>
-${/ data-dd-tabs[ >]/.test(body) ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "tabs.js"))}" defer></script>\n` : ""}${input.copyPage ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "copy.js"))}" defer></script>\n` : ""}<title>${esc(title)}</title>
+${/ data-dd-tabs[ >]/.test(body) ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "tabs.js"))}" defer></script>\n` : ""}${input.copyPage ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "copy.js"))}" defer></script>\n` : ""}${input.reference ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "reference.js"))}" defer></script>\n` : ""}<title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="${ROBOTS_META[input.indexing]}">
 <link rel="canonical" href="${esc(canonical)}">
@@ -766,6 +766,7 @@ export function buildStatic(
     if (options.railFilter) out[`${prefix}rail-filter.js`] = railFilterScript();
     if (options.copyPage === true) out[`${prefix}copy.js`] = copyScript();
     if (options.search === true) out[`${prefix}search.js`] = searchScript();
+    if (reference) out[`${prefix}reference.js`] = referenceScript();
     const entityJson = {
         ...entityNode(docs.entity, entityType, entityId),
         // A version is only meaningful on a software entity; on an Organization

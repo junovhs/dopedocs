@@ -78,3 +78,19 @@ it("refuses a reference id that collides with a page", () => {
     docs.reference!.id = "guide";
     expect(validate(docs).map((f) => f.code)).toContain("duplicate-section-id");
 });
+
+it("colours reference samples from prepared tokens and adds a Copy button", async () => {
+    const { prepareCode } = await import("./highlight.js");
+    const docs = await prepareCode(fixture());
+    const out = buildStatic(docs);
+    const page = out["docs/reference/index.html"]!;
+    // The Python quick start and the tabbed example are coloured.
+    expect(page).toContain("<code>load<span class=\"dd-code-token--punctuation\">()</span></code>");
+    expect(page).toContain('<button type="button" class="dd-ref-copy" hidden>');
+    expect(page).toContain('<script src="/docs/reference.js" defer>');
+    expect(out["docs/reference.js"]).toContain(".dd-ref-copy");
+    // Stale tokens never replace the source.
+    const sample = docs.reference!.code![0]!.samples[0]!;
+    sample.code = "changed()";
+    expect(buildStatic(docs)["docs/reference/index.html"]).toContain("<code>changed()</code>");
+});
