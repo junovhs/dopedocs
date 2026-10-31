@@ -81,6 +81,71 @@ A section is a **page** or a **group**.
 | `landing` | Optional `DocPage` overview (id, title, question, answer and blocks), linked from the chapter label and read before its children. Its id must be unique across groups, pages and articles. |
 | `children` | Required. Pages or subgroups, with no more than three nested groups. May be empty when the group has a landing page. |
 
+### `reference` — a developer reference
+
+Optional. A reference is one long page at `/<base>/<id>/`, published beside
+the manual: each entry is a row with its prose on the left and its code on the
+right, and the code stays in view while the row scrolls. Narrow screens and
+print stack the two. It isn't tied to HTTP: an entry can be a function, a
+message on a socket, a command, an endpoint or a file format.
+
+```ts
+reference: {
+    id: "reference", title: "Developer reference",
+    question: "How do I use Garden from code?",
+    answer: "Garden's reference lists every function and message.",
+    blocks: [],
+    code: [{ title: "Quick start", samples: [{ label: "Python", language: "python", code: "garden.plant()" }] }],
+    groups: [{ id: "plants", title: "Plants", entries: [{
+        id: "plant", title: "plant()", badge: "fn",
+        signature: "garden.plant(name, depth=2) -> Plant",
+        question: "How do I plant something with Garden?",
+        answer: "Garden's plant() adds one plant and returns it.",
+        fields: [{ title: "Parameters", fields: [
+            { name: "name", type: "str", required: true, description: "What to plant." },
+            { name: "depth", type: "int", default: "2", description: "In centimetres." },
+        ] }],
+        errors: [{ code: "SoilError", description: "The bed is full." }],
+        code: [{ title: "Example", samples: [
+            { label: "Python", language: "python", code: "garden.plant(\"mint\")" },
+            { label: "Node.js", language: "js", code: "await garden.plant(\"mint\")" },
+        ] }],
+        guide: "first-task",
+    }] }],
+},
+```
+
+| Field | |
+| --- | --- |
+| `id`, `title`, `question`, `answer`, `blocks` | The overview, a page like any other. `id` is the URL. |
+| `code` | Panels beside the overview, such as a quick start. |
+| `groups` | Labelled runs of entries: `{ id, title, entries }`. The label shows in the rail and above each entry. |
+
+An entry is a page (`id`, `title`, `question`, `answer`, optional `blocks`) with:
+
+| Entry field | |
+| --- | --- |
+| `badge` | A short kind label in the rail and beside the signature: `fn`, `GET`, `socket`, `cli`. |
+| `signature` | One line of code naming it. |
+| `fields` | Titled lists (`Parameters`, `Returns`, `Reply`) of `{ name, type?, required?, default?, description }`. |
+| `errors` | `{ code, description }` rows. |
+| `code` | Panels: `{ title, samples: { label, language?, code }[] }`. Several samples become tabs; samples with the same label switch together across the page. |
+| `guide` | A manual page id, linked as further reading. |
+
+Entry ids share the page namespace. A manual link to an entry, `[load](#load)`,
+leads to its anchor on the reference page, and the bar switches between the
+manual and the reference. Entries are listed in `llms.txt` and
+`questions.json` with their anchor URLs; the sitemap lists the one page.
+`validate` checks entries by every page rule, plus unique group ids, non-empty
+groups, panel titles, unique sample labels, field names and descriptions, and
+that `guide` names a manual page.
+
+The reference page links `reference.css` after dopedocs' own sheet; the Vite
+and Astro integrations emit it as `dopedocs-reference.css` when the document has
+a reference, so other pages never load it. It uses the same `--dd-*` tokens,
+and code panels sit on `--dd-ink` in both themes. The in-app panel doesn't
+show the reference yet.
+
 ---
 
 ## Block kinds

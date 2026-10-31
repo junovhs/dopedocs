@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9.0 - 2026-10-31
+
+- **Developer reference:** add `reference` to your docs for a reference page
+  beside the manual, as in the Reference prototype: each entry is a row with
+  prose on the left and its code on the right, the code staying in view while
+  the row scrolls. Entries carry a badge, a signature, field lists, errors,
+  code panels with tabs that switch together, and a guide link. It isn't tied
+  to HTTP, so functions, socket messages, commands and file formats fit. The
+  bar switches between the manual and the reference, manual links to an entry
+  land on its anchor, and entries appear in `llms.txt` and `questions.json`.
+  Its styles ship in a separate `reference.css`, emitted only for documents
+  with a reference, so other pages keep their weight. The in-app panel doesn't
+  show it yet.
+- Static pages load the tabs enhancement for any element marked `data-dd-tabs`.
+
+All changes are additive; documents without a reference build as before.
+
 ## 0.8.0 - 2026-10-28
 
 - **Docs-only Vite sites:** serve and build a complete documentation site with

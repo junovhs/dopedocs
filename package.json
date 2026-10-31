@@ -1,6 +1,6 @@
 {
     "name": "dopedocs",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "private": false,
     "type": "module",
     "description": "A typed documentation engine: one source renders to an in-app panel and to crawlable static pages, with AEO/GEO annotation enforced by the compiler.",
@@ -46,6 +46,7 @@
             "import": "./dist/zoom.js"
         },
         "./zoom.css": "./styles/zoom.css",
+        "./reference.css": "./styles/reference.css",
         "./highlight": {
             "types": "./dist/highlight.d.ts",
             "import": "./dist/highlight.js"
@@ -82,11 +83,11 @@
     },
     "peerDependencies": {
         "astro": ">=4",
+        "katex": "^0.19.1",
         "photoswipe": "^5.4.4",
         "playwright": ">=1.40",
         "shiki": "^3.0.0",
-        "vite": ">=5",
-        "katex": "^0.19.1"
+        "vite": ">=5"
     },
     "peerDependenciesMeta": {
         "vite": {

@@ -170,6 +170,8 @@ export function mergeCrawlerFile(name: string, existing: string, generated: stri
  * real consumer, never relative to the dopedocs source tree.
  */
 const OWN_SHEET_URL = new URL("../styles/dopedocs.css", import.meta.url);
+/** The reference page's extra sheet, emitted only when the docs have a reference (DEC-20). */
+const REFERENCE_SHEET_URL = new URL("../styles/reference.css", import.meta.url);
 
 /**
  * A host's view of one documentation set: how to build its tree, serve it in
@@ -182,6 +184,7 @@ export function createHost(options: DopedocsHostOptions) {
     const basePath = (options.basePath ?? docs.basePath ?? "docs").replace(/^\/+|\/+$/g, "");
     /** Where the bundled sheet lands when the host emits it. */
     const ownSheetPath = basePath ? `${basePath}/dopedocs.css` : "dopedocs.css";
+    const referenceSheetPath = basePath ? `${basePath}/dopedocs-reference.css` : "dopedocs-reference.css";
     const sheets = stylesheet === undefined ? [] : [stylesheet].flat();
     /** True when dopedocs must emit its own sheet as well as link it. */
     const emitsOwnSheet = sheets.includes(true);
@@ -190,9 +193,11 @@ export function createHost(options: DopedocsHostOptions) {
         // Order is preserved, so a consumer's alias sheet listed after `true`
         // overrides the tokens dopedocs' own sheet defines.
         stylesheet: sheets.map((s) => (s === true ? `/${ownSheetPath}` : s)),
+        referenceStylesheet: sheets.flatMap((s) => (s === true ? [`/${ownSheetPath}`, `/${referenceSheetPath}`] : [s])),
     };
     /** The bundled sheet, read once and reused across dev requests. */
     let ownSheet: string | undefined;
+    let referenceSheet: string | undefined;
 
     /** Builds the tree, turning a document fault into a readable build failure. */
     const build = (): Record<string, string> => {
@@ -215,6 +220,7 @@ export function createHost(options: DopedocsHostOptions) {
         }
         if (emitsOwnSheet) {
             tree[ownSheetPath] = ownSheet ??= readFileSync(fileURLToPath(OWN_SHEET_URL), "utf8");
+            if (docs.reference) tree[referenceSheetPath] = referenceSheet ??= readFileSync(fileURLToPath(REFERENCE_SHEET_URL), "utf8");
         }
         return tree;
     };

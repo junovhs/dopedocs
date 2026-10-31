@@ -302,6 +302,14 @@ still change wrapping. If the named system font is unavailable, the rest of
 your existing stack remains available. Removing a font removes its generated
 fallbacks too. Unchanged sites get no new faces until they run `fonts add`.
 
+### A developer reference: prose beside code
+
+Add `reference` to your docs for one long page of rows, each with its prose on
+the left and its code on the right, like Stripe's or the Reference prototype.
+An entry is a page plus a badge, a signature, field lists, errors and tabbed
+code panels, so functions, socket messages, commands and endpoints all fit. See
+the [reference](./docs/reference.md#reference--a-developer-reference).
+
 ### Typed API reference data
 
 Add an optional `api` field to `defineDocs`. It contains `baseUrl`, optional

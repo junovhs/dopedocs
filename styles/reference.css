@@ -1,0 +1,208 @@
+/* ==========================================================================
+   Developer reference (DEC-20) — rows of prose beside sticky code
+   One long page. Each row's code column stays in view while the row scrolls;
+   below 1000px the two stack. Code panels sit on --dd-ink in both themes.
+   ========================================================================== */
+
+.dd-bar-tabs {
+    display: flex;
+    gap: 2px;
+    margin-left: auto;
+    padding: 3px;
+    border-radius: var(--dd-radius-xs);
+    background: color-mix(in srgb, var(--dd-on-ink) 8%, transparent);
+}
+.dd-bar-tab {
+    padding: 5px 12px;
+    border-radius: var(--dd-radius-xs);
+    color: color-mix(in srgb, var(--dd-on-ink) 62%, transparent);
+    font: 500 12.5px/1.4 var(--dd-ui, var(--dd-sans));
+    text-decoration: none;
+    white-space: nowrap;
+}
+.dd-bar-tab:hover { color: var(--dd-on-ink-strong); }
+.dd-bar-tab[aria-current="page"] {
+    background: color-mix(in srgb, var(--dd-on-ink) 16%, transparent);
+    color: var(--dd-on-ink-strong);
+}
+.dd-bar-tab:focus-visible { outline: 2px solid var(--dd-on-ink); outline-offset: 1px; }
+
+.dd-static .dd-body--reference {
+    grid-template-columns: var(--dd-rail) minmax(0, 1fr);
+}
+.dd-static .dd-body--reference .dd-page--reference {
+    grid-column: 2;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+.dd-static .dd-body--reference .dd-mobile-contents { grid-column: 1; }
+
+.dd-ref-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(24px, 4vw, 56px);
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: calc(56px * var(--dd-density)) clamp(20px, 4vw, 48px);
+    border-bottom: 1px solid var(--dd-line-soft);
+    scroll-margin-top: 52px;
+}
+.dd-ref-row:last-child { border-bottom: 0; padding-bottom: calc(110px * var(--dd-density)); }
+.dd-ref-doc { min-width: 0; margin: 0; }
+.dd-ref-code { min-width: 0; }
+.dd-ref-stick {
+    position: sticky;
+    top: calc(52px + 24px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.dd-ref-kicker {
+    margin: 0 0 calc(6px * var(--dd-density));
+    color: var(--dd-accent);
+    font: 600 11px/1.4 var(--dd-ui, var(--dd-sans));
+    letter-spacing: var(--dd-caps-track, 0.1em);
+    text-transform: uppercase;
+}
+.dd-ref-title {
+    margin: 0 0 calc(12px * var(--dd-density));
+    color: var(--dd-text);
+    font: var(--dd-heading-weight, 700) var(--dd-h2-size, 26px)/1.2 var(--dd-display, var(--dd-sans));
+    letter-spacing: var(--dd-display-track, -0.02em);
+}
+.dd-ref-signature {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 calc(18px * var(--dd-density));
+}
+.dd-ref-signature .dd-ref-badge { position: relative; top: -1px; }
+.dd-section .dd-ref-signature code {
+    min-width: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--dd-text);
+    font: 500 13.5px/1.5 var(--dd-mono);
+    overflow-wrap: anywhere;
+}
+.dd-ref-badge {
+    flex: none;
+    min-width: 34px;
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--dd-accent) 13%, transparent);
+    color: var(--dd-accent);
+    font: 650 9.5px/1.5 var(--dd-mono);
+    letter-spacing: 0.03em;
+    text-align: center;
+    text-transform: uppercase;
+}
+.dd-ref-label {
+    display: flex;
+    margin: calc(28px * var(--dd-density)) 0 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--dd-line);
+    color: var(--dd-muted);
+    font: 600 12px/1.4 var(--dd-ui, var(--dd-sans));
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.dd-ref-fields, .dd-ref-errors, .dd-ref-index { margin: 0; padding: 0; list-style: none; }
+.dd-ref-fields > li, .dd-ref-errors > li, .dd-ref-index > li {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--dd-line-soft);
+}
+.dd-ref-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+}
+.dd-section .dd-ref-name { padding: 0; border: 0; background: none; color: var(--dd-text); font-weight: 600; }
+.dd-ref-type { color: var(--dd-muted); font: 12px var(--dd-mono); }
+.dd-ref-required { color: #c2410c; font: 600 10px var(--dd-ui, var(--dd-sans)); letter-spacing: 0.05em; text-transform: uppercase; }
+.dd-ref-default { color: var(--dd-muted); font-size: 12.5px; }
+.dd-ref-desc, .dd-ref-errors p { margin: 6px 0 0; color: var(--dd-text-soft); font-size: 14.5px; line-height: 1.6; }
+.dd-ref-errors > li { display: grid; grid-template-columns: minmax(0, 14em) minmax(0, 1fr); gap: 12px; align-items: baseline; }
+.dd-ref-errors p { margin: 0; }
+.dd-ref-index-group { margin: 0; color: var(--dd-text); font: 600 13.5px var(--dd-mono); }
+.dd-ref-index-links { margin: 4px 0 0; color: var(--dd-muted); font-size: 14.5px; }
+.dd-ref-index-links a, .dd-ref-guide a { color: var(--dd-text); }
+.dd-ref-guide { display: flex; align-items: center; gap: 8px; margin: calc(22px * var(--dd-density)) 0 0; font-size: 14.5px; }
+.dd-ref-guide svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; color: var(--dd-muted); }
+
+/* The code panel: --dd-ink in light and dark, like a terminal. */
+.dd-ref-panel {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--dd-on-ink) 12%, var(--dd-ink));
+    border-radius: var(--dd-radius);
+    background: var(--dd-ink);
+    color: var(--dd-on-ink);
+}
+.dd-ref-panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    padding: 10px 14px;
+    border-bottom: 1px solid color-mix(in srgb, var(--dd-on-ink) 12%, transparent);
+    color: var(--dd-on-ink);
+    font: 500 12.5px/1.4 var(--dd-mono);
+}
+.dd-ref-panel-lang { color: color-mix(in srgb, var(--dd-on-ink) 55%, transparent); font-size: 11.5px; }
+.dd-ref-pre {
+    margin: 0;
+    padding: 14px 16px 16px;
+    overflow-x: auto;
+    color: var(--dd-on-ink);
+    font: 400 12.5px/1.7 var(--dd-mono);
+    tab-size: 4;
+}
+.dd-ref-pre code { font: inherit; white-space: pre; }
+.dd-ref-pre:focus-visible { outline: 2px solid var(--dd-on-ink); outline-offset: -2px; }
+
+/* Shared tabs, restyled for the dark panel: the title and tabs share a row. */
+.dd-ref-panel.dd-tabs { margin: 0; border-color: color-mix(in srgb, var(--dd-on-ink) 12%, var(--dd-ink)); background: var(--dd-ink); }
+.dd-ref-panel { min-width: 0; }
+.dd-ref-panel.dd-tabs--enhanced { display: grid; grid-template-columns: max-content minmax(0, 1fr); }
+.dd-ref-panel.dd-tabs--enhanced > .dd-ref-panel-title { border-bottom: 1px solid color-mix(in srgb, var(--dd-on-ink) 12%, transparent); }
+.dd-ref-panel.dd-tabs--enhanced > .dd-tab-list { justify-content: flex-end; border-bottom: 1px solid color-mix(in srgb, var(--dd-on-ink) 12%, transparent); padding-inline: 6px; }
+.dd-ref-panel.dd-tabs--enhanced > .dd-tab-pane { grid-column: 1 / -1; min-width: 0; padding: 0; }
+.dd-ref-panel .dd-tab-pane { padding: 0; }
+.dd-ref-panel .dd-tab-label { padding: 8px 14px 0; border-top: 0; color: color-mix(in srgb, var(--dd-on-ink) 55%, transparent); font: 500 11.5px var(--dd-mono); }
+.dd-ref-panel .dd-tab {
+    margin: 6px 0;
+    padding: 4px 10px;
+    border: 0;
+    border-radius: var(--dd-radius-xs);
+    color: color-mix(in srgb, var(--dd-on-ink) 62%, transparent);
+    font: 500 12px var(--dd-ui, var(--dd-sans));
+}
+.dd-ref-panel .dd-tab[aria-selected="true"] {
+    background: color-mix(in srgb, var(--dd-on-ink) 14%, transparent);
+    color: var(--dd-on-ink-strong);
+}
+
+.dd-ref-link { display: flex; align-items: baseline; gap: 8px; }
+.dd-ref-link > .dd-ref-badge { min-width: 0; padding: 1px 5px; font-size: 8.5px; }
+.dd-ref-link > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 1000px) {
+    .dd-ref-row { grid-template-columns: minmax(0, 1fr); }
+    .dd-ref-stick { position: static; }
+}
+@media (max-width: 860px) {
+    .dd-static .dd-body--reference { grid-template-columns: minmax(0, 1fr); }
+    .dd-static .dd-body--reference .dd-page--reference { grid-column: 1; }
+}
+@media print {
+    .dd-ref-row { grid-template-columns: minmax(0, 1fr); }
+    .dd-ref-stick { position: static; }
+    .dd-ref-panel { background: none; color: inherit; border-color: currentColor; }
+}

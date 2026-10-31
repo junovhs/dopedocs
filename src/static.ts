@@ -4,6 +4,7 @@ import { tabsScript } from "./tabs.js";
 import { walkBlocks } from "./blocks.js";
 import { generateApiSamples } from "./api.js";
 import { createSearchIndex, renderSearch, searchScript } from "./search.js";
+import { renderReference, renderReferenceRail } from "./reference.js";
 /**
  * The static build: what search engines and answer engines actually read.
  *
@@ -28,6 +29,7 @@ import {
     type DocSet,
     isGroup,
     pagesOf,
+    referencePages,
     reservedEntityProperty,
     type JsonValue,
     type Finding,
@@ -104,6 +106,12 @@ export interface BuildStaticOptions {
      * see are the ones that look nothing like the product.
      */
     stylesheet?: string | string[];
+    /**
+     * Stylesheets for the developer reference page instead of `stylesheet`:
+     * the same list with `reference.css` after dopedocs' own sheet, so other
+     * pages never load it (DEC-20). Defaults to `stylesheet`.
+     */
+    referenceStylesheet?: string | string[];
     /** Injected for deterministic output. Defaults to now. */
     now?: Date;
     /** Findings older than this many days mark a fact stale. Default 365. */
@@ -246,6 +254,8 @@ interface PageInput {
     section?: boolean;
     /** Marks an article or the articles index: one centred column, no rail. */
     article?: boolean;
+    /** Marks the developer reference: rows of prose beside code, full width (DEC-20). */
+    reference?: boolean;
     /** The whole document on one page, linked as the alternate reading. */
     whole?: { url: string; title: string };
     /** The articles feed, advertised so a feed reader finds it from the page. */
@@ -271,7 +281,7 @@ function page(input: PageInput): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="${esc(input.skipScriptPath)}" defer></script>
-${body.includes('class="dd-tabs" data-dd-tabs') ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "tabs.js"))}" defer></script>\n` : ""}${input.copyPage ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "copy.js"))}" defer></script>\n` : ""}<title>${esc(title)}</title>
+${/ data-dd-tabs[ >]/.test(body) ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "tabs.js"))}" defer></script>\n` : ""}${input.copyPage ? `<script src="${esc(input.skipScriptPath.replace(/skip\.js$/, "copy.js"))}" defer></script>\n` : ""}<title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="${ROBOTS_META[input.indexing]}">
 <link rel="canonical" href="${esc(canonical)}">
@@ -293,8 +303,8 @@ ${jsonLd(graph)}
 <body class="dd-static">
 <a class="dd-skip" href="#${contentId}">Skip to content</a>
 ${chrome.bar}
-<div class="dd-body">
-<main id="${contentId}" tabindex="-1" class="dd-page${input.section ? " dd-page--section" : ""}${input.article ? " dd-page--article" : ""}">
+<div class="dd-body${input.reference ? " dd-body--reference" : ""}">
+<main id="${contentId}" tabindex="-1" class="dd-page${input.section ? " dd-page--section" : ""}${input.article ? " dd-page--article" : ""}${input.reference ? " dd-page--reference" : ""}">
 <article>
 ${body}
 </article>
@@ -694,14 +704,25 @@ export function buildStatic(
        the entity's own URL, the labels from its name and the document title,
        and the rail from the section tree. A consumer rebuilds and has chrome. */
 
-    const bar =
+    /** With a reference, the bar switches between the manual and it (DEC-20). */
+    const reference = docs.reference;
+    const barFor = (current: "manual" | "reference"): string =>
         `<div class="dd-bar">` +
         (basePath
             ? `<a class="dd-back" href="${escapeHtml(homePath)}">` +
               `${BACK_ARROW}${escapeHtml(docs.entity.name)}</a>` +
-              `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>`
+              (reference ? "" : `<span class="dd-bar-page">${escapeHtml(docs.title)}</span>`)
             : `<a class="dd-bar-page" href="${escapeHtml(homePath)}">${escapeHtml(docs.entity.name)}</a>`) +
+        (reference
+            ? `<nav class="dd-bar-tabs" aria-label="Documentation">` +
+              ([["manual", indexPath, docs.title], ["reference", pathFor(reference.id), reference.title]] as const)
+                  .map(([key, href, label]) =>
+                      `<a class="dd-bar-tab" href="${escapeHtml(href)}"${key === current ? ` aria-current="page"` : ""}>${escapeHtml(label)}</a>`)
+                  .join("") +
+              `</nav>`
+            : "") +
         `</div>`;
+    const bar = barFor("manual");
 
     /** One rail link, marked when it is the page being read. */
     const navLink = (s: DocPage, currentId?: string): string =>
@@ -734,8 +755,9 @@ export function buildStatic(
     const out: Record<string, string> = {};
     // Native fragment navigation remains available without this enhancement.
     out[`${prefix}skip.js`] = `document.querySelector('.dd-skip').addEventListener('click', function(event) { event.preventDefault(); document.getElementById(this.hash.slice(1)).focus(); });` + mobileContentsScript();
-    if ([...pagesOf(docs.sections).map(({ page }) => page), ...(docs.articles ?? [])]
-        .some(page => [...walkBlocks(page.blocks)].some(block => block.kind === "tabs"))) {
+    if ([...pagesOf(docs.sections).map(({ page }) => page), ...(docs.articles ?? []), ...referencePages(reference)]
+        .some(page => [...walkBlocks(page.blocks)].some(block => block.kind === "tabs")) ||
+        [reference, ...(reference?.groups.flatMap((g) => g.entries) ?? [])].some((item) => item?.code?.some((c) => c.samples.length > 1))) {
         out[`${prefix}tabs.js`] = tabsScript();
     }
     if (options.railFilter) out[`${prefix}rail-filter.js`] = railFilterScript();
@@ -771,8 +793,12 @@ export function buildStatic(
               link: indexLink,
           })}</p>`
         : "";
+    /** Reference entries are anchors on the one reference page. */
+    const entryIds = new Set(reference ? reference.groups.flatMap((g) => g.entries.map((e) => e.id)) : []);
+    const hrefFor = (id: string) => (entryIds.has(id) ? `${pathFor(reference!.id)}#${id}` : pathFor(id));
+    const urlOf = (id: string) => (entryIds.has(id) ? `${urlFor(reference!.id)}#${id}` : urlFor(id));
     /** Section references in prose lead to that section's own page. */
-    const links = { sectionHref: pathFor };
+    const links = { sectionHref: hrefFor };
     const indexBody = renderLead(docs, links) + renderBody(docs, links);
     const indexNote = noteText
         ? `<p class="dd-fullnote">${fill(noteText.index, {
@@ -899,6 +925,55 @@ export function buildStatic(
         });
     }
 
+    /* --- the developer reference (DEC-20) --------------------------------
+       One page at <base>/<id>/, every entry a row anchored by its id. Its
+       entries are answers in the machine outputs below, each with its anchor. */
+
+    const referenceEntries = referencePages(reference).map((p) => ({
+        id: p.id,
+        title: p.title,
+        url: urlOf(p.id),
+        question: plain(p.question, facts, `reference "${p.id}"`),
+        answer: plain(p.answer, facts, `reference "${p.id}"`),
+        modified: p.updated ?? p.published,
+    }));
+    if (reference) {
+        const path = `${prefix}${reference.id}/index.html`;
+        if (path in out) throw new Error(`dopedocs: the reference would overwrite "${path}"; rename it.`);
+        const url = urlFor(reference.id);
+        const manualTitles = new Map(pagesOf(docs.sections).map(({ page }) => [page.id, page.title]));
+        out[path] = page({
+            title: `${reference.title} - ${docs.entity.name}`,
+            description: referenceEntries[0]!.answer,
+            canonical: url,
+            copyPage: false,
+            entity: docs.entity,
+            stylesheet: options.referenceStylesheet ?? options.stylesheet,
+            indexing,
+            chrome: { bar: barFor("reference"), rail: renderReferenceRail(reference) },
+            skipScriptPath: `${indexPath}skip.js`,
+            reference: true,
+            body: renderReference(reference, facts, { sectionHref: hrefFor, titleOf: (id) => manualTitles.get(id) }),
+            graph: {
+                "@context": "https://schema.org",
+                "@graph": [
+                    entityJson,
+                    {
+                        "@type": articleType,
+                        "@id": `${url}#article`,
+                        url,
+                        headline: reference.title,
+                        description: referenceEntries[0]!.answer,
+                        about: { "@id": entityId },
+                        publisher: { "@id": entityId },
+                        isPartOf: { "@id": `${indexUrl}#page` },
+                    },
+                    faqNode(referenceEntries, `${url}#faq`),
+                ],
+            },
+        });
+    }
+
     /* --- articles (DEC-18) ----------------------------------------------
        Dated answer pages at the site root's /articles/, beside the manual
        rather than inside it: no rail, no pager, no reading order. A build
@@ -942,7 +1017,7 @@ export function buildStatic(
                 skipScriptPath: `${indexPath}skip.js`,
                 section: true,
                 article: true,
-                body: articleBody(entry, facts, pathFor, {
+                body: articleBody(entry, facts, hrefFor, {
                     indexPath: articlesIndexPath,
                     // The newest others: the index's order, not a guess at relevance (DEC-18).
                     more: articleEntries
@@ -1041,6 +1116,8 @@ export function buildStatic(
         [
             { url: indexUrl, modified: newest },
             ...entries,
+            // One page, so one sitemap entry; its anchors aren't separate URLs.
+            ...referenceEntries.slice(0, 1),
             ...(articleEntries.length
                 ? [{ url: `${origin}/${ARTICLES_DIR}/`, modified: articleEntries.map((e) => e.modified).sort().at(-1) }]
                 : []),
@@ -1090,6 +1167,12 @@ export function buildStatic(
         entries
             .map((e) => `### ${e.title}\n\n${e.question}\n\n${e.answer}\n\n${e.url}\n`)
             .join("\n") +
+        (referenceEntries.length
+            ? `\n## ${reference!.title}\n\n` +
+              referenceEntries
+                  .map((e) => `### ${e.title}\n\n${e.question}\n\n${e.answer}\n\n${e.url}\n`)
+                  .join("\n")
+            : "") +
         (articleEntries.length
             ? `\n## Articles\n\n` +
               articleEntries
@@ -1111,7 +1194,7 @@ export function buildStatic(
                 entity: docs.entity.name,
                 generated,
                 questions: [
-                    ...entries.map((e) => ({
+                    ...[...entries, ...referenceEntries].map((e) => ({
                         id: e.id,
                         question: e.question,
                         answer: e.answer,

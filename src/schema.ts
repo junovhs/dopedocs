@@ -391,6 +391,84 @@ export interface DocApi {
     errors?: ApiError[];
 }
 
+/* ── Developer reference (DEC-20) ──────────────────────────────────────────
+   One long page, prose beside sticky code, for anything a developer calls:
+   functions, messages, commands, endpoints. Every entry is a page in its own
+   right (question, answer, blocks, facts), so it is annotated and validated
+   like one; the fields below only add what a reference shows beside it. */
+
+/** One named input, output or field, as a reference lists it. */
+export interface ReferenceField {
+    /** `path`, `--profile`, `names`. */
+    name: string;
+    /** Free text, so it fits any language: `str`, `string[]`, `u8`. */
+    type?: string;
+    required?: boolean;
+    /** The default, as code. */
+    default?: string;
+    description: string;
+}
+
+/** A titled list of fields: "Parameters", "Returns", "Reply". */
+export interface ReferenceFields {
+    title: string;
+    fields: ReferenceField[];
+}
+
+/** One sample in a code panel; a panel with several shows them as tabs. */
+export interface ReferenceSample {
+    /** The tab's label: `Python`, `Go`, `Request`. Unique within a panel. */
+    label: string;
+    language?: string;
+    code: string;
+}
+
+/** A panel in the code column, such as "Example" or "Reply". */
+export interface ReferenceCode {
+    title: string;
+    samples: ReferenceSample[];
+}
+
+/** One thing a developer can call, send or run. Its id is its anchor on the reference page. */
+export interface ReferenceEntry extends Omit<DocPage, "blocks"> {
+    /** Prose beside the code; often the fields and samples say enough. */
+    blocks?: DocBlock[];
+    /** A short kind label shown in the rail and beside the signature: `fn`, `GET`, `socket`, `cli`. */
+    badge?: string;
+    /** One line of code naming it: `load(path=".env", profile=None)`. */
+    signature?: string;
+    fields?: ReferenceFields[];
+    /** Errors it can produce: the code or message, and what it means. */
+    errors?: { code: string; description: string }[];
+    /** The panels beside it; samples labelled alike switch together. */
+    code?: ReferenceCode[];
+    /** A manual page that explains it in context. */
+    guide?: string;
+}
+
+/** A labelled run of entries; the label shows in the rail and above each entry. */
+export interface ReferenceGroup {
+    id: string;
+    title: string;
+    entries: ReferenceEntry[];
+}
+
+/**
+ * The developer reference, published at `<base>/<id>/`. The overview is the
+ * page's own question, answer and blocks; `code` is its quick-start panel.
+ */
+export interface DocReference extends DocPage {
+    code?: ReferenceCode[];
+    groups: ReferenceGroup[];
+}
+
+/** The reference overview and every entry, as pages, in reading order. */
+export function referencePages(reference: DocReference | undefined): DocPage[] {
+    return reference
+        ? [reference, ...reference.groups.flatMap((group) => group.entries.map((entry) => ({ ...entry, blocks: entry.blocks ?? [] })))]
+        : [];
+}
+
 /* ── The document ────────────────────────────────────────────────────────── */
 
 /** A whole documentation set: who publishes it, what it claims, what it says. */
@@ -408,6 +486,8 @@ export interface DocSet<F extends FactMap = FactMap> {
     articles?: DocArticle[];
     /** Optional API metadata and build-time request samples; guide annotation stays unchanged. */
     api?: DocApi;
+    /** A developer reference beside the manual: prose beside sticky code (DEC-20). */
+    reference?: DocReference;
 }
 
 /**
@@ -456,7 +536,9 @@ export type FindingCode =
     | "unknown-api-guide"
     | "invalid-api-parameter"
     | "invalid-api-url"
-    | "invalid-api-response";
+    | "invalid-api-response"
+    | "invalid-reference"
+    | "unknown-reference-guide";
 
 /**
  * One problem found in a document. Findings are returned, never thrown: the
@@ -478,6 +560,56 @@ export interface ValidateOptions {
     staleAfterDays?: number;
     /** Injected for deterministic tests. Defaults to now. */
     today?: Date;
+}
+
+/** What a reference adds to its pages: groups, fields, code panels, guides. */
+function validateReference(reference: DocReference, manualIds: Set<string>): Finding[] {
+    const findings: Finding[] = [];
+    const bad = (sectionId: string, message: string) =>
+        findings.push({ code: "invalid-reference", severity: "fatal", sectionId, message });
+    const panels = (id: string, code: ReferenceCode[] | undefined) => {
+        for (const panel of code ?? []) {
+            if (!panel.title.trim()) bad(id, `A code panel in "${id}" has no title.`);
+            if (!panel.samples.length) bad(id, `The "${panel.title}" panel in "${id}" has no samples.`);
+            const labels = new Set<string>();
+            for (const sample of panel.samples) {
+                if (!sample.label.trim() || labels.has(sample.label)) {
+                    bad(id, `The "${panel.title}" panel in "${id}" needs a unique, non-blank label for each sample.`);
+                }
+                labels.add(sample.label);
+                if (!sample.code.trim()) bad(id, `The "${sample.label}" sample in "${id}" is empty.`);
+            }
+        }
+    };
+    panels(reference.id, reference.code);
+    const groupIds = new Set<string>();
+    for (const group of reference.groups) {
+        if (!SLUG.test(group.id) || groupIds.has(group.id)) bad(group.id, `Reference group id "${group.id}" must be a unique slug.`);
+        groupIds.add(group.id);
+        if (!group.entries.length) bad(group.id, `Reference group "${group.id}" has no entries.`);
+        for (const entry of group.entries) {
+            panels(entry.id, entry.code);
+            if (entry.badge !== undefined && !entry.badge.trim()) bad(entry.id, `Entry "${entry.id}" has a blank badge.`);
+            for (const list of entry.fields ?? []) {
+                if (!list.title.trim()) bad(entry.id, `A field list in "${entry.id}" has no title.`);
+                if (list.fields.some((field) => !field.name.trim() || !field.description.trim())) {
+                    bad(entry.id, `Every field in "${entry.id}" needs a name and a description.`);
+                }
+            }
+            if ((entry.errors ?? []).some((error) => !error.code.trim() || !error.description.trim())) {
+                bad(entry.id, `Every error in "${entry.id}" needs a code and a description.`);
+            }
+            if (entry.guide !== undefined && !manualIds.has(entry.guide)) {
+                findings.push({
+                    code: "unknown-reference-guide",
+                    severity: "fatal",
+                    sectionId: entry.id,
+                    message: `Entry "${entry.id}" names the guide "${entry.guide}", which is not a manual page.`,
+                });
+            }
+        }
+    }
+    return findings;
 }
 
 /** The longest answer that still reads as a quotable snippet. */
@@ -613,6 +745,9 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
     const factKeys = new Set(Object.keys(docs.facts));
     // Links target pages, including group landings, rather than fold ids.
     const pageIds = new Set(pagesOf(docs.sections).map(({ page }) => page.id));
+    // Reference entries are link targets too: their anchor on the reference page.
+    const manualIds = new Set(pageIds);
+    for (const page of referencePages(docs.reference)) pageIds.add(page.id);
 
     /** Reports each link in `text` that leads nowhere, or somewhere it must not. */
     const checkLinks = (text: string, where: string, sectionId?: string) => {
@@ -659,7 +794,11 @@ export function validate(docs: DocSet, options: ValidateOptions = {}): Finding[]
         }
     }
 
-    for (const { section, depth } of [...walk(docs.sections), ...articles]) {
+    // DEC-20: the reference overview and its entries are pages for every rule below.
+    const reference = referencePages(docs.reference).map((section) => ({ section, depth: 0 }));
+    if (docs.reference) findings.push(...validateReference(docs.reference, manualIds));
+
+    for (const { section, depth } of [...walk(docs.sections), ...articles, ...reference]) {
         const { id } = section;
 
         if (seen.has(id)) {
