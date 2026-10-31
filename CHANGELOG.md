@@ -14,6 +14,13 @@
   with a reference, so other pages keep their weight. The in-app panel doesn't
   show it yet.
 - Static pages load the tabs enhancement for any element marked `data-dd-tabs`.
+- **Studio:** typed controls in a designed editing panel, every documented
+  theme token and typography control, local previews with batched saves, and
+  readability fixes. Development only, as before.
+- **Density and motion:** content spacing scales with a `--dd-density` token,
+  and shared motion presets always respect reduced motion.
+- **Mobile contents:** on static pages the contents open as a sheet that
+  closes the way it opened, and stays usable without JavaScript.
 
 All changes are additive; documents without a reference build as before.
 
